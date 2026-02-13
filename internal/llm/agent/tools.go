@@ -44,6 +44,10 @@ func CoderAgentTools(
 			tools.NewPartVTKTool(),
 			tools.NewMeasureToolTool(),
 			tools.NewReportTool(),
+			// v0.2: Visualization + AI Analysis
+			tools.NewPvpythonTool(),
+			tools.NewMonitorTool(),
+			tools.NewAnalysisTool(),
 		}, otherTools...,
 	)
 }

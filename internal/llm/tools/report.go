@@ -26,6 +26,7 @@ type ReportParams struct {
 	SimDir     string     `json:"sim_dir"`
 	CaseConfig CaseConfig `json:"case_config"`
 	CSVFiles   []string   `json:"csv_files,omitempty"`
+	ImageFiles []string   `json:"image_files,omitempty"` // RPT-02: Include images
 }
 
 type reportTool struct{}
@@ -146,7 +147,21 @@ func generateReport(params ReportParams) string {
 	} else {
 		sb.WriteString("- 측정 데이터: 없음\n")
 	}
+
+	// RPT-02: Include images
+	if len(params.ImageFiles) > 0 {
+		sb.WriteString(fmt.Sprintf("- 렌더링 이미지: %d개 파일\n", len(params.ImageFiles)))
+	}
 	sb.WriteString("\n")
+
+	// RPT-02: Embed images in report
+	if len(params.ImageFiles) > 0 {
+		sb.WriteString("### 시각화 결과\n\n")
+		for _, imgPath := range params.ImageFiles {
+			relPath, _ := filepath.Rel(params.SimDir, imgPath)
+			sb.WriteString(fmt.Sprintf("![%s](%s)\n\n", filepath.Base(imgPath), relPath))
+		}
+	}
 
 	// Section 4: Water level time series (if CSV available)
 	if len(params.CSVFiles) > 0 {

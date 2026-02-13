@@ -18,6 +18,7 @@ type XMLGeneratorParams struct {
 	DP          float64 `json:"dp"`
 	TimeMax     float64 `json:"time_max"`
 	OutPath     string  `json:"out_path"`
+	Dimension   string  `json:"dimension,omitempty"` // "2D" or "3D" (default: "3D")
 }
 
 type xmlGeneratorTool struct{}
@@ -116,7 +117,12 @@ func (x *xmlGeneratorTool) Run(ctx context.Context, call ToolCall) (ToolResponse
 		return NewTextErrorResponse(fmt.Sprintf("출력 디렉토리 생성 실패: %s", err)), nil
 	}
 
-	// Generate XML
+	// Default dimension
+	if params.Dimension == "" {
+		params.Dimension = "3D"
+	}
+
+	// Generate XML (DIM-01: 2D support)
 	xmlContent := generateSloshingXML(params)
 	xmlPath := params.OutPath + ".xml"
 	if err := os.WriteFile(xmlPath, []byte(xmlContent), 0644); err != nil {
@@ -142,6 +148,11 @@ func generateSloshingXML(p XMLGeneratorParams) string {
 	fH := p.FluidHeight
 	margin := p.DP * 5
 	timeOut := p.TimeMax / 50
+
+	// DIM-01: For 2D, set width to minimal value
+	if p.Dimension == "2D" {
+		W = p.DP * 3 // Minimal width for 2D simulation
+	}
 
 	// SWL gauge positions
 	leftX := fmt.Sprintf("%.4f", 0.05*L)

@@ -1,0 +1,50 @@
+# =============================================================================
+# ParaView pvpython Docker Image for DualSPHysics Post-Processing
+# =============================================================================
+# This image provides ParaView CLI (pvpython) for automated rendering.
+# Used by VIS-01, VIS-02, VIS-03 for image/animation generation.
+# =============================================================================
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PARAVIEW_VERSION=5.11.2 \
+    PARAVIEW_BUILD=paraview-v5.11.2
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    ca-certificates \
+    python3 \
+    python3-pip \
+    libgl1-mesa-glx \
+    libglu1-mesa \
+    libxrender1 \
+    libxcursor1 \
+    libxft2 \
+    libxinerama1 \
+    libgomp1 \
+    xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download and install ParaView headless (osmesa build for server rendering)
+WORKDIR /tmp
+RUN wget -q "https://www.paraview.org/paraview-downloads/download.php?submit=Download&version=v5.11&type=binary&os=Linux&downloadFile=ParaView-5.11.2-osmesa-MPI-Linux-Python3.9-x86_64.tar.gz" \
+    -O paraview.tar.gz && \
+    mkdir -p /opt/paraview && \
+    tar -xzf paraview.tar.gz -C /opt/paraview --strip-components=1 && \
+    rm paraview.tar.gz
+
+# Environment
+ENV PATH="/opt/paraview/bin:${PATH}" \
+    LD_LIBRARY_PATH="/opt/paraview/lib:${LD_LIBRARY_PATH}" \
+    PYTHONPATH="/opt/paraview/lib/python3.9/site-packages:${PYTHONPATH}"
+
+# Install Python dependencies for rendering scripts
+RUN pip3 install --no-cache-dir numpy
+
+# Verify pvpython installation
+RUN pvpython --version
+
+WORKDIR /data
+
+CMD ["pvpython"]
