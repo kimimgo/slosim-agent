@@ -215,7 +215,7 @@ UpdatePipeline()
 # Get time range
 timeKeeper = GetTimeKeeper()
 timesteps = timeKeeper.TimestepValues
-print("Found %d timesteps" %% len(timesteps))
+print("Found %%d timesteps" %%%% len(timesteps))
 
 # Set time range
 startTime = %g

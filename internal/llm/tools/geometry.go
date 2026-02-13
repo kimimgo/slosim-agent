@@ -17,7 +17,8 @@ const (
 // CylindricalGeometry generates XML geometry for cylindrical tank (GEO-01).
 func CylindricalGeometry(radius, height, fluidHeight, dp float64) string {
 	margin := dp * 5
-	segments := 36 // Angular segments for cylinder approximation
+	segments := 36 // TODO: use for curved wall generation
+	_ = segments // Angular segments for cylinder approximation
 
 	return fmt.Sprintf(`
             <definition dp="%g" units_comment="metres (m)">

@@ -151,6 +151,7 @@ func (s *seismicInputTool) Run(ctx context.Context, call ToolCall) (ToolResponse
 		dt,
 		minAccel*params.ScaleFactor,
 		maxAccel*params.ScaleFactor,
+		params.ScaleFactor,
 	)
 
 	if params.ValidateOnly {

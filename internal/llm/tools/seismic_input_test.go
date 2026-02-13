@@ -309,6 +309,7 @@ seconds m/s^2
 		timeData, accelData, err := parseSeismicFile(dataPath, params)
 		require.NoError(t, err)
 		assert.Len(t, timeData, 2)
+		assert.Len(t, accelData, 2)
 	})
 }
 

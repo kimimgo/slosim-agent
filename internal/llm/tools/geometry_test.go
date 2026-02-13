@@ -50,7 +50,7 @@ func TestCylindricalGeometry(t *testing.T) {
 	t.Run("GEO-01: margin calculation with dp", func(t *testing.T) {
 		// dp * 5 margin 확인
 		dp := 0.05
-		margin := dp * 5 // 0.25
+		_ = dp * 5 // 0.25
 
 		xml := CylindricalGeometry(1.0, 2.0, 1.0, dp)
 
