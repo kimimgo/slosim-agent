@@ -23,8 +23,19 @@ type StatusCmp interface {
 	tea.Model
 }
 
+type jobInfo struct {
+	active      bool
+	progressPct int
+	eta         string
+	completed   bool
+	failed      bool
+	resultDir   string
+	errorMsg    string
+}
+
 type statusCmp struct {
 	info       util.InfoMsg
+	job        jobInfo
 	width      int
 	messageTTL time.Duration
 	lspClients map[string]*lsp.Client
@@ -35,6 +46,13 @@ type statusCmp struct {
 func (m statusCmp) clearMessageCmd(ttl time.Duration) tea.Cmd {
 	return tea.Tick(ttl, func(time.Time) tea.Msg {
 		return util.ClearStatusMsg{}
+	})
+}
+
+// clearJobStatusCmd clears job status after completed/failed display
+func (m statusCmp) clearJobStatusCmd(ttl time.Duration) tea.Cmd {
+	return tea.Tick(ttl, func(time.Time) tea.Msg {
+		return util.ClearJobStatusMsg{}
 	})
 }
 
@@ -66,6 +84,26 @@ func (m statusCmp) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.clearMessageCmd(ttl)
 	case util.ClearStatusMsg:
 		m.info = util.InfoMsg{}
+	case util.JobUpdateMsg:
+		m.job = jobInfo{
+			active:      true,
+			progressPct: msg.ProgressPct,
+			eta:         msg.ETA,
+		}
+	case util.JobCompletedMsg:
+		m.job = jobInfo{
+			completed: true,
+			resultDir: msg.ResultDir,
+		}
+		return m, m.clearJobStatusCmd(30 * time.Second)
+	case util.JobFailedMsg:
+		m.job = jobInfo{
+			failed:   true,
+			errorMsg: msg.Message,
+		}
+		return m, m.clearJobStatusCmd(60 * time.Second)
+	case util.ClearJobStatusMsg:
+		m.job = jobInfo{}
 	}
 	return m, nil
 }
@@ -145,7 +183,9 @@ func (m statusCmp) View() string {
 
 	availableWidht := max(0, m.width-lipgloss.Width(helpWidget)-lipgloss.Width(m.model())-lipgloss.Width(diagnostics)-tokenInfoWidth)
 
-	if m.info.Msg != "" {
+	if jobMsg := m.renderJobStatus(t, availableWidht); jobMsg != "" {
+		status += jobMsg
+	} else if m.info.Msg != "" {
 		infoStyle := styles.Padded().
 			Foreground(t.Background()).
 			Width(availableWidht)
@@ -264,6 +304,43 @@ func (m statusCmp) availableFooterMsgWidth(diagnostics, tokenInfo string) int {
 		tokensWidth = lipgloss.Width(tokenInfo) + 2
 	}
 	return max(0, m.width-lipgloss.Width(helpWidget)-lipgloss.Width(m.model())-lipgloss.Width(diagnostics)-tokensWidth)
+}
+
+func (m statusCmp) renderJobStatus(t theme.Theme, width int) string {
+	switch {
+	case m.job.active:
+		msg := fmt.Sprintf("%s 시뮬레이션 실행 중 (%d%%)", styles.SimRunningIcon, m.job.progressPct)
+		if m.job.eta != "" {
+			msg += fmt.Sprintf(" — %s", m.job.eta)
+		}
+		return styles.Padded().
+			Foreground(t.Background()).
+			Background(t.Info()).
+			Width(width).
+			Render(msg)
+	case m.job.completed:
+		msg := fmt.Sprintf("%s 시뮬레이션 완료", styles.SimCompletedIcon)
+		if m.job.resultDir != "" {
+			msg += fmt.Sprintf(" — 결과: %s", m.job.resultDir)
+		}
+		return styles.Padded().
+			Foreground(t.Background()).
+			Background(t.Success()).
+			Width(width).
+			Render(msg)
+	case m.job.failed:
+		msg := fmt.Sprintf("%s 시뮬레이션 실패", styles.SimFailedIcon)
+		if m.job.errorMsg != "" {
+			msg += fmt.Sprintf(" — %s", m.job.errorMsg)
+		}
+		return styles.Padded().
+			Foreground(t.Background()).
+			Background(t.Error()).
+			Width(width).
+			Render(msg)
+	default:
+		return ""
+	}
 }
 
 func (m statusCmp) model() string {
