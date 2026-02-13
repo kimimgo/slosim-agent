@@ -48,6 +48,10 @@ func CoderAgentTools(
 			tools.NewPvpythonTool(),
 			tools.NewMonitorTool(),
 			tools.NewAnalysisTool(),
+			// v0.3: Domain Expansion + Multi-Job
+			tools.NewSTLImportTool(),
+			tools.NewSeismicInputTool(),
+			tools.NewAnimationTool(),
 		}, otherTools...,
 	)
 }
