@@ -1,47 +1,13 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-
-# Test binary, built with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
+DualSPHysics/
+simulations/
+*.bi4
+*.vtk
 *.out
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
-go.work
-
-# IDE specific files
-.idea/
+__pycache__/
+*.pyc
+.venv/
+.uv/
 .vscode/
-*.swp
-*.swo
-
-# OS specific files
+.idea/
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-*.log
-
-# Binary output directory
-/bin/
-/dist/
-
-# Local environment variables
-.env
-.env.local
-
 .opencode/
-
-opencode
-opencode.md

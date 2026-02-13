@@ -1,0 +1,9 @@
+.git
+.claude/
+.opencode/
+simulations/
+cases/
+*.md
+!DualSPHysics/README.md
+Modelfile.*
+opencode.json
