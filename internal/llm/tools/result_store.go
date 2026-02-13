@@ -74,6 +74,13 @@ func NewResultStoreTool() BaseTool {
 	}
 }
 
+// NewResultStoreToolWithDir creates a result store with a custom directory (for testing).
+func NewResultStoreToolWithDir(storeDir string) BaseTool {
+	return &resultStoreTool{
+		storeDir: storeDir,
+	}
+}
+
 func (r *resultStoreTool) Info() ToolInfo {
 	return ToolInfo{
 		Name:        ResultStoreToolName,
