@@ -1,12 +1,13 @@
 package tools
 
 import (
-	"encoding/json"
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -148,15 +149,16 @@ func (e *errorRecoveryTool) Run(ctx context.Context, call ToolCall) (ToolRespons
 		errors := parseLogErrors(logPath)
 		result.Errors = append(result.Errors, errors...)
 
-		// Suggest fixes based on error patterns
+		// Suggest fixes based on error patterns (case-insensitive)
 		for _, errMsg := range errors {
-			if strings.Contains(errMsg, "particle") && strings.Contains(errMsg, "out") {
+			lowerErr := strings.ToLower(errMsg)
+			if strings.Contains(lowerErr, "particle") && strings.Contains(lowerErr, "out") {
 				result.FixActions = append(result.FixActions, "도메인 크기 증가 또는 파티클 이탈 검사 활성화")
 			}
-			if strings.Contains(errMsg, "memory") {
+			if strings.Contains(lowerErr, "memory") {
 				result.FixActions = append(result.FixActions, "GPU 메모리 부족 → 파티클 수 감소 또는 dp 증가")
 			}
-			if strings.Contains(errMsg, "NaN") {
+			if strings.Contains(lowerErr, "nan") {
 				result.FixActions = append(result.FixActions, "NaN 발생 → TimeStep 감소, 초기 조건 검토")
 			}
 		}
@@ -223,6 +225,7 @@ Job ID: %s
 }
 
 // checkDivergence analyzes Run.csv for signs of simulation divergence.
+// Detects exponential energy growth by tracking consecutive growth ratios.
 func checkDivergence(csvPath string) (bool, []string) {
 	file, err := os.Open(csvPath)
 	if err != nil {
@@ -234,30 +237,50 @@ func checkDivergence(csvPath string) (bool, []string) {
 	warnings := []string{}
 	divergent := false
 
-	// Read header
-	scanner.Scan()
+	// Read header to find Energy column index
+	if !scanner.Scan() {
+		return false, warnings
+	}
+	header := scanner.Text()
+	headerFields := strings.Split(header, ",")
+	energyIdx := -1
+	for i, h := range headerFields {
+		if strings.TrimSpace(h) == "Energy" {
+			energyIdx = i
+			break
+		}
+	}
 
 	// Scan data rows
 	lineNum := 0
 	var prevEnergy float64
+	consecutiveGrowth := 0
+	const growthThreshold = 1.2  // 1.2x per step = rapid growth
+	const consecutiveLimit = 5   // 5 consecutive steps of rapid growth = divergence
+
 	for scanner.Scan() {
 		lineNum++
 		line := scanner.Text()
 		fields := strings.Split(line, ",")
 
-		if len(fields) < 3 {
-			continue
-		}
+		if energyIdx >= 0 && energyIdx < len(fields) {
+			energy, err := strconv.ParseFloat(strings.TrimSpace(fields[energyIdx]), 64)
+			if err != nil {
+				continue
+			}
 
-		// Simple heuristic: Check if energy is increasing rapidly
-		// In real implementation, parse CSV properly
-		_ = prevEnergy
-		_ = fields
-
-		// Placeholder divergence check
-		if lineNum > 100 && !divergent {
-			// Assume divergence if we reach many iterations
-			// Real check: energy growth rate, pressure spikes, etc.
+			if lineNum > 1 && prevEnergy > 0 {
+				ratio := energy / prevEnergy
+				if ratio >= growthThreshold {
+					consecutiveGrowth++
+					if consecutiveGrowth >= consecutiveLimit {
+						divergent = true
+					}
+				} else {
+					consecutiveGrowth = 0
+				}
+			}
+			prevEnergy = energy
 		}
 	}
 
@@ -282,20 +305,27 @@ func parseLogErrors(logPath string) []string {
 	for scanner.Scan() {
 		line := scanner.Text()
 		lowerLine := strings.ToLower(line)
+		trimmedLine := strings.TrimSpace(line)
 
-		// Detect error patterns
-		if strings.Contains(lowerLine, "error") {
-			errors = append(errors, strings.TrimSpace(line))
-		}
-		if strings.Contains(lowerLine, "failed") {
-			errors = append(errors, strings.TrimSpace(line))
-		}
-		if strings.Contains(lowerLine, "nan") || strings.Contains(lowerLine, "inf") {
-			errors = append(errors, "NaN 또는 Inf 값 감지: "+strings.TrimSpace(line))
+		// Check NaN/Inf first (case-sensitive to avoid false positives like "[INFO]")
+		if strings.Contains(line, "NaN") || isInfValue(line) {
+			errors = append(errors, "NaN 또는 Inf 값 감지: "+trimmedLine)
+		} else if strings.Contains(lowerLine, "error") || strings.Contains(lowerLine, "failed") {
+			errors = append(errors, trimmedLine)
 		}
 	}
 
 	return errors
+}
+
+// isInfValue checks for Inf floating-point values while avoiding false positives like "[INFO]".
+func isInfValue(line string) bool {
+	for _, pattern := range []string{" Inf ", " Inf,", "+Inf", "-Inf", " Inf\t"} {
+		if strings.Contains(line, pattern) {
+			return true
+		}
+	}
+	return strings.HasSuffix(line, " Inf")
 }
 
 // retryWithBackoff implements exponential backoff retry logic.

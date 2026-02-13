@@ -168,6 +168,7 @@ func TestModifyBaseCase(t *testing.T) {
 
 		modified := modifyBaseCase(baseCasePath, params)
 		assert.NotEmpty(t, modified)
-		assert.Contains(t, modified, "fill_ratio = 0.650")
+		assert.Contains(t, modified, "0.65")
+		assert.NotContains(t, modified, "{{fill_ratio}}")
 	})
 }

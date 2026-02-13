@@ -7,8 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/opencode-ai/opencode/internal/config"
 )
 
 type LSParams struct {
@@ -96,11 +94,11 @@ func (l *lsTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error) {
 
 	searchPath := params.Path
 	if searchPath == "" {
-		searchPath = config.WorkingDirectory()
+		searchPath = getWorkingDirectory()
 	}
 
 	if !filepath.IsAbs(searchPath) {
-		searchPath = filepath.Join(config.WorkingDirectory(), searchPath)
+		searchPath = filepath.Join(getWorkingDirectory(), searchPath)
 	}
 
 	if _, err := os.Stat(searchPath); os.IsNotExist(err) {

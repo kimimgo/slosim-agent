@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -50,44 +51,47 @@ func TestJobManagerTool_Submit(t *testing.T) {
 		assert.Contains(t, response.Content, "job_id")
 	})
 
-	t.Run("AC-5: rejects concurrent job submission (v0.1 single job only)", func(t *testing.T) {
-		// v0.1: 단일 Job만 관리
-		// 동시 2개 제출 시 거절
+	t.Run("AC-5: rejects concurrent job submission beyond limit (v0.3 max 3)", func(t *testing.T) {
+		// v0.3: 동시 최대 3개 Job 관리
+		// 4번째 제출 시 거절
 		tool := NewJobManagerTool()
 
-		// 첫 번째 Job 제출
-		params1 := JobManagerParams{
-			Action:  "submit",
-			Command: []string{"sleep", "100"},
-			WorkDir: "/tmp/job_test_1",
-		}
-		paramsJSON1, err := json.Marshal(params1)
-		require.NoError(t, err)
+		// 3개 Job 제출 → 모두 성공해야 함
+		for i := 1; i <= 3; i++ {
+			params := JobManagerParams{
+				Action:  "submit",
+				Command: []string{"sleep", "100"},
+				WorkDir: fmt.Sprintf("/tmp/job_test_%d", i),
+			}
+			paramsJSON, err := json.Marshal(params)
+			require.NoError(t, err)
 
-		call1 := ToolCall{
-			Name:  "job_manager",
-			Input: string(paramsJSON1),
+			call := ToolCall{
+				Name:  "job_manager",
+				Input: string(paramsJSON),
+			}
+			response, err := tool.Run(context.Background(), call)
+			require.NoError(t, err)
+			assert.False(t, response.IsError, "Job %d should succeed", i)
 		}
-		response1, err := tool.Run(context.Background(), call1)
-		require.NoError(t, err)
-		assert.False(t, response1.IsError)
 
-		// 두 번째 Job 제출 → 거절되어야 함
-		params2 := JobManagerParams{
+		// 4번째 Job 제출 → 거절되어야 함
+		params4 := JobManagerParams{
 			Action:  "submit",
 			Command: []string{"sleep", "200"},
-			WorkDir: "/tmp/job_test_2",
+			WorkDir: "/tmp/job_test_4",
 		}
-		paramsJSON2, err := json.Marshal(params2)
+		paramsJSON4, err := json.Marshal(params4)
 		require.NoError(t, err)
 
-		call2 := ToolCall{
+		call4 := ToolCall{
 			Name:  "job_manager",
-			Input: string(paramsJSON2),
+			Input: string(paramsJSON4),
 		}
-		response2, err := tool.Run(context.Background(), call2)
+		response4, err := tool.Run(context.Background(), call4)
 		require.NoError(t, err)
-		assert.True(t, response2.IsError)
+		assert.True(t, response4.IsError)
+		assert.Contains(t, response4.Content, "초과")
 	})
 }
 
