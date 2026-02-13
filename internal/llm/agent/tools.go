@@ -52,6 +52,10 @@ func CoderAgentTools(
 			tools.NewSTLImportTool(),
 			tools.NewSeismicInputTool(),
 			tools.NewAnimationTool(),
+			// v1.0: Parametric Study + Production
+			tools.NewParametricStudyTool(),
+			tools.NewResultStoreTool(),
+			tools.NewErrorRecoveryTool(),
 		}, otherTools...,
 	)
 }
