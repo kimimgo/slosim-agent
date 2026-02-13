@@ -1,6 +1,6 @@
-# slosim-agent 개발 체계 v2.0
+# slosim-agent 개발 체계 v3.0
 
-*2026-02-13 — 전면 재설계*
+*2026-02-13 — CC Agent Teams 기반 전면 재설계*
 
 ---
 
@@ -8,256 +8,302 @@
 
 | | 제품 (Product) | 개발팀 (Dev Team) |
 |---|---|---|
-| **정체** | slosim-agent (OpenCode fork + Qwen3 SLM) | Claude Code (Anthropic) 인스턴스들 |
-| **모델** | Qwen3 32B/Coder (오픈웨이트, 로컬) | Claude Sonnet/Opus (Anthropic API) |
-| **실행** | 호스트에서 직접 실행 (Go TUI) | 호스트 tmux에서 CC Agent Team |
+| **정체** | slosim-agent (OpenCode fork + Qwen3 SLM) | Claude Code Agent Teams |
+| **모델** | Qwen3 32B/Coder (오픈웨이트, 로컬 Ollama) | Claude Sonnet/Opus (Anthropic API) |
+| **실행** | 호스트에서 직접 실행 (Go TUI) | CC TeamCreate → Task(team_name) → SendMessage |
+| **환경변수** | — | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` |
 
 ---
 
 ## 1. 제품 아키텍처: slosim-agent
 
-OpenCode(kimimgo/opencode-custom) 포크 → 슬로싱 전문 에이전트로 커스텀
+OpenCode(`kimimgo/opencode-custom`) 포크 → 슬로싱 전문 에이전트로 커스텀
 
 ```
-┌─────────────────────────────────────────────┐
-│         slosim-agent (Go + BubbleTea)       │
-│                                             │
-│  ┌─────────────────────────────────────┐    │
-│  │  TUI Layer (슬로싱 특화 UI)         │    │
-│  │  - Chat + Sim Dashboard             │    │
-│  │  - Case Wizard / Result Viewer      │    │
-│  │  - Parametric Comparison View       │    │
-│  └──────────────┬──────────────────────┘    │
-│                 │ pubsub                     │
-│  ┌──────────────▼──────────────────────┐    │
-│  │  Agent Core (Sloshing Coder)        │    │
-│  │  - LLM: Qwen3 via Ollama           │    │
-│  │  - Sloshing domain prompt           │    │
-│  │  - Tool orchestration (ReAct)       │    │
-│  └──────────────┬──────────────────────┘    │
-│                 │                            │
-│  ┌──────────────▼──────────────────────┐    │
-│  │  Tools (DualSPHysics Pipeline)      │    │
-│  │  gencase / solver / partvtk /       │    │
-│  │  measuretool / pvpython /           │    │
-│  │  job_manager / report_generator     │    │
-│  └──────────────┬──────────────────────┘    │
-│                 │ Docker exec                │
-│  ┌──────────────▼──────────────────────┐    │
-│  │  DualSPHysics v5.4 (CUDA 12.6)     │    │
-│  │  ParaView (pvpython)                │    │
-│  └─────────────────────────────────────┘    │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│           slosim-agent (Go + BubbleTea)         │
+│                                                 │
+│  ┌───────────────────────────────────────────┐  │
+│  │  TUI Layer (슬로싱 특화 UI)               │  │
+│  │  ┌───────────┐ ┌────────────┐ ┌────────┐  │  │
+│  │  │ Chat View │ │ Sim Dash   │ │ Result │  │  │
+│  │  │           │ │ - Job List │ │ Viewer │  │  │
+│  │  │           │ │ - Progress │ │ - VTK  │  │  │
+│  │  │           │ │ - Logs     │ │ - Plot │  │  │
+│  │  └───────────┘ └────────────┘ └────────┘  │  │
+│  │  ┌────────────────┐ ┌──────────────────┐  │  │
+│  │  │ Case Wizard    │ │ Parametric View  │  │  │
+│  │  │ (Step-by-step) │ │ (Compare/Table)  │  │  │
+│  │  └────────────────┘ └──────────────────┘  │  │
+│  └──────────────────┬────────────────────────┘  │
+│                     │ pubsub events              │
+│  ┌──────────────────▼────────────────────────┐  │
+│  │  Agent Core (Sloshing Coder)              │  │
+│  │  - LLM: Qwen3 via Ollama (local)         │  │
+│  │  - Sloshing domain system prompt          │  │
+│  │  - Tool orchestration (ReAct loop)        │  │
+│  │  - Job Manager (background goroutine)     │  │
+│  └──────────────────┬────────────────────────┘  │
+│                     │                            │
+│  ┌──────────────────▼────────────────────────┐  │
+│  │  Tools (DualSPHysics Pipeline)            │  │
+│  │  ┌────────┐ ┌────────┐ ┌───────────────┐  │  │
+│  │  │gencase │ │solver  │ │partvtk        │  │  │
+│  │  │        │ │        │ │measuretool    │  │  │
+│  │  └────────┘ └────────┘ │isosurface     │  │  │
+│  │  ┌────────┐ ┌────────┐ └───────────────┘  │  │
+│  │  │pvpython│ │report  │                    │  │
+│  │  │ParaView│ │generat.│                    │  │
+│  │  └────────┘ └────────┘                    │  │
+│  └──────────────────┬────────────────────────┘  │
+│                     │ docker exec / compose      │
+│  ┌──────────────────▼────────────────────────┐  │
+│  │  DualSPHysics v5.4 (CUDA 12.6, RTX 4090) │  │
+│  │  ParaView pvpython (headless rendering)   │  │
+│  └───────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────┘
+```
+
+### 코드 레이아웃
+
+```
+internal/
+├── tui/                          # TUI Layer (tui-dev 담당)
+│   ├── components/
+│   │   ├── chat/                 # 기존 Chat View
+│   │   ├── dialog/               # 기존 Dialogs
+│   │   ├── sim/                  # [신규] Sim Dashboard, Job List
+│   │   ├── wizard/               # [신규] Case Wizard (step-by-step)
+│   │   ├── result/               # [신규] Result Viewer
+│   │   └── parametric/           # [신규] Parametric Comparison View
+│   ├── theme/                    # 슬로싱 브랜드 테마
+│   └── styles/                   # Lipgloss adaptive styles
+├── llm/                          # Agent Core (agent-eng 담당)
+│   ├── agent/                    # Agent loop + sloshing-coder type
+│   ├── provider/                 # LLM providers (Ollama/Qwen3 중심)
+│   ├── prompt/                   # System prompts (sloshing domain)
+│   └── tools/                    # Built-in + DualSPHysics tools
+│       ├── bash.go, edit.go, ... # 기존 OpenCode tools
+│       ├── gencase.go            # [신규] GenCase XML → particles
+│       ├── solver.go             # [신규] DualSPHysics GPU solver
+│       ├── partvtk.go            # [신규] VTK export
+│       ├── measuretool.go        # [신규] Measurement extraction
+│       ├── pvpython.go           # [신규] ParaView rendering
+│       ├── job_manager.go        # [신규] Background job orchestration
+│       └── report.go             # [신규] Report generation
+├── app/                          # App orchestrator
+├── config/                       # Viper config (.opencode/config.json)
+├── db/                           # SQLite3 + sqlc
+├── session/                      # Session CRUD
+├── message/                      # Message CRUD
+├── pubsub/                       # Event broker
+├── permission/                   # Tool permission checks
+└── lsp/                          # LSP client (gopls)
+
+tests/                            # E2E 테스트 (qa-tester 담당)
+├── e2e/
+│   ├── scenario_simple_sloshing_test.go
+│   ├── scenario_parametric_test.go
+│   └── scenario_stl_import_test.go
+└── fixtures/
+    ├── simple_tank.xml
+    └── sample.stl
+
+docs/scenarios/                   # BDD 시나리오 (qa-tester 담당)
+├── simple_sloshing.feature
+├── parametric_study.feature
+└── error_handling.feature
 ```
 
 ---
 
-## 2. CC 개발팀 구성
+## 2. CC Agent Team 구성
 
-CC의 **Agent Teams** 기능 활용 (CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1)
+### Team API 사용법
+
+```
+# 1. Lead가 팀 생성
+TeamCreate(team_name="slosim", description="slosim-agent 개발팀")
+
+# 2. Teammate 스폰 (Task tool with team_name)
+Task(
+  subagent_type="general-purpose",
+  team_name="slosim",
+  name="tui-dev",
+  mode="plan",           # plan approval 필수
+  prompt="TUI 개발 담당. ARCHITECTURE.md의 tui-dev 역할 참조..."
+)
+
+# 3. 태스크 분배
+TaskCreate(subject="Sim Dashboard 컴포넌트 구현", ...)
+TaskUpdate(taskId="1", owner="tui-dev")
+
+# 4. 커뮤니케이션
+SendMessage(type="message", recipient="tui-dev", content="...", summary="...")
+SendMessage(type="broadcast", content="develop 머지 완료", summary="...")
+```
 
 ### 팀 구조
 
 ```
-prj-slosim-main (Lead CC)
-├── Teammate 1: tui-dev      ← TUI 개발 담당
-├── Teammate 2: qa-tester    ← UX 기획 + 제품 테스터
-└── Teammate 3: agent-eng    ← SLM 에이전트 엔지니어
+prj-slosim (Lead CC) ─── delegate mode, 코드 직접 수정 금지
+├── tui-dev          ─── BubbleTea TUI 개발 (plan mode)
+├── qa-tester        ─── UX 기획 + 제품 QA (plan mode)
+└── agent-eng        ─── SLM 에이전트 엔지니어 (plan mode)
 ```
 
-**Lead (오케스트레이터):**
-- Delegate mode (Shift+Tab) — 코드 직접 수정 금지, 조율만
-- 태스크 분배, 의존성 관리, PR 머지, 품질 게이트
-- Split-pane mode (tmux 기반)
-
-### 역할별 상세
+### Teammate 상세
 
 ---
 
-### 🖥️ Teammate 1: `tui-dev` — TUI 개발
+### Teammate 1: `tui-dev` — TUI 개발
 
 **담당 영역:** `internal/tui/`, `internal/app/`
 **worktree 브랜치:** `feat/tui`
+**mode:** `plan` (코드 변경 전 Lead 승인 필수)
 
 **하는 일:**
-- BubbleTea 컴포넌트 개발 (Sim Dashboard, Case Wizard, Result Viewer)
-- Lipgloss 테마/스타일링 (슬로싱 브랜딩)
+- BubbleTea 컴포넌트 개발 (Sim Dashboard, Case Wizard, Result Viewer, Parametric View)
+- Lipgloss 테마/스타일링 (슬로싱 브랜딩, AdaptiveColor)
 - pubsub 이벤트 연결 (Agent Core ↔ TUI)
-- 이미지/애니메이션 인라인 렌더링
+- 이미지/애니메이션 인라인 렌더링 (Sixel/Kitty 프로토콜)
 
-**CC 플러그인:**
+**BubbleTea 컴포넌트 패턴:**
+```go
+// Model struct with Init/Update/View
+type SimDashboard struct {
+    jobs     []JobStatus
+    spinner  spinner.Model
+    viewport viewport.Model
+    width    int
+    height   int
+}
 
-| 플러그인 | 출처 | 용도 |
-|---------|------|------|
-| `gopls-lsp` | Official marketplace | Go 코드 인텔리전스 (타입 에러 즉시 감지) |
-| `github` | Official marketplace | PR 생성, 리뷰 자동화 |
-| `commit-commands` | Official marketplace | Git 커밋 워크플로우 |
+func (m SimDashboard) Init() tea.Cmd {
+    return tea.Batch(m.spinner.Tick, m.subscribeJobEvents())
+}
 
-**MCP 서버:**
+func (m SimDashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+    switch msg := msg.(type) {
+    case tea.WindowSizeMsg:
+        m.width, m.height = msg.Width, msg.Height
+    case JobUpdateMsg:
+        m.jobs = updateJobList(m.jobs, msg)
+    }
+    // 컴포넌트 위임
+    var cmd tea.Cmd
+    m.spinner, cmd = m.spinner.Update(msg)
+    return m, cmd
+}
 
-| MCP | 용도 |
-|-----|------|
-| `context7` | BubbleTea, Lipgloss, Bubbles 최신 API 참조 |
-
-**커스텀 Sub-agent:**
-```yaml
-# .claude/agents/tui-test-runner.md
----
-name: tui-test-runner
-description: Run TUI component tests after every edit
-tools: Bash, Read, Glob
-model: haiku
----
-After code changes in internal/tui/, run:
-go test ./internal/tui/... -v
-Report failures concisely with file:line and fix suggestions.
+func (m SimDashboard) View() string {
+    return lipgloss.JoinVertical(lipgloss.Left,
+        m.renderHeader(),
+        m.renderJobList(),
+        m.spinner.View(),
+    )
+}
 ```
 
-**커스텀 Skill:**
-```
-# .claude/commands/bubbletea-component.md
-Create a new BubbleTea component following the project pattern:
-- Model struct with Init/Update/View
-- Lipgloss adaptive styling
-- pubsub event subscription
-- teatest unit test
-Component name: $ARGUMENTS
-```
+**CC 플러그인:** gopls-lsp, github, commit-commands
+**MCP 서버:** context7 (BubbleTea, Lipgloss, Bubbles API 참조)
+**Sub-agent:** `tui-test-runner` — 편집 후 자동 테스트 (haiku)
+**Slash command:** `/bubbletea-component <name>` — 컴포넌트 스캐폴딩
 
 ---
 
-### 🧪 Teammate 2: `qa-tester` — UX 기획 & 제품 테스터
+### Teammate 2: `qa-tester` — UX 기획 & 제품 테스터
 
 **담당 영역:** `tests/`, `docs/scenarios/`
 **worktree 브랜치:** `feat/qa`
-**권한:** Read-only (코드 수정 금지, 테스트/문서만 작성)
+**mode:** `plan` (테스트/시나리오 작성 전 Lead 승인 필수)
+**권한:** 소스 코드 Read-only (테스트·문서만 작성)
 
 **하는 일:**
-- BDD 시나리오 설계 (비전문가 관점)
-- E2E 테스트 작성 + 실행
+- BDD 시나리오 설계 (CFD 비전문가 관점)
+- Go E2E 테스트 작성 + 실행
 - UX 플로우 검증 (시나리오대로 구현됐는지)
 - CFD 용어 → 쉬운 말 변환 검증
 - 버그 발견 시 GitHub Issue 생성
 
-**CC 플러그인:**
+**시나리오 형식:**
+```gherkin
+# docs/scenarios/simple_sloshing.feature
+Feature: 단순 슬로싱 해석
 
-| 플러그인 | 출처 | 용도 |
-|---------|------|------|
-| `gopls-lsp` | Official | Go 테스트 코드 인텔리전스 |
-| `github` | Official | Issue 생성, PR 리뷰 |
-| `pr-review-toolkit` | Official | PR 품질 리뷰 자동화 |
+  Scenario: 비전문가가 자연어로 해석 요청
+    Given 사용자가 slosim-agent를 실행한다
+    When "LNG 탱크 슬로싱 해석해줘"라고 입력한다
+    Then AI가 탱크 치수를 제안한다
+    And 제안에 CFD 전문 용어가 포함되지 않는다
+    And 사용자에게 확인을 요청한다
 
-**MCP 서버:**
-
-| MCP | 용도 |
-|-----|------|
-| `context7` | Go testing, testify 문서 참조 |
-
-**커스텀 Sub-agent:**
-```yaml
-# .claude/agents/scenario-validator.md
----
-name: scenario-validator
-description: Validate UX scenarios against implementation
-tools: Read, Bash, Glob, Grep
-model: sonnet
----
-You are a product tester who has NO CFD knowledge.
-Read docs/scenarios/*.feature files.
-For each scenario, verify the implementation handles all steps.
-Flag any error message or UI text that contains CFD jargon
-without explanation. Report as GitHub issues.
+  Scenario: 시뮬레이션 실패 시 알기 쉬운 에러 메시지
+    Given 사용자가 잘못된 조건으로 해석을 요청한다
+    When 시뮬레이션이 발산한다
+    Then "시뮬레이션이 불안정해졌습니다" 메시지를 보여준다
+    And 가능한 원인과 해결 방법을 쉬운 말로 안내한다
 ```
 
-**커스텀 Skill:**
-```
-# .claude/commands/write-scenario.md
-Write a BDD scenario for slosim-agent from a NON-EXPERT user perspective.
-Rules:
-- User has zero CFD knowledge
-- All interactions are natural language Korean
-- Include error cases (invalid input, simulation failure)
-- Verify error messages are understandable
-Feature: $ARGUMENTS
-```
+**CC 플러그인:** gopls-lsp, github, pr-review-toolkit
+**MCP 서버:** context7 (Go testing, testify 문서 참조)
+**Sub-agent:** `scenario-validator` — 시나리오 vs 구현 검증 (sonnet)
+**Slash command:** `/write-scenario <feature>` — BDD 시나리오 자동 생성
 
 ---
 
-### 🤖 Teammate 3: `agent-eng` — SLM 에이전트 엔지니어
+### Teammate 3: `agent-eng` — SLM 에이전트 엔지니어
 
-**담당 영역:** `internal/llm/`, `internal/tools/` (신규 DualSPHysics tools)
+**담당 영역:** `internal/llm/` (agent, prompt, tools)
 **worktree 브랜치:** `feat/agent-core`
+**mode:** `plan` (코드 변경 전 Lead 승인 필수)
 
 **하는 일:**
 - DualSPHysics Tool 구현 (GenCase, Solver, PartVTK, MeasureTool, pvpython)
 - Qwen3 전용 시스템 프롬프트 설계 (슬로싱 도메인 지식)
 - Agent Loop 커스텀 (sloshing-coder agent type)
-- Job Manager (백그라운드 실행 + 모니터링)
+- Job Manager (백그라운드 실행 + goroutine 모니터링)
 - 파라메트릭 스터디 오케스트레이션
 - 리포트 생성기
 
-**CC 플러그인:**
+**Tool 구현 패턴:**
+```go
+// internal/llm/tools/gencase.go
+// BaseTool 인터페이스: Info() + Run(ctx, ToolCall) -> (ToolResponse, error)
 
-| 플러그인 | 출처 | 용도 |
-|---------|------|------|
-| `gopls-lsp` | Official | Go 코드 인텔리전스 |
-| `github` | Official | PR, 코드 리뷰 |
-| `commit-commands` | Official | 커밋 워크플로우 |
+type genCaseTool struct{}
 
-**MCP 서버:**
+func (t *genCaseTool) Info() ToolInfo {
+    return ToolInfo{
+        Name:        "gencase",
+        Description: "Generate particle geometry from DualSPHysics XML case definition",
+        Parameters: map[string]any{
+            "type": "object",
+            "properties": map[string]any{
+                "case_path": map[string]any{
+                    "type":        "string",
+                    "description": "Path to XML case file (WITHOUT .xml extension)",
+                },
+                "save_path": map[string]any{
+                    "type":        "string",
+                    "description": "Output directory for generated particles",
+                },
+            },
+            "required": []string{"case_path", "save_path"},
+        },
+    }
+}
 
-| MCP | 용도 |
-|-----|------|
-| `context7` | DualSPHysics docs, Ollama Go SDK, Go concurrency 패턴 |
-| `docker-mcp` | Docker 컨테이너 제어 (DualSPHysics 빌드/실행/로그) |
-
-**커스텀 Sub-agent:**
-```yaml
-# .claude/agents/dsph-xml-validator.md
----
-name: dsph-xml-validator
-description: Validate DualSPHysics XML case files
-tools: Read, Bash
-model: haiku
----
-Validate XML files for DualSPHysics GenCase:
-1. All values must be in attributes (never text content)
-2. File path must NOT end in .xml (GenCase auto-appends)
-3. Required sections: casedef, execution, geometry
-4. Gravity, dp, kernel, viscotreatment must be present
-Run: xmllint --noout <file> for well-formedness check.
+func (t *genCaseTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error) {
+    // docker compose run --rm dsph GenCase <case_path> -save:<save_path>
+    // GenCase 자동 .xml 추가 — 경로에 .xml 포함하지 않음
+}
 ```
 
-```yaml
-# .claude/agents/prompt-optimizer.md
----
-name: prompt-optimizer
-description: Optimize system prompts for Qwen3 SLM
-tools: Read, Write, Bash
-model: sonnet
----
-You are an SLM prompt engineering specialist for Qwen3 (32B/8B).
-Constraints:
-- Total system prompt must fit in 8K tokens
-- Use structured output (JSON mode) for tool calls
-- Few-shot examples must be token-efficient
-- Korean+English domain terms mixed
-- Chain-of-Thought for physics reasoning
-Test prompts against Ollama locally before finalizing.
-```
-
-**커스텀 Skill:**
-```
-# .claude/commands/implement-tool.md
-Implement a new DualSPHysics tool following the OpenCode Tool interface:
-1. Create internal/llm/tools/<name>.go
-2. Implement BaseTool.Info() with name, description, input schema
-3. Implement Execute(ctx, input) -> ToolResponse
-4. All execution via Docker (docker compose run --rm dsph ...)
-5. Create internal/llm/tools/<name>_test.go (TDD: test first)
-6. Register in tools/tools.go
-Tool name: $ARGUMENTS
-```
+**CC 플러그인:** gopls-lsp, github, commit-commands
+**MCP 서버:** context7 (DualSPHysics docs, Ollama Go SDK), docker-mcp
+**Sub-agents:** `dsph-xml-validator` (haiku), `prompt-optimizer` (sonnet)
+**Slash command:** `/implement-tool <name>` — DualSPHysics 도구 스캐폴딩
 
 ---
 
@@ -267,7 +313,7 @@ Tool name: $ARGUMENTS
 
 ```
 main (protected — QA 통과 후 머지만)
-├── develop          ← 통합 브랜치
+├── develop          ← 통합 브랜치 (Lead가 머지)
 ├── feat/tui         ← tui-dev worktree
 ├── feat/agent-core  ← agent-eng worktree
 └── feat/qa          ← qa-tester worktree
@@ -284,84 +330,133 @@ git branch feat/tui
 git branch feat/agent-core
 git branch feat/qa
 
-# Worktree 생성 (각 Teammate용)
+# Worktree 생성 (각 Teammate용 독립 작업 디렉토리)
 git worktree add ../slosim-wt-tui feat/tui
 git worktree add ../slosim-wt-agent feat/agent-core
 git worktree add ../slosim-wt-qa feat/qa
 ```
 
-### TDD 흐름
+### TDD 흐름 (Red → Green → Refactor)
 
 ```
-1. qa-tester: 시나리오 작성 → 실패하는 E2E 테스트 작성 (RED)
-2. agent-eng: Tool 유닛 테스트 작성 → 구현 (RED → GREEN)
-3. tui-dev: UI 컴포넌트 테스트 작성 → 구현 (RED → GREEN)
-4. Lead: develop 머지 → 통합 테스트
-5. qa-tester: E2E 테스트 통과 확인 (GREEN)
-6. Lead: main 머지
+1. qa-tester   → 시나리오 작성 → 실패하는 E2E 테스트 작성 (RED)
+2. agent-eng   → Tool 유닛 테스트 작성 → 구현 (RED → GREEN)
+3. tui-dev     → UI 컴포넌트 teatest 작성 → 구현 (RED → GREEN)
+4. Lead        → develop 머지 → `go test ./...` 통합 테스트
+5. qa-tester   → E2E 테스트 전체 통과 확인 (GREEN)
+6. Lead        → main 머지 (PR + review)
 ```
 
 ### 의존성 그래프 (빌드 순서)
 
 ```
-Phase 1 (병렬):
-  agent-eng: Tools (gencase, solver, partvtk, measuretool, pvpython)
-  qa-tester: 시나리오 문서 + 실패 테스트
-  tui-dev: 기존 OpenCode TUI 분석 + 테마 프로토타입
-
-Phase 2 (agent-eng 선행):
-  agent-eng: Job Manager + Result Store + Agent Loop
-  tui-dev: Sim Dashboard + Case Wizard (Agent Core 이벤트 구독)
-  qa-tester: Tool 유닛 테스트 리뷰
-
-Phase 3 (통합):
-  Lead: develop 머지
-  tui-dev: Result Viewer + Parametric View
-  agent-eng: Report Generator + 프롬프트 최적화
-  qa-tester: E2E 시나리오 검증
-
-Phase 4 (폴리시):
-  tui-dev: UX 개선 (qa-tester 피드백 반영)
-  agent-eng: Qwen3 32b vs 8b 벤치마크
-  qa-tester: 전체 회귀 테스트 + 논문 데모 검증
+Phase 1 — Foundation (모두 병렬)
+┌──────────────────────────────────────────────────────────────┐
+│ agent-eng                                                    │
+│ ├── gencase tool + test                                      │
+│ ├── solver tool + test                                       │
+│ └── partvtk/measuretool/isosurface tools + tests             │
+│                                                              │
+│ qa-tester                                                    │
+│ ├── docs/scenarios/*.feature (BDD 시나리오 4건)              │
+│ └── tests/e2e/scenario_simple_sloshing_test.go (RED)         │
+│                                                              │
+│ tui-dev                                                      │
+│ ├── 기존 OpenCode TUI 구조 분석                              │
+│ └── internal/tui/theme/sloshing.go (슬로싱 브랜드 테마)      │
+└──────────────────────────────────────────────────────────────┘
+          │
+          ▼
+Phase 2 — Core Integration (agent-eng 선행 의존)
+┌──────────────────────────────────────────────────────────────┐
+│ agent-eng                                                    │
+│ ├── job_manager.go (백그라운드 실행 + pubsub events)         │
+│ ├── sloshing-coder agent type + prompt                       │
+│ └── pvpython tool + test                                     │
+│                                                              │
+│ tui-dev (agent-eng의 pubsub events 필요)                     │
+│ ├── internal/tui/components/sim/ (Sim Dashboard)             │
+│ └── internal/tui/components/wizard/ (Case Wizard)            │
+│                                                              │
+│ qa-tester                                                    │
+│ └── Tool 유닛 테스트 커버리지 리뷰 → Issue 생성              │
+└──────────────────────────────────────────────────────────────┘
+          │
+          ▼
+Phase 3 — Feature Complete (통합)
+┌──────────────────────────────────────────────────────────────┐
+│ Lead: develop 머지 (feat/agent-core + feat/tui)              │
+│                                                              │
+│ agent-eng                                                    │
+│ ├── report.go (Markdown 리포트 생성)                         │
+│ ├── 파라메트릭 스터디 오케스트레이션                         │
+│ └── Qwen3 프롬프트 최적화 (prompt-optimizer sub-agent)       │
+│                                                              │
+│ tui-dev                                                      │
+│ ├── internal/tui/components/result/ (Result Viewer)          │
+│ └── internal/tui/components/parametric/ (Comparison View)    │
+│                                                              │
+│ qa-tester                                                    │
+│ ├── E2E 시나리오 전체 검증                                   │
+│ └── CFD 용어 검증 (scenario-validator sub-agent)             │
+└──────────────────────────────────────────────────────────────┘
+          │
+          ▼
+Phase 4 — Polish & Benchmark
+┌──────────────────────────────────────────────────────────────┐
+│ tui-dev: UX 개선 (qa-tester 피드백 반영)                     │
+│ agent-eng: Qwen3 32b vs 8b 벤치마크                          │
+│ qa-tester: 전체 회귀 테스트 + 논문 데모 검증                 │
+│ Lead: main 머지 → v1.0 태그                                  │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-### Hooks (품질 게이트)
+---
+
+## 4. Hooks (품질 게이트)
+
+`.claude/settings.json`에 정의. CC의 hook 시스템으로 편집/커밋 시 자동 품질 검증.
 
 ```json
-// .claude/settings.json
 {
   "hooks": {
-    "TeammateIdle": {
-      "command": "go test ./... 2>&1 | tail -5",
-      "description": "Run tests when teammate finishes",
-      "exitCode2Action": "block"
-    },
-    "PostEdit": {
-      "command": "go vet ./...",
-      "description": "Vet after every edit"
-    }
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "cd /home/imgyu/workspace/02_active/slosim-agent && go vet ./...",
+        "description": "go vet after every code edit"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "command": "echo \"$TOOL_INPUT\" | grep -qvE '(rm -rf|sudo|/mnt/storage)' || (echo 'BLOCKED: dangerous command' && exit 1)",
+        "description": "Block dangerous bash commands"
+      }
+    ]
   }
 }
 ```
 
 ---
 
-## 4. Agent Team 실행 방법
+## 5. Agent Team 실행 방법
 
-### 환경 설정
+### 1단계: 환경 설정
 
 ```bash
-# CC settings (~/.claude/settings.json)
-{
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  },
-  "teammateMode": "tmux"
-}
+# 전역 CC settings에 Agent Teams 활성화 (~/.claude/settings.json)
+# "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" }
+
+# Git worktree 생성
+cd ~/workspace/02_active/slosim-agent
+git branch develop && git branch feat/tui && git branch feat/agent-core && git branch feat/qa
+git worktree add ../slosim-wt-tui feat/tui
+git worktree add ../slosim-wt-agent feat/agent-core
+git worktree add ../slosim-wt-qa feat/qa
 ```
 
-### 팀 시작 프롬프트
+### 2단계: 팀 시작 프롬프트
 
 ```
 slosim-agent 프로젝트를 개발할 Agent Team을 구성해줘:
@@ -369,78 +464,91 @@ slosim-agent 프로젝트를 개발할 Agent Team을 구성해줘:
 1. tui-dev: BubbleTea TUI 개발 담당.
    - worktree: ~/workspace/02_active/slosim-wt-tui (feat/tui)
    - 영역: internal/tui/, internal/app/
-   - 플러그인: gopls-lsp, github, commit-commands
-   - MCP: context7
+   - mode: plan (변경 전 승인 필수)
 
 2. qa-tester: UX 시나리오 설계 + E2E 테스트 전담.
    - worktree: ~/workspace/02_active/slosim-wt-qa (feat/qa)
-   - 영역: tests/, docs/scenarios/ (코드 수정 금지)
-   - 플러그인: gopls-lsp, github, pr-review-toolkit
-   - MCP: context7
+   - 영역: tests/, docs/scenarios/ (소스 코드 수정 금지)
+   - mode: plan
 
 3. agent-eng: SLM 에이전트 + DualSPHysics Tool 개발.
    - worktree: ~/workspace/02_active/slosim-wt-agent (feat/agent-core)
-   - 영역: internal/llm/, internal/tools/
-   - 플러그인: gopls-lsp, github, commit-commands
-   - MCP: context7, docker-mcp
+   - 영역: internal/llm/
+   - mode: plan
 
 나(Lead)는 delegate mode로 조율만 한다.
 TDD: qa-tester가 먼저 실패 테스트 작성 → 개발자들이 구현.
 각 teammate는 plan approval 필수.
 ```
 
+### 3단계: Lead 워크플로우
+
+```
+# 태스크 생성 → 분배
+TaskCreate(subject="GenCase tool 구현", description="...", activeForm="Implementing GenCase tool")
+TaskUpdate(taskId="1", owner="agent-eng")
+
+# 진행 확인
+TaskList()
+
+# Teammate에 메시지
+SendMessage(type="message", recipient="tui-dev", content="Phase 2 시작. Sim Dashboard부터.", summary="Phase 2 kickoff")
+
+# Plan 승인 (teammate가 ExitPlanMode 호출 시)
+SendMessage(type="plan_approval_response", recipient="tui-dev", request_id="...", approve=true)
+
+# 작업 완료 후 셧다운
+SendMessage(type="shutdown_request", recipient="tui-dev", content="Phase 완료, 셧다운")
+```
+
 ---
 
-## 5. 플러그인/스킬 요약 매트릭스
+## 6. 플러그인/스킬 매트릭스
 
 | | tui-dev | qa-tester | agent-eng |
 |---|---|---|---|
-| **gopls-lsp** | ✅ | ✅ | ✅ |
-| **github** | ✅ | ✅ (Issue 생성) | ✅ |
-| **commit-commands** | ✅ | — | ✅ |
-| **pr-review-toolkit** | — | ✅ | — |
-| **Context7 MCP** | ✅ (BubbleTea) | ✅ (testing) | ✅ (DSPH, Ollama) |
-| **docker-mcp** | — | — | ✅ |
-| **Sub-agent: test-runner** | ✅ | — | — |
-| **Sub-agent: scenario-validator** | — | ✅ | — |
-| **Sub-agent: xml-validator** | — | — | ✅ |
-| **Sub-agent: prompt-optimizer** | — | — | ✅ |
-| **Skill: /bubbletea-component** | ✅ | — | — |
-| **Skill: /write-scenario** | — | ✅ | — |
-| **Skill: /implement-tool** | — | — | ✅ |
-| **코드 수정 권한** | tui/ only | 없음 (Read-only) | llm/, tools/ only |
+| **gopls-lsp** | Y | Y | Y |
+| **github** | Y | Y (Issue) | Y |
+| **commit-commands** | Y | — | Y |
+| **pr-review-toolkit** | — | Y | — |
+| **Context7 MCP** | Y (BubbleTea) | Y (testing) | Y (DSPH, Ollama) |
+| **docker-mcp** | — | — | Y |
+| **Agent: tui-test-runner** | Y | — | — |
+| **Agent: scenario-validator** | — | Y | — |
+| **Agent: dsph-xml-validator** | — | — | Y |
+| **Agent: prompt-optimizer** | — | — | Y |
+| **Cmd: /bubbletea-component** | Y | — | — |
+| **Cmd: /write-scenario** | — | Y | — |
+| **Cmd: /implement-tool** | — | — | Y |
+| **코드 수정 권한** | tui/ only | Read-only | llm/ only |
 
 ---
 
-## 6. 파일 배치 계획
+## 7. 파일 배치
 
 ```
 slosim-agent/
 ├── .claude/
-│   ├── settings.json          ← hooks, team config
+│   ├── settings.json               ← hooks, permissions
+│   ├── settings.local.json         ← MCP 권한 (gitignore)
 │   ├── agents/
-│   │   ├── tui-test-runner.md
-│   │   ├── scenario-validator.md
-│   │   ├── dsph-xml-validator.md
-│   │   └── prompt-optimizer.md
+│   │   ├── tui-test-runner.md      ← TUI 테스트 자동 실행
+│   │   ├── scenario-validator.md   ← 시나리오 vs 구현 검증
+│   │   ├── dsph-xml-validator.md   ← XML 케이스 검증
+│   │   └── prompt-optimizer.md     ← Qwen3 프롬프트 최적화
 │   └── commands/
-│       ├── bubbletea-component.md
-│       ├── write-scenario.md
-│       └── implement-tool.md
-├── .mcp.json                  ← context7, docker-mcp
-├── CLAUDE.md                  ← 전체 프로젝트 컨텍스트
-├── PRD.md
-├── ARCHITECTURE.md
-├── internal/
-│   ├── tui/                   ← tui-dev 영역
-│   ├── llm/
-│   │   ├── agent/             ← agent-eng 영역
-│   │   ├── prompt/            ← agent-eng 영역
-│   │   └── tools/             ← agent-eng 영역 (DSPH tools)
-│   └── ...
-├── tests/                     ← qa-tester 영역
-├── docs/scenarios/            ← qa-tester 영역
-├── cases/                     ← XML 케이스 템플릿
-├── Dockerfile
-└── docker-compose.yml
+│       ├── bubbletea-component.md  ← /bubbletea-component <name>
+│       ├── write-scenario.md       ← /write-scenario <feature>
+│       └── implement-tool.md       ← /implement-tool <name>
+├── .mcp.json                       ← context7 MCP 서버
+├── CLAUDE.md                       ← CC 프로젝트 컨텍스트
+├── AGENTS.md                       ← 제품 에이전트 개요
+├── PRD.md                          ← 제품 요구사항
+├── ARCHITECTURE.md                 ← 이 파일
+├── internal/                       ← Go 소스
+├── tests/                          ← E2E 테스트
+├── docs/scenarios/                 ← BDD 시나리오
+├── cases/                          ← DualSPHysics XML 템플릿
+├── Dockerfile                      ← GPU Docker 이미지
+└── docker-compose.yml              ← NVIDIA runtime
 ```
