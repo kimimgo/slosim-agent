@@ -38,8 +38,9 @@ type managedJob struct {
 }
 
 type jobManagerTool struct {
-	mu         sync.Mutex
-	currentJob *managedJob
+	mu   sync.Mutex
+	jobs map[string]*managedJob // JOB-02: Support multiple jobs
+	maxConcurrent int
 }
 
 const (
@@ -49,13 +50,17 @@ const (
 사용 가능한 액션:
 - submit: 새 Job 제출 (command, work_dir 필수). 즉시 Job ID 반환.
 - status: Job 상태 조회 (job_id 필수). 상태, 진행률, 경과 시간 반환.
+- list: 모든 Job 목록 조회.
 - cancel: 실행 중인 Job 취소 (job_id 필수).
 
-v0.1 제한: 동시에 하나의 Job만 실행 가능합니다.`
+v0.3: 동시 최대 3개 Job 실행 가능합니다.`
 )
 
 func NewJobManagerTool() BaseTool {
-	return &jobManagerTool{}
+	return &jobManagerTool{
+		jobs:          make(map[string]*managedJob),
+		maxConcurrent: 3, // v0.3: Allow 3 concurrent jobs
+	}
 }
 
 func (j *jobManagerTool) Info() ToolInfo {
@@ -98,10 +103,12 @@ func (j *jobManagerTool) Run(ctx context.Context, call ToolCall) (ToolResponse, 
 		return j.handleSubmit(ctx, params)
 	case "status":
 		return j.handleStatus(params)
+	case "list":
+		return j.handleList()
 	case "cancel":
 		return j.handleCancel(params)
 	default:
-		return NewTextErrorResponse(fmt.Sprintf("알 수 없는 액션입니다: %s (사용 가능: submit, status, cancel)", params.Action)), nil
+		return NewTextErrorResponse(fmt.Sprintf("알 수 없는 액션입니다: %s (사용 가능: submit, status, list, cancel)", params.Action)), nil
 	}
 }
 
@@ -113,9 +120,16 @@ func (j *jobManagerTool) handleSubmit(_ context.Context, params JobManagerParams
 	j.mu.Lock()
 	defer j.mu.Unlock()
 
-	// v0.1: single job only
-	if j.currentJob != nil && (j.currentJob.Status == JobStatusRunning || j.currentJob.Status == JobStatusPending) {
-		return NewTextErrorResponse("이미 실행 중인 작업이 있습니다. 현재 작업이 완료될 때까지 기다려주세요"), nil
+	// v0.3: Check concurrent job limit
+	runningCount := 0
+	for _, job := range j.jobs {
+		if job.Status == JobStatusRunning || job.Status == JobStatusPending {
+			runningCount++
+		}
+	}
+
+	if runningCount >= j.maxConcurrent {
+		return NewTextErrorResponse(fmt.Sprintf("동시 실행 가능한 Job 수(%d)를 초과했습니다. 일부 Job이 완료될 때까지 기다려주세요", j.maxConcurrent)), nil
 	}
 
 	jobID := generateJobID()
@@ -128,7 +142,7 @@ func (j *jobManagerTool) handleSubmit(_ context.Context, params JobManagerParams
 		StartTime: time.Now(),
 		cancel:    cancel,
 	}
-	j.currentJob = job
+	j.jobs[jobID] = job
 
 	// Launch in background goroutine
 	go func() {
@@ -171,19 +185,47 @@ func (j *jobManagerTool) handleStatus(params JobManagerParams) (ToolResponse, er
 	j.mu.Lock()
 	defer j.mu.Unlock()
 
-	if j.currentJob == nil || j.currentJob.ID != params.JobID {
+	job, exists := j.jobs[params.JobID]
+	if !exists {
 		return NewTextErrorResponse(fmt.Sprintf("Job을 찾을 수 없습니다: %s", params.JobID)), nil
 	}
 
-	elapsed := time.Since(j.currentJob.StartTime).Round(time.Second)
+	elapsed := time.Since(job.StartTime).Round(time.Second)
 	result, _ := json.Marshal(map[string]string{
-		"job_id":       j.currentJob.ID,
-		"status":       string(j.currentJob.Status),
+		"job_id":       job.ID,
+		"status":       string(job.Status),
 		"elapsed_time": elapsed.String(),
-		"error":        j.currentJob.Error,
+		"error":        job.Error,
 	})
 
 	return NewTextResponse(string(result)), nil
+}
+
+func (j *jobManagerTool) handleList() (ToolResponse, error) {
+	j.mu.Lock()
+	defer j.mu.Unlock()
+
+	type jobSummary struct {
+		JobID   string `json:"job_id"`
+		Status  string `json:"status"`
+		Elapsed string `json:"elapsed_time"`
+	}
+
+	summaries := []jobSummary{}
+	for _, job := range j.jobs {
+		elapsed := time.Since(job.StartTime).Round(time.Second)
+		if job.Status == JobStatusCompleted || job.Status == JobStatusFailed {
+			elapsed = job.EndTime.Sub(job.StartTime).Round(time.Second)
+		}
+		summaries = append(summaries, jobSummary{
+			JobID:   job.ID,
+			Status:  string(job.Status),
+			Elapsed: elapsed.String(),
+		})
+	}
+
+	result, _ := json.MarshalIndent(summaries, "", "  ")
+	return NewTextResponse(fmt.Sprintf("총 %d개의 Job이 등록되어 있습니다:\n%s", len(summaries), string(result))), nil
 }
 
 func (j *jobManagerTool) handleCancel(params JobManagerParams) (ToolResponse, error) {
@@ -194,14 +236,15 @@ func (j *jobManagerTool) handleCancel(params JobManagerParams) (ToolResponse, er
 	j.mu.Lock()
 	defer j.mu.Unlock()
 
-	if j.currentJob == nil || j.currentJob.ID != params.JobID {
+	job, exists := j.jobs[params.JobID]
+	if !exists {
 		return NewTextErrorResponse(fmt.Sprintf("Job을 찾을 수 없습니다: %s", params.JobID)), nil
 	}
 
-	if j.currentJob.Status != JobStatusRunning {
-		return NewTextErrorResponse(fmt.Sprintf("실행 중인 Job만 취소할 수 있습니다 (현재 상태: %s)", j.currentJob.Status)), nil
+	if job.Status != JobStatusRunning {
+		return NewTextErrorResponse(fmt.Sprintf("실행 중인 Job만 취소할 수 있습니다 (현재 상태: %s)", job.Status)), nil
 	}
 
-	j.currentJob.cancel()
+	job.cancel()
 	return NewTextResponse(fmt.Sprintf("Job %s 취소가 요청되었습니다", params.JobID)), nil
 }

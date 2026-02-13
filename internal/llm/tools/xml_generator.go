@@ -18,7 +18,10 @@ type XMLGeneratorParams struct {
 	DP          float64 `json:"dp"`
 	TimeMax     float64 `json:"time_max"`
 	OutPath     string  `json:"out_path"`
-	Dimension   string  `json:"dimension,omitempty"` // "2D" or "3D" (default: "3D")
+	Dimension   string  `json:"dimension,omitempty"`  // "2D" or "3D" (default: "3D")
+	Geometry    string  `json:"geometry,omitempty"`   // "rectangular", "cylindrical", "l_shaped"
+	ExcitationType string `json:"excitation_type,omitempty"` // "sinusoidal", "seismic", "custom"
+	SeismicFile string `json:"seismic_file,omitempty"` // EXC-01: Path to seismic wave file
 }
 
 type xmlGeneratorTool struct{}

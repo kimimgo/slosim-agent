@@ -20,6 +20,7 @@ type PvpythonParams struct {
 	Resolution   []int    `json:"resolution,omitempty"`
 	OnlyFluid    *bool    `json:"only_fluid,omitempty"`
 	RenderMode   string   `json:"render_mode,omitempty"` // "snapshot" or "animation"
+	FPS          int      `json:"fps,omitempty"`         // ANI-01: Frames per second for animation
 }
 
 type pvpythonTool struct{}
@@ -135,6 +136,9 @@ func (p *pvpythonTool) Run(ctx context.Context, call ToolCall) (ToolResponse, er
 	}
 	if params.RenderMode == "" {
 		params.RenderMode = "snapshot"
+	}
+	if params.FPS == 0 {
+		params.FPS = 30 // ANI-01: Default 30 FPS for animations
 	}
 
 	// Generate pvpython script
