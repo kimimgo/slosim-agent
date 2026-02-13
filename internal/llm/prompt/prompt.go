@@ -16,7 +16,8 @@ func GetAgentPrompt(agentName config.AgentName, provider models.ModelProvider) s
 	basePrompt := ""
 	switch agentName {
 	case config.AgentCoder:
-		basePrompt = CoderPrompt(provider)
+		// Use sloshing domain-specific prompt for v0.1
+		basePrompt = SloshingCoderPrompt(provider)
 	case config.AgentTitle:
 		basePrompt = TitlePrompt(provider)
 	case config.AgentTask:

@@ -36,6 +36,14 @@ func CoderAgentTools(
 			tools.NewPatchTool(lspClients, permissions, history),
 			tools.NewWriteTool(lspClients, permissions, history),
 			NewAgentTool(sessions, messages, lspClients),
+			// DualSPHysics sloshing simulation tools (v0.1)
+			tools.NewXMLGeneratorTool(),
+			tools.NewGenCaseTool(),
+			tools.NewSolverTool(),
+			tools.NewJobManagerTool(),
+			tools.NewPartVTKTool(),
+			tools.NewMeasureToolTool(),
+			tools.NewReportTool(),
 		}, otherTools...,
 	)
 }
