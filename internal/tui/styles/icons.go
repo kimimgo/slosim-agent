@@ -11,4 +11,9 @@ const (
 	SpinnerIcon  string = "..."
 	LoadingIcon  string = "⟳"
 	DocumentIcon string = "🖼"
+
+	// Simulation status icons
+	SimRunningIcon   string = "⟳"
+	SimCompletedIcon string = "✓"
+	SimFailedIcon    string = "✖"
 )

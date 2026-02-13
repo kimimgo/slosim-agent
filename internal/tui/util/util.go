@@ -48,6 +48,22 @@ type (
 		TTL  time.Duration
 	}
 	ClearStatusMsg struct{}
+
+	// Job status messages for DualSPHysics simulation pipeline
+	JobUpdateMsg struct {
+		JobID       string
+		ProgressPct int
+		ETA         string // e.g. "약 2분 남음"
+	}
+	JobCompletedMsg struct {
+		JobID     string
+		ResultDir string // e.g. "simulations/20260213_143022/"
+	}
+	JobFailedMsg struct {
+		JobID   string
+		Message string // 한국어 에러 메시지
+	}
+	ClearJobStatusMsg struct{}
 )
 
 func Clamp(v, low, high int) int {
