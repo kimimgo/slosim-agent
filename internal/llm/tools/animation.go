@@ -125,7 +125,7 @@ func (a *animationTool) Run(ctx context.Context, call ToolCall) (ToolResponse, e
 	}
 
 	// Validate data directory
-	if isPathClearlyInvalid(params.DataDir) {
+	if isPathClearlyInvalid(params.DataDir) || strings.Contains(params.DataDir, "..") {
 		return NewTextErrorResponse(fmt.Sprintf("데이터 디렉토리 경로가 올바르지 않습니다: %s", params.DataDir)), nil
 	}
 
@@ -203,6 +203,37 @@ func (a *animationTool) Run(ctx context.Context, call ToolCall) (ToolResponse, e
 }
 
 func generateAnimationScript(params AnimationParams, onlyFluid bool) string {
+	// Apply defaults for safe direct calls
+	if len(params.Variables) == 0 {
+		params.Variables = []string{"Press"}
+	}
+	if params.Colormap == "" {
+		params.Colormap = "Blue to Red Rainbow"
+	}
+	if params.ViewAngle == "" {
+		params.ViewAngle = "XZ"
+	}
+	if len(params.Resolution) < 2 {
+		params.Resolution = []int{1920, 1080}
+	}
+	if params.FPS == 0 {
+		params.FPS = 30
+	}
+
+	// Build fluid filter block conditionally
+	var filterBlock string
+	if onlyFluid {
+		filterBlock = `# Filter by fluid particles
+threshold = Threshold(Input=reader)
+threshold.Scalars = ['POINTS', 'Idp']
+threshold.ThresholdRange = [0, 999999]  # Fluid particles typically have lower IDs
+UpdatePipeline()
+display = Show(threshold)`
+	} else {
+		filterBlock = `# Show all particles
+display = Show(reader)`
+	}
+
 	// More complete pvpython script for animation
 	return fmt.Sprintf(`#!/usr/bin/env pvpython
 # Auto-generated ParaView animation script (ANI-01)
@@ -224,15 +255,7 @@ if startTime == 0 and endTime == 0:
     startTime = timesteps[0]
     endTime = timesteps[-1]
 
-# Filter by fluid (if requested)
-if %v:
-    threshold = Threshold(Input=reader)
-    threshold.Scalars = ['POINTS', 'Idp']
-    threshold.ThresholdRange = [0, 999999]  # Fluid particles typically have lower IDs
-    UpdatePipeline()
-    display = Show(threshold)
-else:
-    display = Show(reader)
+%s
 
 # Color by variable
 ColorBy(display, ('POINTS', '%s'))
@@ -269,7 +292,7 @@ print("Animation saved to /data/output/%s")
 `,
 		params.StartTime,
 		params.EndTime,
-		onlyFluid,
+		filterBlock,
 		params.Variables[0],
 		params.Variables[0],
 		params.Colormap,

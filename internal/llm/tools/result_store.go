@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -284,18 +285,47 @@ func (r *resultStoreTool) handleCompare(params ResultStoreParams) (ToolResponse,
 		return NewTextErrorResponse("비교할 result_id 목록을 쉼표로 구분하여 지정해주세요"), nil
 	}
 
-	// Split result IDs
-	ids := []string{}
-	for _, id := range []rune(params.ResultID) {
-		if id != ',' && id != ' ' {
-			ids = append(ids, string(id))
+	// Split result IDs by comma
+	rawIDs := strings.Split(params.ResultID, ",")
+	ids := make([]string, 0, len(rawIDs))
+	for _, id := range rawIDs {
+		trimmed := strings.TrimSpace(id)
+		if trimmed != "" {
+			ids = append(ids, trimmed)
 		}
 	}
 
-	// Placeholder: In real implementation, load and compare results
+	if len(ids) < 2 {
+		return NewTextErrorResponse("비교하려면 최소 2개의 result_id가 필요합니다"), nil
+	}
+
+	// Load actual result data for comparison
+	results := make([]SimulationResult, 0, len(ids))
+	for _, id := range ids {
+		metadataPath := filepath.Join(r.storeDir, id+".json")
+		data, err := os.ReadFile(metadataPath)
+		if err != nil {
+			return NewTextErrorResponse(fmt.Sprintf("결과를 찾을 수 없습니다: %s", id)), nil
+		}
+
+		var result SimulationResult
+		if err := json.Unmarshal(data, &result); err != nil {
+			return NewTextErrorResponse(fmt.Sprintf("메타데이터 파싱 실패: %s", id)), nil
+		}
+		results = append(results, result)
+	}
+
 	compareMsg := fmt.Sprintf("결과 비교 (PARA-03):\n")
-	compareMsg += fmt.Sprintf("비교 대상 ID 수: %d\n", len(ids))
-	compareMsg += "비교 리포트 생성 기능은 향후 구현 예정입니다.\n"
+	compareMsg += fmt.Sprintf("비교 대상 ID 수: %d\n\n", len(ids))
+
+	for _, result := range results {
+		compareMsg += fmt.Sprintf("- %s (%s): 상태=%s, 소요시간=%.1fs\n",
+			result.Name, result.ID, result.Status, result.Duration)
+		if len(result.Parameters) > 0 {
+			paramsJSON, _ := json.Marshal(result.Parameters)
+			compareMsg += fmt.Sprintf("  파라미터: %s\n", string(paramsJSON))
+		}
+	}
 
 	return NewTextResponse(compareMsg), nil
 }

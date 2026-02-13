@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -247,17 +250,23 @@ func generateCombinations(variables []ParametricVariable) []map[string]float64 {
 }
 
 // modifyBaseCase applies parameter modifications to base case XML.
+// Supports two modes:
+// 1. Template placeholders: {{param_name}} → value
+// 2. XML attribute replacement: <param_name value="old"/> → <param_name value="new"/>
 func modifyBaseCase(baseCasePath string, params map[string]float64) string {
-	// Placeholder: In real implementation, parse XML and modify parameters
 	baseContent, _ := os.ReadFile(baseCasePath)
 	modified := string(baseContent)
 
-	// Example: Replace fill_ratio parameter (simple string substitution)
 	for name, value := range params {
+		valueStr := strconv.FormatFloat(value, 'f', -1, 64)
+
+		// 1. Replace template placeholders: {{name}} → value
 		placeholder := fmt.Sprintf("{{%s}}", name)
-		modified = fmt.Sprintf("%s\n<!-- Parameter: %s = %.3f -->\n", modified, name, value)
-		// In real implementation, use XML parsing to modify specific elements
-		_ = placeholder // Avoid unused variable warning
+		modified = strings.ReplaceAll(modified, placeholder, valueStr)
+
+		// 2. Replace XML attribute values: <name value="old" /> → <name value="new" />
+		pattern := regexp.MustCompile(fmt.Sprintf(`(<%s\s+value=")([^"]*)(")`, regexp.QuoteMeta(name)))
+		modified = pattern.ReplaceAllString(modified, fmt.Sprintf("${1}%s${3}", valueStr))
 	}
 
 	return modified
