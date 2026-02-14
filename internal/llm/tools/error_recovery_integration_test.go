@@ -107,10 +107,11 @@ func TestErrorRecovery_Integration_Divergence(t *testing.T) {
 		tempDir := t.TempDir()
 
 		// Create Run.csv with exponentially growing energy (clear divergence)
-		csvContent := "Time,TotalMass,Energy\n"
+		// DualSPHysics format: semicolon separator, # header prefix
+		csvContent := "#Time;TotalSteps;Nparticles;Nfloat;Nbound;PartOut;EnergyKin;EnergyPot\n"
 		energy := 100.0
 		for i := 0; i < 200; i++ {
-			csvContent += fmt.Sprintf("%.3f,1000,%.1f\n", float64(i)*0.001, energy)
+			csvContent += fmt.Sprintf("%.3f;%d;10000;8000;2000;0;%.1f;50.0\n", float64(i)*0.001, i*100, energy)
 			energy *= 1.5 // Exponential growth = divergence
 		}
 		require.NoError(t, os.WriteFile(filepath.Join(tempDir, "Run.csv"), []byte(csvContent), 0644))
@@ -131,11 +132,11 @@ func TestErrorRecovery_Integration_Divergence(t *testing.T) {
 	t.Run("NFR-01: stable energy does not trigger divergence", func(t *testing.T) {
 		tempDir := t.TempDir()
 
-		// Create Run.csv with stable energy
-		csvContent := "Time,TotalMass,Energy\n"
+		// Create Run.csv with stable energy (DualSPHysics semicolon format)
+		csvContent := "#Time;TotalSteps;Nparticles;Nfloat;Nbound;PartOut;EnergyKin;EnergyPot\n"
 		for i := 0; i < 100; i++ {
 			energy := 100.0 + float64(i%5)*0.1 // Small oscillation, not divergent
-			csvContent += fmt.Sprintf("%.3f,1000,%.1f\n", float64(i)*0.001, energy)
+			csvContent += fmt.Sprintf("%.3f;%d;10000;8000;2000;0;%.1f;50.0\n", float64(i)*0.001, i*100, energy)
 		}
 		require.NoError(t, os.WriteFile(filepath.Join(tempDir, "Run.csv"), []byte(csvContent), 0644))
 
@@ -166,10 +167,10 @@ func TestErrorRecovery_Integration_Divergence(t *testing.T) {
 	t.Run("RED/NFR-01: very long simulation warns about timestep count", func(t *testing.T) {
 		tempDir := t.TempDir()
 
-		// Create Run.csv with 10001+ lines
-		csvContent := "Time,TotalMass,Energy\n"
+		// Create Run.csv with 10001+ lines (DualSPHysics semicolon format)
+		csvContent := "#Time;TotalSteps;Nparticles;Nfloat;Nbound;PartOut;EnergyKin;EnergyPot\n"
 		for i := 0; i < 10001; i++ {
-			csvContent += fmt.Sprintf("%.3f,1000,100.0\n", float64(i)*0.001)
+			csvContent += fmt.Sprintf("%.3f;%d;10000;8000;2000;0;100.0;50.0\n", float64(i)*0.001, i*100)
 		}
 		require.NoError(t, os.WriteFile(filepath.Join(tempDir, "Run.csv"), []byte(csvContent), 0644))
 
@@ -316,11 +317,11 @@ func TestCheckDivergence_Integration(t *testing.T) {
 	t.Run("NFR-01: handles malformed CSV rows gracefully", func(t *testing.T) {
 		tempDir := t.TempDir()
 		csvPath := filepath.Join(tempDir, "malformed.csv")
-		content := `Time,TotalMass,Energy
-0.0,1000,100
+		content := `#Time;TotalSteps;Nparticles;Nfloat;Nbound;PartOut;EnergyKin;EnergyPot
+0.000;0;10000;8000;2000;0;100.0;50.0
 bad_row
-0.2,1000
-0.3,1000,105,extra_field
+0.200;1000
+0.300;2000;10000;8000;2000;0;105.0;50.0;extra_field
 `
 		require.NoError(t, os.WriteFile(csvPath, []byte(content), 0644))
 
@@ -333,7 +334,7 @@ bad_row
 	t.Run("NFR-01: empty CSV (header only) returns non-divergent", func(t *testing.T) {
 		tempDir := t.TempDir()
 		csvPath := filepath.Join(tempDir, "header_only.csv")
-		content := "Time,TotalMass,Energy\n"
+		content := "#Time;TotalSteps;Nparticles;Nfloat;Nbound;PartOut;EnergyKin;EnergyPot\n"
 		require.NoError(t, os.WriteFile(csvPath, []byte(content), 0644))
 
 		divergent, warnings := checkDivergence(csvPath)

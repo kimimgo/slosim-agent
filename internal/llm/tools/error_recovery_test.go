@@ -32,12 +32,12 @@ func TestErrorRecoveryTool_Run(t *testing.T) {
 		require.NoError(t, err)
 		defer os.RemoveAll(tempDir)
 
-		// Create mock Run.csv
+		// Create mock Run.csv (DualSPHysics format: semicolon separator, # header)
 		runCSVPath := filepath.Join(tempDir, "Run.csv")
-		runContent := `Time,TotalMass,Energy
-0.0,1000,100
-0.1,1000,101
-0.2,1000,102
+		runContent := `#Time;TotalSteps;Nparticles;Nfloat;Nbound;PartOut;EnergyKin;EnergyPot
+0.000;0;10000;8000;2000;0;100.0;50.0
+0.100;100;10000;8000;2000;0;101.0;51.0
+0.200;200;10000;8000;2000;0;102.0;52.0
 `
 		err = os.WriteFile(runCSVPath, []byte(runContent), 0644)
 		require.NoError(t, err)
@@ -158,10 +158,10 @@ func TestCheckDivergence(t *testing.T) {
 		defer os.RemoveAll(tempDir)
 
 		csvPath := filepath.Join(tempDir, "Run.csv")
-		csvContent := `Time,TotalMass,Energy
-0.0,1000,100
-0.1,1000,105
-0.2,1000,150
+		csvContent := `#Time;TotalSteps;Nparticles;Nfloat;Nbound;PartOut;EnergyKin;EnergyPot
+0.000;0;10000;8000;2000;0;100.0;50.0
+0.100;100;10000;8000;2000;0;105.0;52.0
+0.200;200;10000;8000;2000;0;150.0;55.0
 `
 		err = os.WriteFile(csvPath, []byte(csvContent), 0644)
 		require.NoError(t, err)

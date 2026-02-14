@@ -226,6 +226,8 @@ Job ID: %s
 
 // checkDivergence analyzes Run.csv for signs of simulation divergence.
 // Detects exponential energy growth by tracking consecutive growth ratios.
+// DualSPHysics Run.csv uses semicolon (;) separators and # comment lines.
+// Header format: #Time;TotalSteps;Nparticles;Nfloat;Nbound;PartOut;EnergyKin;EnergyPot;...
 func checkDivergence(csvPath string) (bool, []string) {
 	file, err := os.Open(csvPath)
 	if err != nil {
@@ -237,16 +239,21 @@ func checkDivergence(csvPath string) (bool, []string) {
 	warnings := []string{}
 	divergent := false
 
-	// Read header to find Energy column index
-	if !scanner.Scan() {
-		return false, warnings
-	}
-	header := scanner.Text()
-	headerFields := strings.Split(header, ",")
+	// Find EnergyKin column from header line (starts with #)
 	energyIdx := -1
-	for i, h := range headerFields {
-		if strings.TrimSpace(h) == "Energy" {
-			energyIdx = i
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "#") {
+			// Parse header: strip # prefix, split by ;
+			header := strings.TrimPrefix(line, "#")
+			headerFields := strings.Split(header, ";")
+			for i, h := range headerFields {
+				h = strings.TrimSpace(h)
+				if h == "EnergyKin" || h == "Energy" {
+					energyIdx = i
+					break
+				}
+			}
 			break
 		}
 	}
@@ -259,9 +266,13 @@ func checkDivergence(csvPath string) (bool, []string) {
 	const consecutiveLimit = 5   // 5 consecutive steps of rapid growth = divergence
 
 	for scanner.Scan() {
-		lineNum++
 		line := scanner.Text()
-		fields := strings.Split(line, ",")
+		// Skip empty lines and comment lines
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		lineNum++
+		fields := strings.Split(line, ";")
 
 		if energyIdx >= 0 && energyIdx < len(fields) {
 			energy, err := strconv.ParseFloat(strings.TrimSpace(fields[energyIdx]), 64)
