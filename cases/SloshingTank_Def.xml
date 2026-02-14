@@ -65,8 +65,8 @@
             <parameter key="CoefDtMin" value="0.05" />
             <parameter key="DtIni" value="0" />
             <parameter key="DtMin" value="0" />
-<parameter key="TimeMax" value="0.1" units_comment="seconds" />
-<parameter key="TimeOut" value="0.05" units_comment="seconds" />
+<parameter key="TimeMax" value="2.0" units_comment="seconds" />
+<parameter key="TimeOut" value="0.02" units_comment="seconds" />
 <parameter key="PartsOutMax" value="1" />
 <parameter key="DtIni" value="0.0001" />
 <parameter key="DtMin" value="0.0001" />
@@ -74,8 +74,8 @@
             <parameter key="RhopOutMin" value="700" />
             <parameter key="RhopOutMax" value="1300" />
             <simulationdomain>
-                <posmin x="default" y="default" z="default" />
-                <posmax x="default" y="default" z="default + 50%" />
+                <posmin x="default - 10%" y="default" z="default" />
+                <posmax x="default + 10%" y="default" z="default + 50%" />
             </simulationdomain>
         </parameters>
     </execution>

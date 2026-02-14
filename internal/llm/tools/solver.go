@@ -81,7 +81,7 @@ func (s *solverTool) Run(ctx context.Context, call ToolCall) (ToolResponse, erro
 
 	// Build Docker command
 	args := []string{"compose", "run", "--rm", "dsph",
-		"DualSPHysics5.4_linux64", params.CaseName, params.OutDir,
+		"dualsphysics", params.CaseName, params.OutDir,
 	}
 	if params.GPU {
 		args = append(args, "-gpu")

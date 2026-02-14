@@ -33,7 +33,7 @@ func TestJobManagerTool_Submit(t *testing.T) {
 		tool := NewJobManagerTool()
 		params := JobManagerParams{
 			Action:  "submit",
-			Command: []string{"docker", "compose", "run", "--rm", "dsph", "DualSPHysics5.4_linux64"},
+			Command: []string{"docker", "compose", "run", "--rm", "dsph", "dualsphysics"},
 			WorkDir: "/tmp/job_test",
 		}
 

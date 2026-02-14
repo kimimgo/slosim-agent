@@ -88,7 +88,7 @@ func (m *measureToolTool) Run(ctx context.Context, call ToolCall) (ToolResponse,
 	}
 
 	// Build Docker command
-	args := []string{"compose", "run", "--rm", "dsph", "MeasureTool",
+	args := []string{"compose", "run", "--rm", "dsph", "measuretool",
 		fmt.Sprintf("-dirdata %s", params.DataDir),
 		"-filexml AUTO",
 		fmt.Sprintf("-points %s", params.PointsFile),

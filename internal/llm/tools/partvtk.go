@@ -91,7 +91,7 @@ func (p *partVTKTool) Run(ctx context.Context, call ToolCall) (ToolResponse, err
 	}
 
 	// Build Docker command
-	args := []string{"compose", "run", "--rm", "dsph", "PartVTK",
+	args := []string{"compose", "run", "--rm", "dsph", "partvtk",
 		fmt.Sprintf("-dirdata %s", params.DataDir),
 		"-filexml AUTO",
 		fmt.Sprintf("-savevtk %s", params.OutFile),

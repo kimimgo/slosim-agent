@@ -82,8 +82,9 @@ func (g *genCaseTool) Run(ctx context.Context, call ToolCall) (ToolResponse, err
 		}
 	}
 
-	// Build Docker command
-	args := []string{"compose", "run", "--rm", "dsph", "GenCase", casePath, fmt.Sprintf("-save:%s", params.SavePath)}
+	// Build Docker command: gencase input_file output_dir [options]
+	// GenCase takes positional args: gencase <case_path> <save_path>
+	args := []string{"compose", "run", "--rm", "dsph", "gencase", casePath, params.SavePath}
 	if params.DP != nil {
 		args = append(args, fmt.Sprintf("-dp:%g", *params.DP))
 	}
