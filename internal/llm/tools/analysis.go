@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 )
@@ -96,7 +97,7 @@ func generatePhysicalAnalysis(params AnalysisParams) string {
 	L := cc.TankLength
 	h := cc.FluidHeight
 	pi := 3.14159265359
-	f1 := (1 / (2 * pi)) * ((g * pi / L * tanh(pi/L*h)))
+	f1 := (1 / (2 * pi)) * math.Sqrt(g*pi/L*tanh(pi/L*h))
 
 	// Resonance ratio
 	freqRatio := cc.Freq / f1
