@@ -163,6 +163,12 @@ func generateSloshingXML(p XMLGeneratorParams) string {
 	rightX := fmt.Sprintf("%.4f", 0.95*L)
 	centerY := fmt.Sprintf("%.4f", 0.50*W)
 
+	// Calculate SimulationDomain X margin based on motion amplitude
+	marginPct := p.Amplitude / L * 100 + 10
+	if marginPct < 10 {
+		marginPct = 10
+	}
+
 	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8" ?>
 <case>
     <casedef>
@@ -261,8 +267,8 @@ func generateSloshingXML(p XMLGeneratorParams) string {
             <parameter key="RhopOutMin" value="700" />
             <parameter key="RhopOutMax" value="1300" />
             <simulationdomain>
-                <posmin x="default - 10%%" y="default" z="default" />
-                <posmax x="default + 10%%" y="default" z="default + 50%%" />
+                <posmin x="default - %.0f%%%%" y="default" z="default" />
+                <posmax x="default + %.0f%%%%" y="default" z="default + 50%%%%" />
             </simulationdomain>
         </parameters>
     </execution>
@@ -284,6 +290,8 @@ func generateSloshingXML(p XMLGeneratorParams) string {
 		rightX, centerY, rightX, centerY, H,
 		// parameters: TimeMax, TimeOut
 		p.TimeMax, timeOut,
+		// simulationdomain: X margin percentages
+		marginPct, marginPct,
 	)
 }
 
@@ -294,7 +302,7 @@ func generateProbePoints(p XMLGeneratorParams) string {
 	xPositions := []float64{0.05 * p.TankLength, 0.50 * p.TankLength, 0.95 * p.TankLength}
 	y := 0.5 * p.TankWidth
 	numHeights := 6
-	result := ""
+	result := "POINTS\n"
 
 	for _, x := range xPositions {
 		for i := 0; i < numHeights; i++ {

@@ -163,16 +163,19 @@ func TestGenerateAnimationScript(t *testing.T) {
 
 		script := generateAnimationScript(params, true)
 
-		// Check essential script components
+		// Check essential script components (Mesa-compatible: frame-by-frame, no SaveAnimation)
 		assert.Contains(t, script, "#!/usr/bin/env pvpython")
 		assert.Contains(t, script, "from paraview.simple import *")
 		assert.Contains(t, script, "LegacyVTKReader")
 		assert.Contains(t, script, "ColorBy")
 		assert.Contains(t, script, "Blue to Red Rainbow")
-		assert.Contains(t, script, "SaveAnimation")
+		assert.NotContains(t, script, "SaveAnimation", "Mesa backend: must use frame-by-frame, not SaveAnimation")
+		assert.Contains(t, script, "SaveScreenshot", "Mesa backend: must use frame-by-frame SaveScreenshot")
+		assert.Contains(t, script, "AnimationTime", "Mesa backend: must set AnimationTime per frame")
 		assert.Contains(t, script, "[1920, 1080]")
-		assert.Contains(t, script, "FrameRate=30")
+		assert.Contains(t, script, "FPS = 30")
 		assert.Contains(t, script, "Press")
+		assert.Contains(t, script, "ffmpeg", "Must compile frames with ffmpeg")
 	})
 
 	t.Run("handles different view angles", func(t *testing.T) {
@@ -205,11 +208,11 @@ func TestGenerateAnimationScript(t *testing.T) {
 		scriptWithFluid := generateAnimationScript(params, true)
 		scriptWithoutFluid := generateAnimationScript(params, false)
 
-		// When onlyFluid=true, should check for fluid filter
-		assert.Contains(t, scriptWithFluid, "Threshold")
+		// When onlyFluid=true, should use PartFluid_*.vtk pattern
+		assert.Contains(t, scriptWithFluid, "PartFluid_")
 
-		// When onlyFluid=false, should not apply threshold
-		assert.NotContains(t, scriptWithoutFluid, "Threshold")
+		// When onlyFluid=false, should use Part_*.vtk pattern (all particles)
+		assert.Contains(t, scriptWithoutFluid, "Part_*.vtk")
 	})
 }
 
