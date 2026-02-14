@@ -1,0 +1,23 @@
+POINTS
+# SPHERIC Benchmark Test 10 - Pressure sensor positions
+# Sensor 1: Left wall bottom (lateral impact, low fill target)
+0.005 0.031 0.020
+0.005 0.031 0.050
+0.005 0.031 0.093
+# Sensor 2: Left wall mid
+0.005 0.031 0.150
+0.005 0.031 0.250
+# Sensor 3: Ceiling (roof impact, high fill target)
+0.450 0.031 0.503
+0.225 0.031 0.503
+0.675 0.031 0.503
+# Right wall (symmetric)
+0.895 0.031 0.020
+0.895 0.031 0.050
+0.895 0.031 0.093
+0.895 0.031 0.150
+0.895 0.031 0.250
+# Free surface height gauges (x positions at 10%, 50%, 90%)
+0.090 0.031 0.000
+0.450 0.031 0.000
+0.810 0.031 0.000
