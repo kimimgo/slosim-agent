@@ -11,3 +11,7 @@ __pycache__/
 .idea/
 .DS_Store
 .opencode/
+datasets/spheric/
+datasets/papers/
+datasets/dualsphysics/
+datasets/ccp-wsi/
