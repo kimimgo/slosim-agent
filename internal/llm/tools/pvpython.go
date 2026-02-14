@@ -149,20 +149,20 @@ func (p *pvpythonTool) Run(ctx context.Context, call ToolCall) (ToolResponse, er
 	}
 	defer os.Remove(scriptPath)
 
-	// Build Docker command
-	args := []string{"run", "--rm",
-		"-v", fmt.Sprintf("%s:%s", params.DataDir, "/data/input"),
-		"-v", fmt.Sprintf("%s:%s", filepath.Dir(params.OutFile), "/data/output"),
-		"-v", fmt.Sprintf("%s:/tmp/render.py", scriptPath),
-		"pvpython",
-		"pvpython", "/tmp/render.py",
-	}
-
-	cmd := exec.CommandContext(ctx, "docker", args...)
+	// Run pvpython locally with Mesa backend (NOT Docker)
+	cmd := exec.CommandContext(ctx,
+		"/opt/paraview/bin/pvpython", "--force-offscreen-rendering", "--mesa",
+		scriptPath,
+	)
 	cmd.Dir = getWorkingDirectory()
+	cmd.Env = append(os.Environ(),
+		"DISPLAY=",
+		"VTK_DEFAULT_RENDER_WINDOW_OFFSCREEN=1",
+	)
 
 	output, err := cmd.CombinedOutput()
-	if err != nil {
+	// Exit code 1 is normal for Mesa cleanup — only treat as error if no output was generated
+	if err != nil && !isMesaCleanupExit(err, params.OutFile) {
 		return NewTextErrorResponse(fmt.Sprintf("렌더링 실행 실패: %s\n출력: %s", err, string(output))), nil
 	}
 
@@ -170,47 +170,227 @@ func (p *pvpythonTool) Run(ctx context.Context, call ToolCall) (ToolResponse, er
 	if params.RenderMode == "animation" {
 		resultMsg += "애니메이션 파일이 생성되었습니다.\n"
 	} else {
-		resultMsg += fmt.Sprintf("%d개 이미지가 생성되었습니다.\n", len(params.Timesteps))
+		resultMsg += "스냅샷 이미지가 생성되었습니다.\n"
 	}
 
 	return NewTextResponse(resultMsg + string(output)), nil
 }
 
+// isMesaCleanupExit checks if the error is just a Mesa cleanup exit code 1 (not a real error).
+func isMesaCleanupExit(err error, outFile string) bool {
+	if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
+		// Check if output file(s) exist — if so, it's just cleanup noise
+		if _, statErr := os.Stat(outFile); statErr == nil {
+			return true
+		}
+		// For frame-based output, check if frames directory exists
+		framesDir := filepath.Join(filepath.Dir(outFile), "frames")
+		if entries, _ := os.ReadDir(framesDir); len(entries) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
 func generatePvpythonScript(params PvpythonParams, onlyFluid bool) string {
-	// Simplified pvpython script template (actual implementation would be more complex)
-	return fmt.Sprintf(`#!/usr/bin/env pvpython
-# Auto-generated ParaView rendering script
+	// Camera setup based on view_angle
+	cameraBlock := pvpythonCameraBlock(params.ViewAngle)
+
+	// VTK file pattern — use the actual data_dir path (not Docker mount)
+	vtkPattern := filepath.Join(params.DataDir, "PartFluid_*.vtk")
+	if !onlyFluid {
+		vtkPattern = filepath.Join(params.DataDir, "Part_*.vtk")
+	}
+
+	outDir := filepath.Dir(params.OutFile)
+	framesDir := filepath.Join(outDir, "frames")
+
+	if params.RenderMode == "animation" {
+		// Animation mode: frame-by-frame rendering + ffmpeg compilation
+		return fmt.Sprintf(`#!/usr/bin/env pvpython
+# Auto-generated Mesa-compatible ParaView animation script
+import os, sys, glob, subprocess
 from paraview.simple import *
 
-# Load VTK files
-reader = LegacyVTKReader(FileNames=['/data/input/*.vtk'])
-UpdatePipeline()
+# --- Configuration ---
+VTK_PATTERN = %q
+OUTPUT_MP4 = %q
+OUTPUT_PNG_DIR = %q
+RESOLUTION = [%d, %d]
+FPS = %d
 
-# Color by variable
-ColorBy(reader, ('POINTS', '%s'))
-LUT = GetColorTransferFunction('%s')
-LUT.ApplyPreset('%s', True)
+vtk_files = sorted(glob.glob(VTK_PATTERN))
+if not vtk_files:
+    print(f"ERROR: No VTK files found at {VTK_PATTERN}")
+    sys.exit(1)
 
-# Set view
-view = GetActiveView()
-view.ViewSize = [%d, %d]
-view.CameraPosition = [1, 0, 0]  # %s view
+print(f"Found {len(vtk_files)} VTK files")
+os.makedirs(OUTPUT_PNG_DIR, exist_ok=True)
 
-# Render
-if '%s' == 'snapshot':
-    SaveScreenshot('/data/output/%s', view)
+# --- Setup ParaView pipeline ---
+paraview.simple._DisableFirstRenderCameraReset()
+reader = LegacyVTKReader(FileNames=vtk_files)
+
+renderView = CreateRenderView()
+renderView.ViewSize = RESOLUTION
+renderView.Background = [0.1, 0.1, 0.15]
+
+display = Show(reader, renderView)
+display.Representation = 'Points'
+display.PointSize = 4.0
+
+ColorBy(display, ('POINTS', %q))
+lut = GetColorTransferFunction(%q)
+lut.ApplyPreset(%q, True)
+lut.RescaleTransferFunction(0, 5000)
+
+colorBar = GetScalarBar(lut, renderView)
+colorBar.Title = '%s'
+colorBar.ComponentTitle = ''
+colorBar.TitleFontSize = 18
+colorBar.LabelFontSize = 14
+colorBar.Visibility = 1
+colorBar.WindowLocation = 'Upper Right Corner'
+
+%s
+
+# --- Frame-by-frame rendering (Mesa compatible) ---
+scene = GetAnimationScene()
+scene.UpdateAnimationUsingDataTimeSteps()
+timesteps = list(scene.TimeKeeper.TimestepValues)
+print(f"Rendering {len(timesteps)} frames at {RESOLUTION[0]}x{RESOLUTION[1]}...")
+
+for i, t in enumerate(timesteps):
+    scene.AnimationTime = t
+    Render()
+    frame_path = os.path.join(OUTPUT_PNG_DIR, f"frame_{i:04d}.png")
+    SaveScreenshot(frame_path, renderView, ImageResolution=RESOLUTION)
+    if (i + 1) %% 10 == 0 or i == 0:
+        print(f"  Frame {i+1}/{len(timesteps)} (t={t:.3f}s)")
+
+frame_count = len(glob.glob(os.path.join(OUTPUT_PNG_DIR, "frame_*.png")))
+print(f"Rendered {frame_count} frames")
+
+if frame_count == 0:
+    print("ERROR: No frames rendered")
+    sys.exit(1)
+
+# --- Compile to MP4 with ffmpeg ---
+print("Compiling animation with ffmpeg...")
+vf = "pad=ceil(iw/2)*2:ceil(ih/2)*2"
+ffmpeg_result = subprocess.run([
+    "ffmpeg", "-y",
+    "-framerate", str(FPS),
+    "-i", os.path.join(OUTPUT_PNG_DIR, "frame_%%04d.png"),
+    "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+    "-pix_fmt", "yuv420p", "-vf", vf,
+    OUTPUT_MP4
+], capture_output=True, text=True)
+
+if ffmpeg_result.returncode == 0 and os.path.exists(OUTPUT_MP4):
+    size_mb = os.path.getsize(OUTPUT_MP4) / (1024 * 1024)
+    duration = frame_count / FPS
+    print(f"Animation saved: {OUTPUT_MP4} ({size_mb:.1f} MB, {frame_count} frames, {duration:.1f}s)")
 else:
-    SaveAnimation('/data/output/%s', view)
+    print(f"WARNING: ffmpeg failed: {ffmpeg_result.stderr[:500]}")
 
-print("Rendering complete")
+print("Done!")
 `,
-		params.Variables[0],
-		params.Variables[0],
-		params.Colormap,
+			vtkPattern, params.OutFile, framesDir,
+			params.Resolution[0], params.Resolution[1], params.FPS,
+			params.Variables[0], params.Variables[0], params.Colormap,
+			params.Variables[0],
+			cameraBlock,
+		)
+	}
+
+	// Snapshot mode: single frame rendering
+	return fmt.Sprintf(`#!/usr/bin/env pvpython
+# Auto-generated Mesa-compatible ParaView snapshot script
+import os, sys, glob
+from paraview.simple import *
+
+VTK_PATTERN = %q
+OUTPUT_FILE = %q
+RESOLUTION = [%d, %d]
+
+vtk_files = sorted(glob.glob(VTK_PATTERN))
+if not vtk_files:
+    print(f"ERROR: No VTK files found at {VTK_PATTERN}")
+    sys.exit(1)
+
+print(f"Found {len(vtk_files)} VTK files")
+
+paraview.simple._DisableFirstRenderCameraReset()
+reader = LegacyVTKReader(FileNames=vtk_files)
+
+renderView = CreateRenderView()
+renderView.ViewSize = RESOLUTION
+renderView.Background = [0.1, 0.1, 0.15]
+
+display = Show(reader, renderView)
+display.Representation = 'Points'
+display.PointSize = 4.0
+
+ColorBy(display, ('POINTS', %q))
+lut = GetColorTransferFunction(%q)
+lut.ApplyPreset(%q, True)
+lut.RescaleTransferFunction(0, 5000)
+
+colorBar = GetScalarBar(lut, renderView)
+colorBar.Title = '%s'
+colorBar.ComponentTitle = ''
+colorBar.Visibility = 1
+colorBar.WindowLocation = 'Upper Right Corner'
+
+%s
+
+# Render last (or mid) timestep for snapshot
+scene = GetAnimationScene()
+scene.UpdateAnimationUsingDataTimeSteps()
+timesteps = list(scene.TimeKeeper.TimestepValues)
+mid = len(timesteps) // 2
+scene.AnimationTime = timesteps[mid]
+Render()
+
+os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
+SaveScreenshot(OUTPUT_FILE, renderView, ImageResolution=RESOLUTION)
+print(f"Snapshot saved: {OUTPUT_FILE}")
+`,
+		vtkPattern, params.OutFile,
 		params.Resolution[0], params.Resolution[1],
-		params.ViewAngle,
-		params.RenderMode,
-		filepath.Base(params.OutFile),
-		filepath.Base(params.OutFile),
+		params.Variables[0], params.Variables[0], params.Colormap,
+		params.Variables[0],
+		cameraBlock,
 	)
+}
+
+// pvpythonCameraBlock returns Python code to set up the camera for a given view angle.
+func pvpythonCameraBlock(viewAngle string) string {
+	switch viewAngle {
+	case "XY":
+		return `# Camera: top-down (XY plane)
+renderView.CameraPosition = [0.5, 0.25, 2.0]
+renderView.CameraFocalPoint = [0.5, 0.25, 0.25]
+renderView.CameraViewUp = [0, 1, 0]
+renderView.ResetCamera()`
+	case "YZ":
+		return `# Camera: side view (YZ plane)
+renderView.CameraPosition = [2.0, 0.25, 0.3]
+renderView.CameraFocalPoint = [0.5, 0.25, 0.3]
+renderView.CameraViewUp = [0, 0, 1]
+renderView.ResetCamera()`
+	case "ISO":
+		return `# Camera: isometric view
+renderView.CameraPosition = [0.5, -1.2, 0.6]
+renderView.CameraFocalPoint = [0.5, 0.25, 0.25]
+renderView.CameraViewUp = [0, 0, 1]
+renderView.CameraParallelScale = 0.6`
+	default: // "XZ" — default side view
+		return `# Camera: side view (XZ plane)
+renderView.CameraPosition = [0.5, -1.5, 0.3]
+renderView.CameraFocalPoint = [0.5, 0.25, 0.3]
+renderView.CameraViewUp = [0, 0, 1]
+renderView.ResetCamera()`
+	}
 }

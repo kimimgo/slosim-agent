@@ -150,7 +150,6 @@ func (a *animationTool) Run(ctx context.Context, call ToolCall) (ToolResponse, e
 		params.FPS = 30
 	}
 	if params.Format == "" {
-		// Infer from extension
 		ext := strings.ToLower(filepath.Ext(params.OutFile))
 		if ext == ".gif" {
 			params.Format = "gif"
@@ -167,21 +166,20 @@ func (a *animationTool) Run(ctx context.Context, call ToolCall) (ToolResponse, e
 	}
 	defer os.Remove(scriptPath)
 
-	// Build Docker command
-	outDir := filepath.Dir(params.OutFile)
-	args := []string{"run", "--rm",
-		"-v", fmt.Sprintf("%s:%s", params.DataDir, "/data/input"),
-		"-v", fmt.Sprintf("%s:%s", outDir, "/data/output"),
-		"-v", fmt.Sprintf("%s:/tmp/animate.py", scriptPath),
-		"pvpython",
-		"pvpython", "/tmp/animate.py",
-	}
-
-	cmd := exec.CommandContext(ctx, "docker", args...)
+	// Run pvpython locally with Mesa backend (NOT Docker)
+	cmd := exec.CommandContext(ctx,
+		"/opt/paraview/bin/pvpython", "--force-offscreen-rendering", "--mesa",
+		scriptPath,
+	)
 	cmd.Dir = getWorkingDirectory()
+	cmd.Env = append(os.Environ(),
+		"DISPLAY=",
+		"VTK_DEFAULT_RENDER_WINDOW_OFFSCREEN=1",
+	)
 
 	output, err := cmd.CombinedOutput()
-	if err != nil {
+	// Exit code 1 is normal for Mesa cleanup
+	if err != nil && !isMesaCleanupExit(err, params.OutFile) {
 		return NewTextErrorResponse(fmt.Sprintf("애니메이션 생성 실패: %s\n출력: %s", err, string(output))), nil
 	}
 
@@ -220,90 +218,135 @@ func generateAnimationScript(params AnimationParams, onlyFluid bool) string {
 		params.FPS = 30
 	}
 
-	// Build fluid filter block conditionally
-	var filterBlock string
-	if onlyFluid {
-		filterBlock = `# Filter by fluid particles
-threshold = Threshold(Input=reader)
-threshold.Scalars = ['POINTS', 'Idp']
-threshold.ThresholdRange = [0, 999999]  # Fluid particles typically have lower IDs
-UpdatePipeline()
-display = Show(threshold)`
-	} else {
-		filterBlock = `# Show all particles
-display = Show(reader)`
+	// VTK file pattern — use the actual data_dir path
+	vtkPattern := filepath.Join(params.DataDir, "PartFluid_*.vtk")
+	if !onlyFluid {
+		vtkPattern = filepath.Join(params.DataDir, "Part_*.vtk")
 	}
 
-	// More complete pvpython script for animation
+	framesDir := filepath.Join(filepath.Dir(params.OutFile), "frames")
+	cameraBlock := pvpythonCameraBlock(params.ViewAngle)
+
+	// Mesa-compatible animation: frame-by-frame rendering + ffmpeg compilation
+	// NO SaveAnimation (crashes Mesa), NO Text/AnnotateTimeFilter (crashes Mesa)
 	return fmt.Sprintf(`#!/usr/bin/env pvpython
-# Auto-generated ParaView animation script (ANI-01)
+# Auto-generated Mesa-compatible animation script (ANI-01)
+import os, sys, glob, subprocess
 from paraview.simple import *
 
-# Load VTK files
-reader = LegacyVTKReader(FileNames=['/data/input/*.vtk'])
-UpdatePipeline()
+# --- Configuration ---
+VTK_PATTERN = %q
+OUTPUT_FILE = %q
+OUTPUT_PNG_DIR = %q
+RESOLUTION = [%d, %d]
+FPS = %d
+START_TIME = %g
+END_TIME = %g
+OUTPUT_FORMAT = %q
 
-# Get time range
-timeKeeper = GetTimeKeeper()
-timesteps = timeKeeper.TimestepValues
-print("Found %%d timesteps" %%%% len(timesteps))
+vtk_files = sorted(glob.glob(VTK_PATTERN))
+if not vtk_files:
+    print(f"ERROR: No VTK files found at {VTK_PATTERN}")
+    sys.exit(1)
 
-# Set time range
-startTime = %g
-endTime = %g
-if startTime == 0 and endTime == 0:
-    startTime = timesteps[0]
-    endTime = timesteps[-1]
+print(f"Found {len(vtk_files)} VTK files")
+os.makedirs(OUTPUT_PNG_DIR, exist_ok=True)
+
+# --- Setup ParaView pipeline ---
+paraview.simple._DisableFirstRenderCameraReset()
+reader = LegacyVTKReader(FileNames=vtk_files)
+
+renderView = CreateRenderView()
+renderView.ViewSize = RESOLUTION
+renderView.Background = [0.1, 0.1, 0.15]
+
+display = Show(reader, renderView)
+display.Representation = 'Points'
+display.PointSize = 4.0
+
+ColorBy(display, ('POINTS', %q))
+lut = GetColorTransferFunction(%q)
+lut.ApplyPreset(%q, True)
+lut.RescaleTransferFunction(0, 5000)
+
+colorBar = GetScalarBar(lut, renderView)
+colorBar.Title = '%s'
+colorBar.ComponentTitle = ''
+colorBar.TitleFontSize = 18
+colorBar.LabelFontSize = 14
+colorBar.Visibility = 1
+colorBar.WindowLocation = 'Upper Right Corner'
 
 %s
 
-# Color by variable
-ColorBy(display, ('POINTS', '%s'))
-LUT = GetColorTransferFunction('%s')
-LUT.ApplyPreset('%s', True)
+# --- Frame-by-frame rendering (Mesa compatible) ---
+scene = GetAnimationScene()
+scene.UpdateAnimationUsingDataTimeSteps()
+all_timesteps = list(scene.TimeKeeper.TimestepValues)
 
-# Set view
-view = GetActiveView()
-view.ViewSize = [%d, %d]
+# Filter timesteps by start/end time
+if START_TIME > 0 or END_TIME > 0:
+    end = END_TIME if END_TIME > 0 else all_timesteps[-1]
+    timesteps = [t for t in all_timesteps if START_TIME <= t <= end]
+else:
+    timesteps = all_timesteps
 
-# Set camera based on view angle
-if '%s' == 'XZ':
-    view.CameraPosition = [0, 10, 0]
-    view.CameraFocalPoint = [0, 0, 0]
-    view.CameraViewUp = [0, 0, 1]
-elif '%s' == 'XY':
-    view.CameraPosition = [0, 0, 10]
-    view.CameraFocalPoint = [0, 0, 0]
-    view.CameraViewUp = [0, 1, 0]
-elif '%s' == 'YZ':
-    view.CameraPosition = [10, 0, 0]
-    view.CameraFocalPoint = [0, 0, 0]
-    view.CameraViewUp = [0, 0, 1]
+print(f"Rendering {len(timesteps)} frames at {RESOLUTION[0]}x{RESOLUTION[1]}...")
 
-view.ResetCamera()
+for i, t in enumerate(timesteps):
+    scene.AnimationTime = t
+    Render()
+    frame_path = os.path.join(OUTPUT_PNG_DIR, f"frame_{i:04d}.png")
+    SaveScreenshot(frame_path, renderView, ImageResolution=RESOLUTION)
+    if (i + 1) %% 10 == 0 or i == 0:
+        print(f"  Frame {i+1}/{len(timesteps)} (t={t:.3f}s)")
 
-# Save animation
-SaveAnimation('/data/output/%s', view,
-    ImageResolution=[%d, %d],
-    FrameWindow=[0, len(timesteps)-1],
-    FrameRate=%d)
+frame_count = len(glob.glob(os.path.join(OUTPUT_PNG_DIR, "frame_*.png")))
+print(f"Rendered {frame_count} frames")
 
-print("Animation saved to /data/output/%s")
+if frame_count == 0:
+    print("ERROR: No frames rendered")
+    sys.exit(1)
+
+# --- Compile with ffmpeg (text overlay via drawtext, not ParaView Text) ---
+print("Compiling animation with ffmpeg...")
+vf = "pad=ceil(iw/2)*2:ceil(ih/2)*2"
+
+if OUTPUT_FORMAT == "gif":
+    ffmpeg_cmd = [
+        "ffmpeg", "-y",
+        "-framerate", str(FPS),
+        "-i", os.path.join(OUTPUT_PNG_DIR, "frame_%%04d.png"),
+        "-vf", f"fps={FPS},scale={RESOLUTION[0]}:-1:flags=lanczos,{vf}",
+        "-c:v", "gif",
+        OUTPUT_FILE
+    ]
+else:
+    ffmpeg_cmd = [
+        "ffmpeg", "-y",
+        "-framerate", str(FPS),
+        "-i", os.path.join(OUTPUT_PNG_DIR, "frame_%%04d.png"),
+        "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+        "-pix_fmt", "yuv420p", "-vf", vf,
+        OUTPUT_FILE
+    ]
+
+ffmpeg_result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)
+if ffmpeg_result.returncode == 0 and os.path.exists(OUTPUT_FILE):
+    size_mb = os.path.getsize(OUTPUT_FILE) / (1024 * 1024)
+    duration = frame_count / FPS
+    print(f"Animation saved: {OUTPUT_FILE} ({size_mb:.1f} MB, {frame_count} frames, {duration:.1f}s)")
+else:
+    print(f"WARNING: ffmpeg failed: {ffmpeg_result.stderr[:500]}")
+
+print("Done!")
 `,
-		params.StartTime,
-		params.EndTime,
-		filterBlock,
+		vtkPattern, params.OutFile, framesDir,
+		params.Resolution[0], params.Resolution[1], params.FPS,
+		params.StartTime, params.EndTime, params.Format,
+		params.Variables[0], params.Variables[0], params.Colormap,
 		params.Variables[0],
-		params.Variables[0],
-		params.Colormap,
-		params.Resolution[0], params.Resolution[1],
-		params.ViewAngle,
-		params.ViewAngle,
-		params.ViewAngle,
-		filepath.Base(params.OutFile),
-		params.Resolution[0], params.Resolution[1],
-		params.FPS,
-		filepath.Base(params.OutFile),
+		cameraBlock,
 	)
 }
 

@@ -13,7 +13,8 @@ import (
 
 // MonitorParams defines parameters for real-time simulation monitoring (MON-01).
 type MonitorParams struct {
-	SimDir string `json:"sim_dir"`
+	SimDir  string  `json:"sim_dir"`
+	TimeMax float64 `json:"time_max,omitempty"` // Optional: override TimeMax. If 0, auto-detect from XML.
 }
 
 // MonitorStatus represents the current simulation state.
@@ -59,6 +60,10 @@ func (m *monitorTool) Info() ToolInfo {
 				"type":        "string",
 				"description": "시뮬레이션 출력 디렉토리",
 			},
+			"time_max": map[string]any{
+				"type":        "number",
+				"description": "시뮬레이션 총 시간 (초). 미지정 시 XML에서 자동 감지",
+			},
 		},
 		Required: []string{"sim_dir"},
 	}
@@ -74,13 +79,20 @@ func (m *monitorTool) Run(ctx context.Context, call ToolCall) (ToolResponse, err
 		return NewTextErrorResponse("시뮬레이션 디렉토리(sim_dir)를 지정해주세요"), nil
 	}
 
+	// Determine TimeMax
+	timeMax := params.TimeMax
+	if timeMax <= 0 {
+		// Try to auto-detect from XML case file in sim_dir
+		timeMax = detectTimeMaxFromXML(params.SimDir)
+	}
+
 	// Parse Run.csv
 	runCSV := filepath.Join(params.SimDir, "Run.csv")
 	if _, err := os.Stat(runCSV); os.IsNotExist(err) {
 		return NewTextErrorResponse(fmt.Sprintf("Run.csv 파일을 찾을 수 없습니다: %s", runCSV)), nil
 	}
 
-	status, err := parseRunCSV(runCSV)
+	status, err := parseRunCSV(runCSV, timeMax)
 	if err != nil {
 		return NewTextErrorResponse(fmt.Sprintf("Run.csv 파싱 실패: %s", err)), nil
 	}
@@ -98,7 +110,7 @@ func (m *monitorTool) Run(ctx context.Context, call ToolCall) (ToolResponse, err
 	return NewTextResponse(msg), nil
 }
 
-func parseRunCSV(csvPath string) (*MonitorStatus, error) {
+func parseRunCSV(csvPath string, timeMax float64) (*MonitorStatus, error) {
 	file, err := os.Open(csvPath)
 	if err != nil {
 		return nil, err
@@ -144,8 +156,14 @@ func parseRunCSV(csvPath string) (*MonitorStatus, error) {
 		unstableReason = fmt.Sprintf("%d개 파티클이 이탈했습니다 (전체의 %.1f%%)", particlesOut, float64(particlesOut)/float64(particleCount)*100)
 	}
 
-	// Calculate progress (assume TimeMax is known from context, here we use a placeholder)
-	progressPct := currentTime / 10.0 * 100 // Placeholder: assume TimeMax=10s
+	// Calculate progress using dynamic TimeMax
+	var progressPct float64
+	if timeMax > 0 {
+		progressPct = currentTime / timeMax * 100
+	}
+	if progressPct > 100 {
+		progressPct = 100
+	}
 
 	return &MonitorStatus{
 		CurrentTime:    currentTime,
@@ -157,4 +175,58 @@ func parseRunCSV(csvPath string) (*MonitorStatus, error) {
 		IsUnstable:     isUnstable,
 		UnstableReason: unstableReason,
 	}, nil
+}
+
+// detectTimeMaxFromXML searches for XML case files in the simulation directory
+// and extracts the TimeMax parameter value.
+func detectTimeMaxFromXML(simDir string) float64 {
+	// Look for XML files in sim_dir and parent directory
+	searchDirs := []string{simDir, filepath.Dir(simDir)}
+	for _, dir := range searchDirs {
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			continue
+		}
+		for _, entry := range entries {
+			if !entry.IsDir() && strings.HasSuffix(strings.ToLower(entry.Name()), ".xml") {
+				timeMax := extractTimeMaxFromXML(filepath.Join(dir, entry.Name()))
+				if timeMax > 0 {
+					return timeMax
+				}
+			}
+		}
+	}
+	return 0
+}
+
+// extractTimeMaxFromXML reads an XML file and extracts the TimeMax parameter value.
+func extractTimeMaxFromXML(xmlPath string) float64 {
+	data, err := os.ReadFile(xmlPath)
+	if err != nil {
+		return 0
+	}
+	content := string(data)
+
+	// Search for: <parameter key="TimeMax" value="..." />
+	// Simple string search — avoids XML parsing dependency for a single value
+	idx := strings.Index(content, `key="TimeMax"`)
+	if idx < 0 {
+		return 0
+	}
+	// Find value attribute nearby
+	snippet := content[idx:]
+	valIdx := strings.Index(snippet, `value="`)
+	if valIdx < 0 || valIdx > 100 {
+		return 0
+	}
+	snippet = snippet[valIdx+7:]
+	endIdx := strings.Index(snippet, `"`)
+	if endIdx < 0 {
+		return 0
+	}
+	val, err := strconv.ParseFloat(snippet[:endIdx], 64)
+	if err != nil {
+		return 0
+	}
+	return val
 }
