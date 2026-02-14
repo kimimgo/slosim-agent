@@ -1,11 +1,15 @@
 package tools
 
 import (
+	"bufio"
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -129,43 +133,229 @@ func (s *stlImportTool) Run(ctx context.Context, call ToolCall) (ToolResponse, e
 
 // STLValidation holds mesh validation results.
 type STLValidation struct {
-	TriangleCount int
-	IsWatertight  bool
-	BBoxMin       [3]float64
-	BBoxMax       [3]float64
+	TriangleCount    int
+	IsWatertight     bool
+	NormalsConsistent bool
+	BBoxMin          [3]float64
+	BBoxMax          [3]float64
+}
+
+// stlVertex represents a 3D point with quantized coordinates for map key usage.
+type stlVertex struct {
+	X, Y, Z float64
+}
+
+// stlTriangle holds three vertices and a normal.
+type stlTriangle struct {
+	Normal   stlVertex
+	Vertices [3]stlVertex
+}
+
+// vertexKey returns a string key for map operations, rounding to avoid floating point issues.
+func vertexKey(v stlVertex) string {
+	return fmt.Sprintf("%.6f,%.6f,%.6f", v.X, v.Y, v.Z)
+}
+
+// edgeKey returns a canonical string key for an edge (order-independent).
+func edgeKey(a, b stlVertex) string {
+	ka, kb := vertexKey(a), vertexKey(b)
+	if ka < kb {
+		return ka + "|" + kb
+	}
+	return kb + "|" + ka
 }
 
 func validateSTLMesh(stlPath string) (*STLValidation, error) {
-	// Simple validation: check file format and basic properties
-	// In production, use proper mesh analysis library (e.g., trimesh, meshio)
-
 	content, err := os.ReadFile(stlPath)
 	if err != nil {
 		return nil, err
 	}
 
-	// Check if ASCII or binary STL
-	isASCII := strings.HasPrefix(string(content), "solid")
-
-	validation := &STLValidation{
-		IsWatertight: true, // Placeholder: proper validation needed
-		BBoxMin:      [3]float64{-1, -1, 0},
-		BBoxMax:      [3]float64{1, 1, 2},
+	if len(content) == 0 {
+		return &STLValidation{}, nil
 	}
 
+	// Parse triangles
+	var triangles []stlTriangle
+	isASCII := isASCIISTL(content)
+
 	if isASCII {
-		// Count triangles in ASCII STL
-		validation.TriangleCount = strings.Count(string(content), "facet normal")
+		triangles, err = parseASCIISTL(content)
 	} else {
-		// Binary STL: triangle count is at bytes 80-84
-		if len(content) > 84 {
-			// Read uint32 at offset 80
-			count := uint32(content[80]) | uint32(content[81])<<8 | uint32(content[82])<<16 | uint32(content[83])<<24
-			validation.TriangleCount = int(count)
+		triangles, err = parseBinarySTL(content)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	validation := &STLValidation{
+		TriangleCount: len(triangles),
+	}
+
+	if len(triangles) == 0 {
+		return validation, nil
+	}
+
+	// Compute bounding box
+	validation.BBoxMin = [3]float64{math.MaxFloat64, math.MaxFloat64, math.MaxFloat64}
+	validation.BBoxMax = [3]float64{-math.MaxFloat64, -math.MaxFloat64, -math.MaxFloat64}
+
+	for _, tri := range triangles {
+		for _, v := range tri.Vertices {
+			coords := [3]float64{v.X, v.Y, v.Z}
+			for i := 0; i < 3; i++ {
+				if coords[i] < validation.BBoxMin[i] {
+					validation.BBoxMin[i] = coords[i]
+				}
+				if coords[i] > validation.BBoxMax[i] {
+					validation.BBoxMax[i] = coords[i]
+				}
+			}
 		}
 	}
 
+	// Watertight check: every edge must be shared by exactly 2 triangles
+	edgeCounts := make(map[string]int)
+	for _, tri := range triangles {
+		for i := 0; i < 3; i++ {
+			j := (i + 1) % 3
+			key := edgeKey(tri.Vertices[i], tri.Vertices[j])
+			edgeCounts[key]++
+		}
+	}
+
+	validation.IsWatertight = len(edgeCounts) > 0
+	for _, count := range edgeCounts {
+		if count != 2 {
+			validation.IsWatertight = false
+			break
+		}
+	}
+
+	// Normal consistency check: verify normals point outward (cross product direction matches stated normal)
+	validation.NormalsConsistent = checkNormalConsistency(triangles)
+
 	return validation, nil
+}
+
+// isASCIISTL checks whether content is ASCII STL (starts with "solid" and contains "facet").
+func isASCIISTL(content []byte) bool {
+	if len(content) < 6 {
+		return false
+	}
+	// Binary STL can also start with "solid" in header, so check for "facet" keyword
+	prefix := strings.HasPrefix(string(content), "solid")
+	hasFacet := strings.Contains(string(content[:min(1000, len(content))]), "facet")
+	return prefix && hasFacet
+}
+
+// parseASCIISTL parses ASCII STL format into triangles.
+func parseASCIISTL(content []byte) ([]stlTriangle, error) {
+	var triangles []stlTriangle
+	scanner := bufio.NewScanner(strings.NewReader(string(content)))
+
+	var currentTri stlTriangle
+	vertexIdx := 0
+	inFacet := false
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+
+		if strings.HasPrefix(line, "facet normal") {
+			parts := strings.Fields(line)
+			if len(parts) >= 5 {
+				currentTri.Normal.X, _ = strconv.ParseFloat(parts[2], 64)
+				currentTri.Normal.Y, _ = strconv.ParseFloat(parts[3], 64)
+				currentTri.Normal.Z, _ = strconv.ParseFloat(parts[4], 64)
+			}
+			inFacet = true
+			vertexIdx = 0
+		} else if strings.HasPrefix(line, "vertex") && inFacet {
+			parts := strings.Fields(line)
+			if len(parts) >= 4 && vertexIdx < 3 {
+				currentTri.Vertices[vertexIdx].X, _ = strconv.ParseFloat(parts[1], 64)
+				currentTri.Vertices[vertexIdx].Y, _ = strconv.ParseFloat(parts[2], 64)
+				currentTri.Vertices[vertexIdx].Z, _ = strconv.ParseFloat(parts[3], 64)
+				vertexIdx++
+			}
+		} else if strings.HasPrefix(line, "endfacet") {
+			if vertexIdx == 3 {
+				triangles = append(triangles, currentTri)
+			}
+			inFacet = false
+			currentTri = stlTriangle{}
+		}
+	}
+
+	return triangles, scanner.Err()
+}
+
+// parseBinarySTL parses binary STL format into triangles.
+func parseBinarySTL(content []byte) ([]stlTriangle, error) {
+	if len(content) < 84 {
+		return nil, fmt.Errorf("binary STL too short: %d bytes", len(content))
+	}
+
+	triCount := binary.LittleEndian.Uint32(content[80:84])
+	expectedSize := 84 + int(triCount)*50
+	if len(content) < expectedSize {
+		return nil, fmt.Errorf("binary STL truncated: expected %d bytes, got %d", expectedSize, len(content))
+	}
+
+	triangles := make([]stlTriangle, triCount)
+	for i := uint32(0); i < triCount; i++ {
+		offset := 84 + int(i)*50
+		data := content[offset : offset+50]
+
+		triangles[i].Normal.X = float64(math.Float32frombits(binary.LittleEndian.Uint32(data[0:4])))
+		triangles[i].Normal.Y = float64(math.Float32frombits(binary.LittleEndian.Uint32(data[4:8])))
+		triangles[i].Normal.Z = float64(math.Float32frombits(binary.LittleEndian.Uint32(data[8:12])))
+
+		for v := 0; v < 3; v++ {
+			vOff := 12 + v*12
+			triangles[i].Vertices[v].X = float64(math.Float32frombits(binary.LittleEndian.Uint32(data[vOff : vOff+4])))
+			triangles[i].Vertices[v].Y = float64(math.Float32frombits(binary.LittleEndian.Uint32(data[vOff+4 : vOff+8])))
+			triangles[i].Vertices[v].Z = float64(math.Float32frombits(binary.LittleEndian.Uint32(data[vOff+8 : vOff+12])))
+		}
+	}
+
+	return triangles, nil
+}
+
+// checkNormalConsistency verifies that stated normals roughly match cross-product normals.
+func checkNormalConsistency(triangles []stlTriangle) bool {
+	for _, tri := range triangles {
+		// Compute cross product of (v1-v0) x (v2-v0)
+		e1 := stlVertex{
+			X: tri.Vertices[1].X - tri.Vertices[0].X,
+			Y: tri.Vertices[1].Y - tri.Vertices[0].Y,
+			Z: tri.Vertices[1].Z - tri.Vertices[0].Z,
+		}
+		e2 := stlVertex{
+			X: tri.Vertices[2].X - tri.Vertices[0].X,
+			Y: tri.Vertices[2].Y - tri.Vertices[0].Y,
+			Z: tri.Vertices[2].Z - tri.Vertices[0].Z,
+		}
+		cross := stlVertex{
+			X: e1.Y*e2.Z - e1.Z*e2.Y,
+			Y: e1.Z*e2.X - e1.X*e2.Z,
+			Z: e1.X*e2.Y - e1.Y*e2.X,
+		}
+
+		// Dot product with stated normal should be positive (same direction)
+		dot := cross.X*tri.Normal.X + cross.Y*tri.Normal.Y + cross.Z*tri.Normal.Z
+
+		// Skip degenerate triangles
+		crossMag := math.Sqrt(cross.X*cross.X + cross.Y*cross.Y + cross.Z*cross.Z)
+		if crossMag < 1e-10 {
+			continue
+		}
+
+		if dot < 0 {
+			return false
+		}
+	}
+	return true
 }
 
 func generateSTLXML(params STLImportParams) string {

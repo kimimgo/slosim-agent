@@ -172,3 +172,101 @@ func TestResultBrowserUpdateMsg(t *testing.T) {
 	assert.Len(t, b.AllResults, 1)
 	assert.Len(t, b.Filtered, 1)
 }
+
+func TestBrowserApplyFilter_StatusFilter(t *testing.T) {
+	b := NewBrowser(makeResults())
+
+	// Set status filter manually and apply
+	b.Filter.Status = "completed"
+	b.applyFilter()
+
+	assert.Len(t, b.Filtered, 2) // sim_001 and sim_002
+	assert.Equal(t, "sim_001", b.Filtered[0].ID)
+	assert.Equal(t, "sim_002", b.Filtered[1].ID)
+
+	// Change to failed
+	b.Filter.Status = "failed"
+	b.applyFilter()
+
+	assert.Len(t, b.Filtered, 1) // sim_003 only
+	assert.Equal(t, "sim_003", b.Filtered[0].ID)
+}
+
+func TestBrowserApplyFilter_QueryFilter(t *testing.T) {
+	b := NewBrowser(makeResults())
+
+	// Set query filter and apply
+	b.Filter.Query = "benchmark"
+	b.applyFilter()
+
+	assert.Len(t, b.Filtered, 1) // "Sloshing Benchmark"
+	assert.Equal(t, "sim_001", b.Filtered[0].ID)
+
+	// Case insensitive search
+	b.Filter.Query = "FREQ"
+	b.applyFilter()
+
+	assert.Len(t, b.Filtered, 1) // "High Frequency Run"
+	assert.Equal(t, "sim_003", b.Filtered[0].ID)
+}
+
+func TestBrowserApplyFilter_TagFilter(t *testing.T) {
+	b := NewBrowser(makeResults())
+
+	// Filter by tag
+	b.Filter.Tags = []string{"sloshing"}
+	b.applyFilter()
+
+	assert.Len(t, b.Filtered, 2) // sim_001 and sim_003 have "sloshing" tag
+	assert.Equal(t, "sim_001", b.Filtered[0].ID)
+	assert.Equal(t, "sim_003", b.Filtered[1].ID)
+
+	// Filter by another tag
+	b.Filter.Tags = []string{"parametric"}
+	b.applyFilter()
+
+	assert.Len(t, b.Filtered, 1) // sim_002
+	assert.Equal(t, "sim_002", b.Filtered[0].ID)
+}
+
+func TestBrowserApplyFilter_DateFilter(t *testing.T) {
+	b := NewBrowser(makeResults())
+
+	// Filter by FromDate
+	b.Filter.FromDate = time.Date(2026, 2, 11, 0, 0, 0, 0, time.UTC)
+	b.applyFilter()
+
+	assert.Len(t, b.Filtered, 3) // sim_002, sim_003, sim_004 (after Feb 11)
+
+	// Filter by ToDate
+	b.Filter.FromDate = time.Time{} // Reset FromDate
+	b.Filter.ToDate = time.Date(2026, 2, 11, 23, 59, 59, 0, time.UTC)
+	b.applyFilter()
+
+	assert.Len(t, b.Filtered, 2) // sim_001, sim_002 (before Feb 11 end)
+}
+
+func TestBrowserApplyFilter_CombinedFilters(t *testing.T) {
+	b := NewBrowser(makeResults())
+
+	// Combine status and query
+	b.Filter.Status = "completed"
+	b.Filter.Query = "sloshing"
+	b.applyFilter()
+
+	assert.Len(t, b.Filtered, 1) // Only sim_001 (completed + contains "sloshing")
+	assert.Equal(t, "sim_001", b.Filtered[0].ID)
+}
+
+func TestBrowserApplyFilter_CursorReset(t *testing.T) {
+	b := NewBrowser(makeResults())
+	b.Cursor = 3 // Last item
+
+	// Apply filter that reduces results
+	b.Filter.Status = "completed"
+	b.applyFilter()
+
+	// Cursor should be adjusted to valid range
+	assert.LessOrEqual(t, b.Cursor, len(b.Filtered)-1)
+	assert.GreaterOrEqual(t, b.Cursor, 0)
+}
