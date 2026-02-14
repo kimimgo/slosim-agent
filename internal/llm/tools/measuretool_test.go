@@ -10,7 +10,7 @@ import (
 )
 
 // TOOL-04: MeasureTool (Water Level / Pressure Measurement)
-// FRD AC-1 ~ AC-3
+// Unit tests only — Docker integration tests are in measuretool_docker_test.go
 
 func TestMeasureToolTool_Info(t *testing.T) {
 	tool := NewMeasureToolTool()
@@ -29,101 +29,6 @@ func TestMeasureToolTool_Info(t *testing.T) {
 }
 
 func TestMeasureToolTool_Run(t *testing.T) {
-	t.Run("AC-1: probe_points.txt based measurement success", func(t *testing.T) {
-		// probe_points.txt 기반 측정 성공
-		// Solver 완료 후 → CSV 파일 생성, 데이터 행 > 0
-		tool := NewMeasureToolTool()
-		params := MeasureToolParams{
-			DataDir:    "/tmp/measuretool_test_data",
-			PointsFile: "/tmp/measuretool_test_data/probe_points.txt",
-			OutCSV:     "/tmp/measuretool_test_out/measure",
-		}
-
-		paramsJSON, err := json.Marshal(params)
-		require.NoError(t, err)
-
-		call := ToolCall{
-			Name:  "measuretool",
-			Input: string(paramsJSON),
-		}
-
-		response, err := tool.Run(context.Background(), call)
-		require.NoError(t, err)
-		assert.False(t, response.IsError)
-		assert.Contains(t, response.Content, ".csv")
-	})
-
-	t.Run("AC-2: elevation mode generates _Elevation.csv", func(t *testing.T) {
-		// 수위 높이(elevation) 모드 동작
-		// elevation=true → _Elevation.csv 파일 생성
-		elevation := true
-		tool := NewMeasureToolTool()
-		params := MeasureToolParams{
-			DataDir:    "/tmp/measuretool_test_data",
-			PointsFile: "/tmp/measuretool_test_data/probe_points.txt",
-			OutCSV:     "/tmp/measuretool_test_out/measure",
-			Elevation:  &elevation,
-		}
-
-		paramsJSON, err := json.Marshal(params)
-		require.NoError(t, err)
-
-		call := ToolCall{
-			Name:  "measuretool",
-			Input: string(paramsJSON),
-		}
-
-		response, err := tool.Run(context.Background(), call)
-		require.NoError(t, err)
-		assert.False(t, response.IsError)
-		assert.Contains(t, response.Content, "Elevation")
-	})
-
-	t.Run("AC-3: CSV format validity", func(t *testing.T) {
-		// CSV 파일 포맷 정합성
-		// 헤더 행 + 숫자 데이터, 파싱 가능 확인
-		tool := NewMeasureToolTool()
-		params := MeasureToolParams{
-			DataDir:    "/tmp/measuretool_test_data",
-			PointsFile: "/tmp/measuretool_test_data/probe_points.txt",
-			OutCSV:     "/tmp/measuretool_test_out/measure",
-		}
-
-		paramsJSON, err := json.Marshal(params)
-		require.NoError(t, err)
-
-		call := ToolCall{
-			Name:  "measuretool",
-			Input: string(paramsJSON),
-		}
-
-		response, err := tool.Run(context.Background(), call)
-		require.NoError(t, err)
-		assert.False(t, response.IsError)
-	})
-
-	t.Run("handles custom variable selection", func(t *testing.T) {
-		tool := NewMeasureToolTool()
-		params := MeasureToolParams{
-			DataDir:    "/tmp/measuretool_test_data",
-			PointsFile: "/tmp/measuretool_test_data/probe_points.txt",
-			OutCSV:     "/tmp/measuretool_test_out/measure",
-			Vars:       []string{"vel", "press"},
-		}
-
-		paramsJSON, err := json.Marshal(params)
-		require.NoError(t, err)
-
-		call := ToolCall{
-			Name:  "measuretool",
-			Input: string(paramsJSON),
-		}
-
-		response, err := tool.Run(context.Background(), call)
-		require.NoError(t, err)
-		assert.False(t, response.IsError)
-	})
-
 	t.Run("handles invalid JSON parameters", func(t *testing.T) {
 		tool := NewMeasureToolTool()
 		call := ToolCall{
