@@ -33,7 +33,13 @@ require (
 	github.com/stretchr/testify v1.10.0
 )
 
-require github.com/charmbracelet/harmonica v0.2.0 // indirect
+require (
+	github.com/charmbracelet/harmonica v0.2.0 // indirect
+	github.com/charmbracelet/huh v0.8.0 // indirect
+	github.com/charmbracelet/x/exp/strings v0.0.0-20240722160745-212f7b056ed0 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
+)
 
 require (
 	cloud.google.com/go v0.116.0 // indirect

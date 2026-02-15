@@ -84,6 +84,10 @@ func (x *xmlGeneratorTool) Info() ToolInfo {
 				"type":        "string",
 				"description": "출력 경로 (.xml 확장자 자동 추가)",
 			},
+			"boundary_method": map[string]any{
+				"type":        "string",
+				"description": "경계 조건 방식: dbc (기본, 빠름) 또는 mdbc (고정밀, 압력 정확도 향상)",
+			},
 		},
 		Required: []string{
 			"tank_length", "tank_width", "tank_height",

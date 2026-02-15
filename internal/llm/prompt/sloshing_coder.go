@@ -66,8 +66,22 @@ f₁ = (1/2π) × √(g × π/L × tanh(π/L × h))
 - 시뮬레이션 결과는 simulations/ 하위에 저장합니다
 - 에러 발생 시 한국어로 원인과 해결 방법을 안내합니다
 
-# 제약 사항 (v0.2)
-- 직사각형 탱크만 지원 (원통형은 geometry tool 사용)
-- 정현파 가진만 지원 (CSV 입력은 seismic_input tool 사용)
+# 지원 기능 (v0.3)
+
+## 탱크 형상
+- 직사각형 (기본): xml_generator로 직접 생성
+- 원통형: geometry tool → cylindrical 타입
+- L형: geometry tool → l_shaped 타입
+
+## 경계 조건 방식 (boundary_method 파라미터)
+- "dbc" (기본): Dynamic Boundary Condition — 빠르지만 정밀도 낮음
+- "mdbc": Modified Dynamic Boundary Condition — 압력 정밀도 향상, 벽면 근처 아티팩트 감소
+- 사용자가 "mDBC", "정밀 경계", "고정밀"을 언급하면 boundary_method="mdbc" 사용
+
+## 가진 입력
+- 정현파: freq/amplitude 직접 지정 (기본)
+- 지진파/파도 CSV: seismic_input tool로 파일 파싱 후 변환
+
+# 제약 사항
 - 물(1000 kg/m³) 단일 유체
 - 3D 시뮬레이션만`
