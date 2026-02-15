@@ -74,6 +74,9 @@ type Theme interface {
 	SyntaxType() lipgloss.AdaptiveColor
 	SyntaxOperator() lipgloss.AdaptiveColor
 	SyntaxPunctuation() lipgloss.AdaptiveColor
+
+	// Semantic design tokens for TUI components
+	Tokens() SemanticTokens
 }
 
 // BaseTheme provides a default implementation of the Theme interface

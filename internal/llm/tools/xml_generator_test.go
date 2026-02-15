@@ -352,3 +352,153 @@ func TestXMLGeneratorTool_Run(t *testing.T) {
 		assert.True(t, response.IsError)
 	})
 }
+
+// MDBC-01: Boundary Method support tests
+
+func TestXMLGeneratorTool_MDBC(t *testing.T) {
+	t.Run("MDBC-01: default boundary method is DBC (method=1)", func(t *testing.T) {
+		tool := NewXMLGeneratorTool()
+		tmpDir := t.TempDir()
+
+		outPath := filepath.Join(tmpDir, "test_dbc_Def")
+		params := XMLGeneratorParams{
+			TankLength:  1.0,
+			TankWidth:   0.5,
+			TankHeight:  0.6,
+			FluidHeight: 0.3,
+			Freq:        0.5,
+			Amplitude:   0.05,
+			DP:          0.02,
+			TimeMax:     5.0,
+			OutPath:     outPath,
+		}
+
+		paramsJSON, err := json.Marshal(params)
+		require.NoError(t, err)
+
+		call := ToolCall{
+			Name:  "xml_generator",
+			Input: string(paramsJSON),
+		}
+
+		response, err := tool.Run(context.Background(), call)
+		require.NoError(t, err)
+		assert.False(t, response.IsError)
+
+		// Default: should NOT have boundary method=2 (mDBC)
+		xmlContent, err := os.ReadFile(outPath + ".xml")
+		require.NoError(t, err)
+		content := string(xmlContent)
+		assert.NotContains(t, content, `<boundary`, "Default XML should not have explicit boundary element (uses DBC default)")
+	})
+
+	t.Run("MDBC-01: boundary_method=mdbc generates mDBC XML", func(t *testing.T) {
+		tool := NewXMLGeneratorTool()
+		tmpDir := t.TempDir()
+
+		outPath := filepath.Join(tmpDir, "test_mdbc_Def")
+		params := XMLGeneratorParams{
+			TankLength:     1.0,
+			TankWidth:      0.5,
+			TankHeight:     0.6,
+			FluidHeight:    0.3,
+			Freq:           0.5,
+			Amplitude:      0.05,
+			DP:             0.02,
+			TimeMax:        5.0,
+			OutPath:        outPath,
+			BoundaryMethod: "mdbc",
+		}
+
+		paramsJSON, err := json.Marshal(params)
+		require.NoError(t, err)
+
+		call := ToolCall{
+			Name:  "xml_generator",
+			Input: string(paramsJSON),
+		}
+
+		response, err := tool.Run(context.Background(), call)
+		require.NoError(t, err)
+		assert.False(t, response.IsError)
+
+		xmlContent, err := os.ReadFile(outPath + ".xml")
+		require.NoError(t, err)
+		content := string(xmlContent)
+
+		// mDBC requires <simulationdomain> and boundary method attribute
+		assert.Contains(t, content, `BoundaryMethod`, "mDBC XML should set BoundaryMethod parameter")
+		assert.Contains(t, content, `value="2"`, "mDBC should use method value 2")
+	})
+
+	t.Run("MDBC-01: boundary_method=dbc generates standard DBC XML", func(t *testing.T) {
+		tool := NewXMLGeneratorTool()
+		tmpDir := t.TempDir()
+
+		outPath := filepath.Join(tmpDir, "test_dbc_explicit_Def")
+		params := XMLGeneratorParams{
+			TankLength:     1.0,
+			TankWidth:      0.5,
+			TankHeight:     0.6,
+			FluidHeight:    0.3,
+			Freq:           0.5,
+			Amplitude:      0.05,
+			DP:             0.02,
+			TimeMax:        5.0,
+			OutPath:        outPath,
+			BoundaryMethod: "dbc",
+		}
+
+		paramsJSON, err := json.Marshal(params)
+		require.NoError(t, err)
+
+		call := ToolCall{
+			Name:  "xml_generator",
+			Input: string(paramsJSON),
+		}
+
+		response, err := tool.Run(context.Background(), call)
+		require.NoError(t, err)
+		assert.False(t, response.IsError)
+
+		xmlContent, err := os.ReadFile(outPath + ".xml")
+		require.NoError(t, err)
+		content := string(xmlContent)
+
+		// Explicit DBC: should have BoundaryMethod=1
+		assert.Contains(t, content, `BoundaryMethod`, "Explicit DBC should set BoundaryMethod parameter")
+		assert.Contains(t, content, `value="1"`, "DBC should use method value 1")
+	})
+
+	t.Run("MDBC-01: invalid boundary method returns error", func(t *testing.T) {
+		tool := NewXMLGeneratorTool()
+		tmpDir := t.TempDir()
+
+		outPath := filepath.Join(tmpDir, "test_invalid_Def")
+		params := XMLGeneratorParams{
+			TankLength:     1.0,
+			TankWidth:      0.5,
+			TankHeight:     0.6,
+			FluidHeight:    0.3,
+			Freq:           0.5,
+			Amplitude:      0.05,
+			DP:             0.02,
+			TimeMax:        5.0,
+			OutPath:        outPath,
+			BoundaryMethod: "invalid_method",
+		}
+
+		paramsJSON, err := json.Marshal(params)
+		require.NoError(t, err)
+
+		call := ToolCall{
+			Name:  "xml_generator",
+			Input: string(paramsJSON),
+		}
+
+		response, err := tool.Run(context.Background(), call)
+		require.NoError(t, err)
+		assert.True(t, response.IsError)
+		assert.Contains(t, response.Content, "경계 조건 방식")
+	})
+}

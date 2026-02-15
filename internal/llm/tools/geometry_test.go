@@ -105,6 +105,74 @@ func TestLShapedGeometry(t *testing.T) {
 	})
 }
 
+func TestLShapedGeometry_EdgeCases(t *testing.T) {
+	t.Run("GEO-02: equal width sections (W1==W2)", func(t *testing.T) {
+		L1 := 1.0
+		W1 := 0.5
+		L2 := 0.8
+		W2 := 0.5 // Same as W1
+		H := 1.0
+		fluidHeight := 0.4
+		dp := 0.02
+
+		xml := LShapedGeometry(L1, W1, L2, W2, H, fluidHeight, dp)
+
+		assert.Contains(t, xml, "<definition dp=")
+		assert.Contains(t, xml, "<drawbox>")
+		assert.Contains(t, xml, "<shapeout file=\"Tank\"")
+	})
+
+	t.Run("GEO-02: very small dp ratio", func(t *testing.T) {
+		L1 := 2.0
+		W1 := 1.0
+		L2 := 1.0
+		W2 := 0.5
+		H := 1.5
+		fluidHeight := 0.7
+		dp := 0.005
+
+		xml := LShapedGeometry(L1, W1, L2, W2, H, fluidHeight, dp)
+
+		// margin = dp * 5 = 0.025
+		assert.Contains(t, xml, `dp="0.005"`)
+		assert.Contains(t, xml, "<pointmin")
+		assert.Contains(t, xml, "<pointmax")
+	})
+
+	t.Run("GEO-02: L2 > L1 scenario (wider second section)", func(t *testing.T) {
+		L1 := 0.5
+		W1 := 0.5
+		L2 := 1.0 // L2 > L1
+		W2 := 0.3
+		H := 0.8
+		fluidHeight := 0.3
+		dp := 0.01
+
+		xml := LShapedGeometry(L1, W1, L2, W2, H, fluidHeight, dp)
+
+		// pointmax x should use max(L1, L2) = 1.0
+		assert.Contains(t, xml, "<pointmax")
+		// Two fluid boxes
+		assert.Contains(t, xml, "<drawbox>")
+	})
+
+	t.Run("GEO-02: fluid height at full tank", func(t *testing.T) {
+		L1 := 1.0
+		W1 := 0.5
+		L2 := 0.6
+		W2 := 0.4
+		H := 1.0
+		fluidHeight := 1.0 // Full tank
+		dp := 0.02
+
+		xml := LShapedGeometry(L1, W1, L2, W2, H, fluidHeight, dp)
+
+		// Should still generate valid XML with two fluid boxes
+		drawboxCount := strings.Count(xml, "<drawbox>")
+		assert.GreaterOrEqual(t, drawboxCount, 4, "Should have at least 4 drawbox elements (2 fluid + 2 boundary)")
+	})
+}
+
 func TestMotionSeismicWave(t *testing.T) {
 	t.Run("EXC-01: generates seismic wave motion XML", func(t *testing.T) {
 		// 지진파 motion 생성

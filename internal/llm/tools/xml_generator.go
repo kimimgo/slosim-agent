@@ -18,10 +18,11 @@ type XMLGeneratorParams struct {
 	DP          float64 `json:"dp"`
 	TimeMax     float64 `json:"time_max"`
 	OutPath     string  `json:"out_path"`
-	Dimension   string  `json:"dimension,omitempty"`  // "2D" or "3D" (default: "3D")
-	Geometry    string  `json:"geometry,omitempty"`   // "rectangular", "cylindrical", "l_shaped"
+	Dimension      string `json:"dimension,omitempty"`       // "2D" or "3D" (default: "3D")
+	Geometry       string `json:"geometry,omitempty"`        // "rectangular", "cylindrical", "l_shaped"
 	ExcitationType string `json:"excitation_type,omitempty"` // "sinusoidal", "seismic", "custom"
-	SeismicFile string `json:"seismic_file,omitempty"` // EXC-01: Path to seismic wave file
+	SeismicFile    string `json:"seismic_file,omitempty"`    // EXC-01: Path to seismic wave file
+	BoundaryMethod string `json:"boundary_method,omitempty"` // MDBC-01: "dbc" (default) or "mdbc"
 }
 
 type xmlGeneratorTool struct{}
@@ -125,6 +126,11 @@ func (x *xmlGeneratorTool) Run(ctx context.Context, call ToolCall) (ToolResponse
 		params.Dimension = "3D"
 	}
 
+	// MDBC-01: Validate boundary method
+	if params.BoundaryMethod != "" && params.BoundaryMethod != "dbc" && params.BoundaryMethod != "mdbc" {
+		return NewTextErrorResponse(fmt.Sprintf("경계 조건 방식이 올바르지 않습니다: '%s' (dbc 또는 mdbc만 지원)", params.BoundaryMethod)), nil
+	}
+
 	// Generate XML (DIM-01: 2D support)
 	xmlContent := generateSloshingXML(params)
 	xmlPath := params.OutPath + ".xml"
@@ -167,6 +173,14 @@ func generateSloshingXML(p XMLGeneratorParams) string {
 	marginPct := p.Amplitude / L * 100 + 10
 	if marginPct < 10 {
 		marginPct = 10
+	}
+
+	// MDBC-01: Boundary method parameter line
+	boundaryMethodLine := ""
+	if p.BoundaryMethod == "mdbc" {
+		boundaryMethodLine = "\n            <parameter key=\"BoundaryMethod\" value=\"2\" comment=\"2:mDBC\" />"
+	} else if p.BoundaryMethod == "dbc" {
+		boundaryMethodLine = "\n            <parameter key=\"BoundaryMethod\" value=\"1\" comment=\"1:DBC\" />"
 	}
 
 	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8" ?>
@@ -265,7 +279,7 @@ func generateSloshingXML(p XMLGeneratorParams) string {
             <parameter key="TimeOut" value="%g" units_comment="seconds" />
             <parameter key="PartsOutMax" value="1" />
             <parameter key="RhopOutMin" value="700" />
-            <parameter key="RhopOutMax" value="1300" />
+            <parameter key="RhopOutMax" value="1300" />%s
             <simulationdomain>
                 <posmin x="default - %.0f%%%%" y="default" z="default" />
                 <posmax x="default + %.0f%%%%" y="default" z="default + 50%%%%" />
@@ -290,6 +304,8 @@ func generateSloshingXML(p XMLGeneratorParams) string {
 		rightX, centerY, rightX, centerY, H,
 		// parameters: TimeMax, TimeOut
 		p.TimeMax, timeOut,
+		// MDBC-01: boundary method parameter line
+		boundaryMethodLine,
 		// simulationdomain: X margin percentages
 		marginPct, marginPct,
 	)

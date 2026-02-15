@@ -3,8 +3,10 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -310,6 +312,178 @@ seconds m/s^2
 		require.NoError(t, err)
 		assert.Len(t, timeData, 2)
 		assert.Len(t, accelData, 2)
+	})
+}
+
+// EXC-E2E: Additional edge case tests
+
+func TestSeismicInputTool_EdgeCases(t *testing.T) {
+	t.Run("EXC-E2E: large seismic file (1000 samples)", func(t *testing.T) {
+		tempDir := t.TempDir()
+		dataPath := filepath.Join(tempDir, "large_seismic.txt")
+
+		// Generate 1000-sample dataset
+		var builder strings.Builder
+		builder.WriteString("# Large seismic dataset\n")
+		for i := 0; i < 1000; i++ {
+			tv := float64(i) * 0.01
+			a := 0.5 * float64(i%10) // Simple pattern
+			builder.WriteString(fmt.Sprintf("%.4f %.6f\n", tv, a))
+		}
+		err := os.WriteFile(dataPath, []byte(builder.String()), 0644)
+		require.NoError(t, err)
+
+		tool := NewSeismicInputTool()
+		params := SeismicInputParams{
+			FilePath:     dataPath,
+			ValidateOnly: true,
+		}
+
+		paramsJSON, err := json.Marshal(params)
+		require.NoError(t, err)
+
+		call := ToolCall{
+			Name:  SeismicInputToolName,
+			Input: string(paramsJSON),
+		}
+
+		response, err := tool.Run(context.Background(), call)
+		require.NoError(t, err)
+		assert.False(t, response.IsError)
+		assert.Contains(t, response.Content, "샘플 수: 1000")
+	})
+
+	t.Run("EXC-E2E: non-uniform time spacing", func(t *testing.T) {
+		tempDir := t.TempDir()
+		dataPath := filepath.Join(tempDir, "nonuniform.txt")
+
+		// Non-uniform time steps
+		dataContent := `0.0 0.0
+0.01 0.5
+0.05 1.0
+0.06 0.8
+0.20 0.0
+`
+		err := os.WriteFile(dataPath, []byte(dataContent), 0644)
+		require.NoError(t, err)
+
+		tool := NewSeismicInputTool()
+		params := SeismicInputParams{
+			FilePath:     dataPath,
+			ValidateOnly: true,
+		}
+
+		paramsJSON, err := json.Marshal(params)
+		require.NoError(t, err)
+
+		call := ToolCall{
+			Name:  SeismicInputToolName,
+			Input: string(paramsJSON),
+		}
+
+		response, err := tool.Run(context.Background(), call)
+		require.NoError(t, err)
+		assert.False(t, response.IsError)
+		assert.Contains(t, response.Content, "샘플 수: 5")
+		assert.Contains(t, response.Content, "지속 시간: 0.200")
+	})
+
+	t.Run("EXC-E2E: wrong column index returns error", func(t *testing.T) {
+		tempDir := t.TempDir()
+		dataPath := filepath.Join(tempDir, "twocol.txt")
+
+		// Only 2 columns (0 and 1)
+		dataContent := `0.0 1.0
+0.1 2.0
+`
+		err := os.WriteFile(dataPath, []byte(dataContent), 0644)
+		require.NoError(t, err)
+
+		tool := NewSeismicInputTool()
+		params := SeismicInputParams{
+			FilePath:    dataPath,
+			AccelColumn: 5, // Index 5 doesn't exist
+			ValidateOnly: true,
+		}
+
+		paramsJSON, err := json.Marshal(params)
+		require.NoError(t, err)
+
+		call := ToolCall{
+			Name:  SeismicInputToolName,
+			Input: string(paramsJSON),
+		}
+
+		response, err := tool.Run(context.Background(), call)
+		require.NoError(t, err)
+		// When column index exceeds available fields, rows are silently skipped
+		// leading to empty data → error
+		assert.True(t, response.IsError)
+		assert.Contains(t, response.Content, "데이터가 비어 있습니다")
+	})
+
+	t.Run("EXC-E2E: file with only comments", func(t *testing.T) {
+		tempDir := t.TempDir()
+		dataPath := filepath.Join(tempDir, "comments_only.txt")
+
+		dataContent := `# Comment line 1
+# Comment line 2
+# Comment line 3
+`
+		err := os.WriteFile(dataPath, []byte(dataContent), 0644)
+		require.NoError(t, err)
+
+		tool := NewSeismicInputTool()
+		params := SeismicInputParams{
+			FilePath: dataPath,
+		}
+
+		paramsJSON, err := json.Marshal(params)
+		require.NoError(t, err)
+
+		call := ToolCall{
+			Name:  SeismicInputToolName,
+			Input: string(paramsJSON),
+		}
+
+		response, err := tool.Run(context.Background(), call)
+		require.NoError(t, err)
+		assert.True(t, response.IsError)
+		assert.Contains(t, response.Content, "데이터가 비어 있습니다")
+	})
+
+	t.Run("EXC-E2E: negative acceleration values", func(t *testing.T) {
+		tempDir := t.TempDir()
+		dataPath := filepath.Join(tempDir, "negative.txt")
+
+		dataContent := `0.0 -5.5
+0.1 -2.3
+0.2 0.0
+0.3 3.1
+0.4 -8.7
+`
+		err := os.WriteFile(dataPath, []byte(dataContent), 0644)
+		require.NoError(t, err)
+
+		tool := NewSeismicInputTool()
+		params := SeismicInputParams{
+			FilePath:     dataPath,
+			ValidateOnly: true,
+		}
+
+		paramsJSON, err := json.Marshal(params)
+		require.NoError(t, err)
+
+		call := ToolCall{
+			Name:  SeismicInputToolName,
+			Input: string(paramsJSON),
+		}
+
+		response, err := tool.Run(context.Background(), call)
+		require.NoError(t, err)
+		assert.False(t, response.IsError)
+		assert.Contains(t, response.Content, "-8.7")  // min accel
+		assert.Contains(t, response.Content, "3.1")    // max accel
 	})
 }
 

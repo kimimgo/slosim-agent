@@ -308,6 +308,31 @@ func testScenarios() []promptScenario {
 			ExpectedTools:  []string{"xml_generator"},
 			ForbiddenTools: []string{"error_recovery"},
 		},
+		// AGENT-E2E: v0.3 추가 시나리오
+		{
+			Name:           "MDBC01_BoundaryMethod",
+			UserPrompt:     "1m x 0.5m x 0.6m 탱크에서 mDBC 경계조건으로 슬로싱 해석해줘. 주파수 0.5Hz, 진폭 1cm",
+			ExpectedTools:  []string{"xml_generator"},
+			ForbiddenTools: []string{"error_recovery", "monitor", "solver"},
+		},
+		{
+			Name:           "GEO02_LShapedTank",
+			UserPrompt:     "L자 형태 탱크로 슬로싱 해석해줘. 주파수 0.3Hz",
+			ExpectedTools:  []string{"xml_generator"},
+			ForbiddenTools: []string{"error_recovery"},
+		},
+		{
+			Name:           "EXC01_SeismicInput",
+			UserPrompt:     "지진파 데이터 파일 earthquake.csv 로 슬로싱 해석해줘. 탱크 크기 2m x 1m x 1.5m",
+			ExpectedTools:  []string{"xml_generator"},
+			ForbiddenTools: []string{"error_recovery", "monitor"},
+		},
+		{
+			Name:           "ErrorRecovery_NotCalledFirst",
+			UserPrompt:     "해석이 불안정해졌어. 타임스텝 줄여서 다시 해봐",
+			ExpectedTools:  []string{"error_recovery", "monitor"},
+			ForbiddenTools: []string{"xml_generator"},
+		},
 	}
 }
 
