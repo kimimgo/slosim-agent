@@ -50,10 +50,10 @@ func (i *detailCmp) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (i *detailCmp) updateContent() {
 	var content strings.Builder
-	t := theme.CurrentTheme()
+	tokens := getTokens()
 
 	// Format the header with timestamp and level
-	timeStyle := lipgloss.NewStyle().Foreground(t.TextMuted())
+	timeStyle := lipgloss.NewStyle().Foreground(tokens.DataLabel)
 	levelStyle := getLevelStyle(i.currentLog.Level)
 
 	header := lipgloss.JoinHorizontal(
@@ -67,7 +67,7 @@ func (i *detailCmp) updateContent() {
 	content.WriteString("\n\n")
 
 	// Message with styling
-	messageStyle := lipgloss.NewStyle().Bold(true).Foreground(t.Text())
+	messageStyle := lipgloss.NewStyle().Bold(true).Foreground(tokens.DataValue)
 	content.WriteString(messageStyle.Render("Message:"))
 	content.WriteString("\n")
 	content.WriteString(lipgloss.NewStyle().Padding(0, 2).Render(i.currentLog.Message))
@@ -75,13 +75,13 @@ func (i *detailCmp) updateContent() {
 
 	// Attributes section
 	if len(i.currentLog.Attributes) > 0 {
-		attrHeaderStyle := lipgloss.NewStyle().Bold(true).Foreground(t.Text())
+		attrHeaderStyle := lipgloss.NewStyle().Bold(true).Foreground(tokens.DataValue)
 		content.WriteString(attrHeaderStyle.Render("Attributes:"))
 		content.WriteString("\n")
 
 		// Create a table-like display for attributes
-		keyStyle := lipgloss.NewStyle().Foreground(t.Primary()).Bold(true)
-		valueStyle := lipgloss.NewStyle().Foreground(t.Text())
+		keyStyle := lipgloss.NewStyle().Foreground(tokens.PanelTitle).Bold(true)
+		valueStyle := lipgloss.NewStyle().Foreground(tokens.DataValue)
 
 		for _, attr := range i.currentLog.Attributes {
 			attrLine := fmt.Sprintf("%s: %s",
@@ -98,19 +98,19 @@ func (i *detailCmp) updateContent() {
 
 func getLevelStyle(level string) lipgloss.Style {
 	style := lipgloss.NewStyle().Bold(true)
-	t := theme.CurrentTheme()
-	
+	tokens := getTokens()
+
 	switch strings.ToLower(level) {
 	case "info":
-		return style.Foreground(t.Info())
+		return style.Foreground(tokens.PanelTitle)
 	case "warn", "warning":
-		return style.Foreground(t.Warning())
+		return style.Foreground(tokens.StatusWarning)
 	case "error", "err":
-		return style.Foreground(t.Error())
+		return style.Foreground(tokens.StatusError)
 	case "debug":
-		return style.Foreground(t.Success())
+		return style.Foreground(tokens.StatusRunning)
 	default:
-		return style.Foreground(t.Text())
+		return style.Foreground(tokens.DataValue)
 	}
 }
 

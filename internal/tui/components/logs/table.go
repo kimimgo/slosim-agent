@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/opencode-ai/opencode/internal/logging"
 	"github.com/opencode-ai/opencode/internal/pubsub"
 	"github.com/opencode-ai/opencode/internal/tui/layout"
@@ -63,8 +64,9 @@ func (i *tableCmp) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (i *tableCmp) View() string {
 	t := theme.CurrentTheme()
+	tokens := getTokens()
 	defaultStyles := table.DefaultStyles()
-	defaultStyles.Selected = defaultStyles.Selected.Foreground(t.Primary())
+	defaultStyles.Selected = defaultStyles.Selected.Foreground(tokens.ListCursor)
 	i.table.SetStyles(defaultStyles)
 	return styles.ForceReplaceBackgroundWithLipgloss(i.table.View(), t.Background())
 }
@@ -133,5 +135,29 @@ func NewLogsTable() TableComponent {
 	tableModel.Focus()
 	return &tableCmp{
 		table: tableModel,
+	}
+}
+
+func getTokens() theme.SemanticTokens {
+	t := theme.CurrentTheme()
+	if t != nil {
+		return t.Tokens()
+	}
+	return theme.SemanticTokens{
+		PanelBg:        lipgloss.AdaptiveColor{Dark: "#222", Light: "#eee"},
+		PanelBorder:    lipgloss.AdaptiveColor{Dark: "#444", Light: "#ccc"},
+		PanelTitle:     lipgloss.AdaptiveColor{Dark: "#88f", Light: "#44a"},
+		StatusRunning:  lipgloss.AdaptiveColor{Dark: "#0f0", Light: "#0a0"},
+		StatusError:    lipgloss.AdaptiveColor{Dark: "#f00", Light: "#a00"},
+		StatusWarning:  lipgloss.AdaptiveColor{Dark: "#ff0", Light: "#aa0"},
+		StatusIdle:     lipgloss.AdaptiveColor{Dark: "#888", Light: "#666"},
+		ListCursor:     lipgloss.AdaptiveColor{Dark: "#88f", Light: "#44a"},
+		ListItemNormal: lipgloss.AdaptiveColor{Dark: "#ccc", Light: "#333"},
+		DataLabel:      lipgloss.AdaptiveColor{Dark: "#888", Light: "#666"},
+		DataValue:      lipgloss.AdaptiveColor{Dark: "#fff", Light: "#000"},
+		DataUnit:       lipgloss.AdaptiveColor{Dark: "#666", Light: "#888"},
+		PanelPadding:   1,
+		PanelMargin:    0,
+		SectionGap:     1,
 	}
 }
