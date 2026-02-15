@@ -75,6 +75,9 @@ type WizardParams struct {
 	CFL            float64
 	BoundaryMethod BoundaryMethodType
 	OutPath        string
+
+	// Internal: form state for huh string↔float conversion
+	formState *formState
 }
 
 // DefaultWizardParams returns sensible defaults for a new simulation.
