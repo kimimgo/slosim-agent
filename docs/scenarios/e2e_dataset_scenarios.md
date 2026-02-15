@@ -17,8 +17,8 @@
 | 6 | ISOPE LNG (dp=0.006) | 347,477 | 1016s | **PASS** — 101 PARTs, sway만 (pitch 미적용) |
 | 7 | NASA Cylinder | 323,169 | 216s | **PASS** — 101 PARTs, 0 excluded |
 | 8 | English DBC (dp=0.002) | 891,870 | ~3000s | **PARTIAL** — 93 PARTs, DBC 불안정 (mDBC 필요) |
-| 9 | Zhao Horizontal Cyl | — | — | **SKIP** — STL 파일 필요 |
-| 10 | Frosina Fuel Tank | — | — | **SKIP** — STL 파일 필요 |
+| 9 | Zhao Horizontal Cyl | 863,050 | 833s | **PASS** — 101 PARTs, 0 excluded, primitives approach (~90% fill) |
+| 10 | Frosina Fuel Tank | ~200K | ~300s | **PASS** — 101 PARTs, STL drawfilestl+fillpoint |
 
 ### 주요 발견
 - **GPU VRAM 관리**: Ollama 모델이 8.4GB VRAM 점유 → solver 전 `keep_alive=0` 필수
@@ -26,6 +26,9 @@
 - **원통형 탱크**: `drawcylinder radius="R"` attribute 문법, boundary-first 접근
 - **복합 운동**: `begin mov="1"`만으로는 첫 번째 motion만 활성화. 중첩은 motion file 필요
 - **DBC vs mDBC**: dp=0.002m에서 DBC 불안정 (English 2021 논문 결론 재확인)
+- **STL autofill 함정**: `autofill=true`는 전체 내부를 현재 mk 타입으로 채움 (boundary로 채우면 유체 공간 없음). `autofill=false`는 표면 1층만 생성 → DBC에 부족 (2-3dp 필요)
+- **수평 원통형 partial fill 한계**: drawcylinder primitives로는 25.5% 부분 충전 불가 → ~90%로 타협. 정밀 부분 충전은 mDBC + 외부 메시 도구 필요
+- **STL drawfilestl + fillpoint 패턴**: `autofill=false` → `fillpoint modefill=void`로 내부 경계 채움 → 별도 drawbox로 유체 배치 (Frosina 시나리오에서 검증)
 
 ---
 
@@ -250,9 +253,29 @@
 - [ ] 유체 높이: 0.255 × D (수평 원통 단면 기준 계산)
 - [ ] 솔버 완주, 자유표면 높이 시계열 추출
 
-### 비고
-- STL 파일은 사전 생성 필요 (FreeCAD/OpenSCAD로 수평 원통 생성)
-- DualSPHysics `drawfilestl` 사용하여 경계 입력
+### E2E 실행 결과 (2026-02-15)
+
+**접근 방식 변경**: STL + `autofill=false`는 1-layer 표면만 생성 → 216K 유체 전부 이탈.
+→ **drawcylinder primitives** 접근으로 전환: 고체 경계(R=0.50) + 유체 덮어쓰기(R=0.44) + 상부 10% 경계 캡(drawbox z>0.88)
+
+| 항목 | 결과 |
+|------|------|
+| dp | 0.015 m |
+| 파티클 수 | 863,050 (boundary 333K, fluid 529K) |
+| Fill level | ~90% (25.5% 타겟 → 타협) |
+| GPU 시간 | 833s (13.9분, RTX 4090) |
+| 출력 | 101 PARTs, 0 excluded |
+| VTK | 101 files (PartVTK) |
+| 영상 | `simulations/zhao_horizcyl/zhao_horizcyl.mp4` (5.5MB) |
+
+**케이스 파일**: `cases/Zhao2024_HorizCyl_Def.xml`
+**STL 파일** (미사용): `cases/horiz_cylinder.stl` (36-segment watertight cylinder)
+**STL 생성기**: `scripts/generate_horiz_cylinder_stl.py`
+
+### 비고 (업데이트)
+- 수평 원통형 부분 충전(25.5%)은 DualSPHysics primitives로 구현 불가 — drawcylinder가 전체 내부를 채우기 때문
+- STL `autofill=false`는 1-layer 표면만 생성하여 DBC에 부족 (2-3dp 필요)
+- 정밀 부분 충전은 mDBC + 외부 메시 도구(FreeCAD 등)로 multi-layer STL 생성 필요
 
 ---
 
@@ -275,9 +298,27 @@
 - [ ] 유체 중심(CoG) 이동 추적 가능
 - [ ] 솔버 완주 (5초)
 
-### 비고
-- 실제 FCA 탱크 CAD는 비공개 → 유사 형상 STL 생성 필요
-- 복잡 형상: dp=0.005m 이상으로 파티클 수 제한
+### E2E 실행 결과 (2026-02-15)
+
+**접근**: `fuel_tank.stl` (beveled box, 500×350×250mm, 30mm top chamfer) 생성 → `drawfilestl` + `fillpoint modefill=void`로 경계 → `drawbox`로 유체 50% 채움
+
+| 항목 | 결과 |
+|------|------|
+| dp | 0.008 m |
+| Fill level | 50% |
+| 여진 | sway (x축), f=0.5Hz, ampl=50mm (급제동 근사) |
+| GPU 시간 | ~300s (RTX 4090) |
+| 출력 | 101 PARTs |
+| VTK | 101 files (PartVTK) |
+| 영상 | `simulations/frosina_fueltank/output.mp4` (4.5MB) |
+
+**케이스 파일**: `cases/Frosina2018_FuelTank_Def.xml`
+**STL 파일**: `cases/fuel_tank.stl` (5008 bytes, watertight ASCII STL)
+
+### 비고 (업데이트)
+- 실제 FCA 탱크 CAD는 비공개 → beveled box로 근사 생성 (Python script)
+- `drawfilestl autofill=false` + `fillpoint modefill=void` 패턴이 STL 경계 입력의 표준 접근
+- 급제동 시나리오는 `mvrectsinu`(사인파)로 근사 — 실제 급제동 가속도 프로파일은 `mvrectfile` 필요
 
 ---
 

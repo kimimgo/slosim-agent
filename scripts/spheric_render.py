@@ -110,11 +110,12 @@ def render_case_3d(vtk_dir, case_label, cam_pos, cam_focus, cam_scale=0.5):
 
 
 if __name__ == "__main__":
-    # NASA 2023: Cylindrical D=2.84m, H=3.0m, 50% fill, sway
+    # Scenario 9: Zhao 2024 HorizCyl (D=1m, L=3m, ~90% fill, pitch 3deg)
+    # Primitives approach: drawcylinder solid boundary + fluid overwrite
     render_case_3d(
-        f"{BASE_DIR}/nasa_cylinder", "NASA_Cyl",
-        cam_pos=[0.0, -5.0, 1.5],
-        cam_focus=[0.0, 0.0, 1.5],
-        cam_scale=2.0
+        f"{BASE_DIR}/zhao_horizcyl", "Zhao_HorizCyl",
+        cam_pos=[1.5, -3.0, 0.5],
+        cam_focus=[1.5, 0.0, 0.5],
+        cam_scale=1.0
     )
-    print("NASA Cylinder rendering complete.")
+    print("Zhao HorizCyl rendering complete.")
