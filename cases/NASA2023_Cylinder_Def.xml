@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!-- NASA 2023 - Cylindrical Tank (simplified, no baffle)
+     Tank:   D=2.84m (R=1.42m), H=3.0m, vertical cylinder
+     Fill:   50% → h=1.42m (water surface at mid-height)
+     Motion: Horizontal sway, f=0.5Hz, A=10mm
+     Fluid:  Water (rho=998)
+     dp=0.04m (coarse for large tank) -->
 <case>
     <casedef>
         <constantsdef>
@@ -15,56 +21,55 @@
         </constantsdef>
         <mkconfig boundcount="240" fluidcount="9" />
         <geometry>
-            <definition dp="0.012" units_comment="metres (m)">
-                <pointmin x="-0.1" y="-0.05" z="-0.1" />
-                <pointmax x="1.1" y="0.55" z="1.1" />
+            <definition dp="0.04" units_comment="metres (m)">
+                <pointmin x="-1.6" y="-1.6" z="-0.2" />
+                <pointmax x="1.6" y="1.6" z="3.2" />
             </definition>
             <commands>
                 <mainlist>
                     <setshapemode>dp | bound</setshapemode>
                     <setdrawmode mode="full" />
-                    <setmkfluid mk="0" />
-                    <drawbox>
-                        <boxfill>solid</boxfill>
-                        <point x="0" y="0" z="0" />
-                        <size x="1.000" y="0.500" z="0.700" />
-                    </drawbox>
+                    <!-- Tank walls: solid cylinder R=1.42m, H=3.0m (boundary first) -->
                     <setmkbound mk="0" />
-                    <drawbox>
-                        <boxfill>bottom | left | right | front | back</boxfill>
+                    <drawcylinder radius="1.42">
+                        <point x="0" y="0" z="-0.04" />
+                        <point x="0" y="0" z="3.0" />
+                    </drawcylinder>
+                    <!-- Fluid cylinder: R=1.38m, h=1.42m (overwrites interior) -->
+                    <setmkfluid mk="0" />
+                    <drawcylinder radius="1.38">
                         <point x="0" y="0" z="0" />
-                        <size x="1.000" y="0.500" z="1.000" />
-                    </drawbox>
-                    <shapeout file="Liu_Amp3.0" />
+                        <point x="0" y="0" z="1.42" />
+                    </drawcylinder>
+                    <shapeout file="NASA_Cyl" />
                 </mainlist>
             </commands>
         </geometry>
         <motion>
             <objreal ref="0">
                 <begin mov="1" start="0" />
-                <mvrotsinu id="1" duration="20" anglesunits="degrees">
-                    <axisp1 x="0.5" y="0.25" z="0" />
-                    <axisp2 x="0.5" y="-0.25" z="0" />
-                    <freq v="0.87" units_comment="Hz" />
-                    <ampl v="3.0" units_comment="degrees" />
-                    <phase v="0" units_comment="degrees" />
-                </mvrotsinu>
+                <!-- Horizontal sway: f=0.5Hz, A=10mm -->
+                <mvrectsinu id="1" duration="20">
+                    <freq x="0.5" y="0" z="0" units_comment="Hz" />
+                    <ampl x="0.010" y="0" z="0" units_comment="metres" />
+                    <phase x="0" y="0" z="0" units_comment="degrees" />
+                </mvrectsinu>
             </objreal>
         </motion>
     </casedef>
     <execution>
         <special>
             <gauges>
-                <swl name="SWL_Left">
-                    <point0 x="0.010" y="0.250" z="0.0" />
-                    <point2 x="0.010" y="0.250" z="1.0" />
+                <swl name="SWL_Wall_X">
+                    <point0 x="1.40" y="0" z="0.0" />
+                    <point2 x="1.40" y="0" z="3.0" />
                     <pointdp value="0.5" />
                     <masslimit value="0.2" />
                     <savevtk value="false" />
                 </swl>
-                <swl name="SWL_Right">
-                    <point0 x="0.990" y="0.250" z="0.0" />
-                    <point2 x="0.990" y="0.250" z="1.0" />
+                <swl name="SWL_Wall_NegX">
+                    <point0 x="-1.40" y="0" z="0.0" />
+                    <point2 x="-1.40" y="0" z="3.0" />
                     <pointdp value="0.5" />
                     <masslimit value="0.2" />
                     <savevtk value="false" />
@@ -82,8 +87,8 @@
             <parameter key="DensityDTvalue" value="0.1" />
             <parameter key="Shifting" value="0" />
             <parameter key="RigidAlgorithm" value="1" />
-            <parameter key="DtIni" value="0.0001" />
-            <parameter key="DtMin" value="0.00001" />
+            <parameter key="DtIni" value="0.0005" />
+            <parameter key="DtMin" value="0.00005" />
             <parameter key="CoefDtMin" value="0.05" />
             <parameter key="TimeMax" value="20.0" units_comment="seconds" />
             <parameter key="TimeOut" value="0.2" units_comment="seconds (101 frames)" />
@@ -91,8 +96,8 @@
             <parameter key="RhopOutMin" value="700" />
             <parameter key="RhopOutMax" value="1300" />
             <simulationdomain>
-                <posmin x="default - 15%" y="default" z="default - 10%" />
-                <posmax x="default + 15%" y="default" z="default + 50%" />
+                <posmin x="default - 15%" y="default - 15%" z="default - 10%" />
+                <posmax x="default + 15%" y="default + 15%" z="default + 50%" />
             </simulationdomain>
         </parameters>
     </execution>

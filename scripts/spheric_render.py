@@ -110,11 +110,11 @@ def render_case_3d(vtk_dir, case_label, cam_pos, cam_focus, cam_scale=0.5):
 
 
 if __name__ == "__main__":
-    # Liu Amp1: 1000x500x1000mm, 70% fill, 1deg
+    # NASA 2023: Cylindrical D=2.84m, H=3.0m, 50% fill, sway
     render_case_3d(
-        f"{BASE_DIR}/liu_amp1", "Liu_Amp1",
-        cam_pos=[0.5, -1.5, 0.5],
-        cam_focus=[0.5, 0.25, 0.35],
-        cam_scale=0.7
+        f"{BASE_DIR}/nasa_cylinder", "NASA_Cyl",
+        cam_pos=[0.0, -5.0, 1.5],
+        cam_focus=[0.0, 0.0, 1.5],
+        cam_scale=2.0
     )
-    print("Liu Amp1 rendering complete.")
+    print("NASA Cylinder rendering complete.")

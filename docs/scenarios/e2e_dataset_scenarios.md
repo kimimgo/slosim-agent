@@ -3,6 +3,30 @@
 > 각 시나리오는 **실제 사용자가 slosim-agent에 입력할 자연어** + **검증 기준**으로 구성.
 > SPHERIC Test 10 (Low/High Fill Water)는 이미 검증 완료. 나머지 데이터셋 커버.
 
+## E2E GPU 검증 결과 요약 (2026-02-15)
+
+| # | 시나리오 | 파티클 수 | GPU 시간 | 결과 |
+|---|---------|----------|---------|------|
+| 1 | SPHERIC Oil Low Fill | 136,704 | 131s | **PASS** — 101 PARTs, 0 excluded |
+| 2 | Chen Shallow Sway | 173,538 | 174s | **PASS** — 101 PARTs, 0 excluded |
+| 3 | Chen Near-Critical | 313,958 | 430s | **PASS** — 101 PARTs, 0 excluded |
+| 4 | Liu Large Pitch (30s) | 247,264 | 738s | **PASS** — 151 PARTs, 0 excluded |
+| 5a | Liu Amp1 (1deg, dp=0.008) | 723,920 | 2194s | **PASS** — 101 PARTs, 0 excluded |
+| 5b | Liu Amp2 (2deg, dp=0.012) | 225,600 | ~300s | **PASS** — 101 PARTs, 0 excluded |
+| 5c | Liu Amp3 (3deg, dp=0.012) | 225,600 | partial | **PARTIAL** — 27 PARTs (t=5.2s), 공진 불안정 |
+| 6 | ISOPE LNG (dp=0.006) | 347,477 | 1016s | **PASS** — 101 PARTs, sway만 (pitch 미적용) |
+| 7 | NASA Cylinder | 323,169 | 216s | **PASS** — 101 PARTs, 0 excluded |
+| 8 | English DBC (dp=0.002) | 891,870 | ~3000s | **PARTIAL** — 93 PARTs, DBC 불안정 (mDBC 필요) |
+| 9 | Zhao Horizontal Cyl | — | — | **SKIP** — STL 파일 필요 |
+| 10 | Frosina Fuel Tank | — | — | **SKIP** — STL 파일 필요 |
+
+### 주요 발견
+- **GPU VRAM 관리**: Ollama 모델이 8.4GB VRAM 점유 → solver 전 `keep_alive=0` 필수
+- **파티클 한계**: 700K+ 파티클 + 공진 → 불안정 가능. dp 증가로 해결
+- **원통형 탱크**: `drawcylinder radius="R"` attribute 문법, boundary-first 접근
+- **복합 운동**: `begin mov="1"`만으로는 첫 번째 motion만 활성화. 중첩은 motion file 필요
+- **DBC vs mDBC**: dp=0.002m에서 DBC 불안정 (English 2021 논문 결론 재확인)
+
 ---
 
 ## Scenario 1: SPHERIC Test 10 — Oil Low Fill (점성 유체)
