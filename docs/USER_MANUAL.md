@@ -1,7 +1,7 @@
 # slosim-agent 사용자 매뉴얼
 
-> **AI 기반 슬로싱 시뮬레이션 에이전트**
-> 자연어로 슬로싱 분석을 실행하는 터미널 도구
+> **AI 기반 슬로싱 시뮬레이션 에이전트 v0.2**
+> 자연어로 슬로싱 분석을 설정·실행·분석하는 터미널 도구
 >
 > GitHub: https://github.com/kimimgo/slosim-agent
 
@@ -16,7 +16,9 @@
 5. [Tool별 설명](#5-tool별-설명)
 6. [파라메트릭 스터디](#6-파라메트릭-스터디)
 7. [결과 비교 및 리포트 해석](#7-결과-비교-및-리포트-해석)
-8. [트러블슈팅 FAQ](#8-트러블슈팅-faq)
+8. [STL 파일 사용법](#8-stl-파일-사용법)
+9. [트러블슈팅 FAQ](#9-트러블슈팅-faq)
+10. [E2E 검증 결과 요약](#10-e2e-검증-결과-요약)
 
 ---
 
@@ -65,7 +67,7 @@ sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
 
-DualSPHysics Docker 이미지 빌드/풀:
+DualSPHysics Docker 이미지 빌드:
 
 ```bash
 # 프로젝트 클론
@@ -73,11 +75,14 @@ git clone https://github.com/kimimgo/slosim-agent.git
 cd slosim-agent
 
 # DualSPHysics GPU Docker 이미지 빌드
-docker build -t dsph-gpu:5.4 -f docker/Dockerfile.dsph .
+docker compose build
 
 # GPU 접근 확인
-docker run --rm --gpus all dsph-gpu:5.4 nvidia-smi
+docker compose run --rm dsph nvidia-smi
 ```
+
+> **참고**: Docker 이미지(`dsph-agent:latest`)는 소문자 symlink를 사용합니다:
+> `gencase`, `dualsphysics`, `partvtk`, `measuretool` (대문자 아님)
 
 ### 1.3 Go 빌드 (slosim-agent TUI)
 
@@ -85,7 +90,11 @@ docker run --rm --gpus all dsph-gpu:5.4 nvidia-smi
 cd slosim-agent
 
 # 빌드
-go build -o slosim-agent ./cmd/slosim-agent
+go build -o slosim-agent ./main.go
+
+# 버전 정보 포함 빌드
+go build -ldflags "-s -w -X github.com/opencode-ai/opencode/internal/version.Version=v0.2.0" \
+  -o slosim-agent ./main.go
 
 # PATH에 추가 (선택)
 sudo mv slosim-agent /usr/local/bin/
@@ -97,32 +106,37 @@ sudo mv slosim-agent /usr/local/bin/
 # Ollama 설치
 curl -fsSL https://ollama.ai/install.sh | sh
 
-# Qwen3 모델 다운로드
-ollama pull qwen3
+# Qwen3 32B 모델 다운로드 (권장, ~20GB VRAM 필요)
+ollama pull qwen3:32b
+
+# 또는 경량 모델 (8B, ~5GB VRAM)
+ollama pull qwen3:8b
 
 # Ollama 서버 실행 확인
 ollama serve &
 curl http://localhost:11434/api/tags  # 모델 목록 확인
 ```
 
+> **GPU VRAM 관리**: Ollama가 VRAM을 점유하면 DualSPHysics 솔버가 메모리 부족으로 실패할 수 있습니다.
+> 솔버 실행 전 Ollama 모델을 언로드하세요: `curl -X POST http://localhost:11434/api/generate -d '{"model":"qwen3:32b","keep_alive":0}'`
+
 ### 1.5 설정 파일
 
-`~/.config/slosim-agent/config.yaml`:
+`.opencode/config.json` (프로젝트 루트):
 
-```yaml
-llm:
-  provider: ollama
-  model: qwen3
-  endpoint: http://localhost:11434
-
-solver:
-  docker_image: dsph-gpu:5.4
-  gpu_device: 0           # GPU 인덱스
-  max_particles: 5000000  # 최대 입자 수
-
-output:
-  base_dir: ~/slosim-results
-  keep_vtk: true          # VTK 파일 보존 여부
+```json
+{
+  "agents": {
+    "coder": { "model": "qwen3:32b" },
+    "task": { "model": "qwen3:8b" }
+  },
+  "providers": {
+    "ollama": {
+      "apiKey": "ollama",
+      "settings": { "endpoint": "http://localhost:11434" }
+    }
+  }
+}
 ```
 
 ---
@@ -132,8 +146,11 @@ output:
 ### 2.1 첫 시뮬레이션 실행
 
 ```bash
-# slosim-agent 시작
-slosim-agent
+# TUI 모드 (대화형)
+./slosim-agent
+
+# 비대화형 모드 (스크립트/자동화용)
+./slosim-agent -p "직사각형 탱크 1m x 0.5m x 0.6m에 물 50% 채우고 슬로싱 해석해줘"
 ```
 
 TUI가 열리면 프롬프트에 자연어로 입력합니다:
@@ -558,9 +575,71 @@ time(s),sensor1_P(Pa),sensor2_P(Pa),sensor3_P(Pa)
 
 ---
 
-## 8. 트러블슈팅 FAQ
+## 8. STL 파일 사용법
 
-### Docker 관련
+### 8.1 지원 형식
+
+- **ASCII STL** — 텍스트 기반, 디버깅 용이
+- **Binary STL** — 바이너리, 파일 크기 작음
+- 두 형식 모두 자동 감지
+
+### 8.2 수밀성(Watertight) 요구사항
+
+DualSPHysics GenCase는 **수밀한(watertight)** STL만 지원합니다:
+- 모든 edge가 정확히 2개 face에 공유되어야 함
+- 열린 edge나 비다양체(non-manifold) edge가 없어야 함
+- `stl_import` 도구가 자동으로 수밀성을 검증합니다
+
+```
+tank.stl 파일로 슬로싱 해석해줘. 물 50% 채우고 롤링 1.2초 5도.
+```
+
+### 8.3 STL 경계 생성 패턴
+
+DualSPHysics에서 STL을 경계로 사용할 때 권장 패턴:
+
+```xml
+<!-- 1. STL 표면을 경계 파티클로 변환 -->
+<setmkbound mk="0" />
+<drawfilestl file="/cases/tank.stl" autofill="false" />
+
+<!-- 2. 내부를 경계로 채움 (DBC 2-3dp 두께 확보) -->
+<fillpoint x="중심x" y="중심y" z="중심z">
+    <modefill>void</modefill>
+</fillpoint>
+
+<!-- 3. 유체를 별도 drawbox로 배치 -->
+<setmkfluid mk="0" />
+<drawbox>
+    <boxfill>solid</boxfill>
+    <point x="..." y="..." z="..." />
+    <size x="..." y="..." z="..." />
+</drawbox>
+```
+
+### 8.4 주의사항
+
+| 옵션 | 동작 | 권장 여부 |
+|------|------|-----------|
+| `autofill="true"` | STL 내부 전체를 현재 mk 타입으로 채움 | 유체로 쓸 때만 사용 |
+| `autofill="false"` | 표면 1-layer만 생성 (DBC에 부족) | `fillpoint`와 함께 사용 |
+
+- **`autofill=true` + boundary**: 내부 전체가 경계 파티클로 채워져 유체 공간이 없음
+- **`autofill=false` only**: 1-layer 표면은 DBC에 부족 (2-3dp 두께 필요) → 유체 이탈
+- **권장**: `autofill=false` + `fillpoint modefill=void` + `drawbox` 유체
+
+### 8.5 수평 원통형 탱크 제한사항
+
+수평 원통형 탱크의 부분 충전(예: 25%)은 DualSPHysics primitives로 구현이 어렵습니다:
+- `drawcylinder`는 원통 전체를 채우므로 부분 충전 불가
+- 대안: 고체 경계(큰 R) + 유체 덮어쓰기(작은 R) + 상부 경계 캡으로 ~90% fill 근사
+- 정밀 부분 충전은 외부 메시 도구(FreeCAD 등)로 multi-layer STL 생성 필요
+
+---
+
+## 9. 트러블슈팅 FAQ
+
+### 9.1 Docker 관련
 
 **Q: `docker: Error response from daemon: could not select device driver`**
 
@@ -588,7 +667,7 @@ docker images | grep dsph-gpu  # 이미지 존재 여부 확인
 cd slosim-agent && docker build -t dsph-gpu:5.4 -f docker/Dockerfile.dsph .
 ```
 
-### GPU 인식
+### 9.2 GPU 인식
 
 **Q: `[GPU ○]` 상태바에 GPU가 빨간색으로 표시됨**
 
@@ -616,7 +695,7 @@ solver:
 
 또는 자연어로: `입자 간격을 0.01m로 크게 해서 다시 실행해줘`
 
-### Ollama 연결
+### 9.3 Ollama 연결
 
 **Q: `[Qwen3 ○]` Ollama 연결 실패**
 
@@ -639,7 +718,7 @@ curl http://localhost:11434/api/tags
 - GPU에서 Ollama가 실행 중인지 확인: `OLLAMA_NUM_GPU=1 ollama serve`
 - 더 작은 모델 사용 가능: `ollama pull qwen3:1.7b` (정확도 감소 가능)
 
-### 시뮬레이션 발산
+### 9.4 시뮬레이션 발산
 
 **Q: `Particles out! ... excluded particles`**
 
@@ -664,7 +743,7 @@ curl http://localhost:11434/api/tags
 - 시뮬레이션 시간이 너무 짧아 정상 상태 미도달
 - 자연어로: `입자 간격 0.005m로 줄이고 시뮬레이션 시간 20초로 늘려서 다시 해줘`
 
-### 기타
+### 9.5 기타
 
 **Q: 리포트가 생성되지 않음**
 
@@ -711,5 +790,35 @@ sim_20260214_070500 결과 다시 보여줘
 
 ---
 
-*본 매뉴얼은 slosim-agent v0.1.0 기준으로 작성되었습니다.*
+---
+
+## 10. E2E 검증 결과 요약
+
+v0.2에서 10개 논문 데이터셋 기반 시나리오를 RTX 4090에서 GPU 검증했습니다.
+
+| # | 시나리오 | 논문 | 파티클 | GPU 시간 | 결과 |
+|---|---------|------|--------|---------|------|
+| 1 | SPHERIC Oil Low Fill | Botia-Vera 2011 | 136K | 131s | PASS |
+| 2 | Chen Shallow Sway | Chen 2018 | 173K | 174s | PASS |
+| 3 | Chen Near-Critical | Chen 2018 | 313K | 430s | PASS |
+| 4 | Liu Large Pitch | Liu 2024 | 247K | 738s | PASS |
+| 5 | Liu Amplitude Parametric | Liu 2024 | 225-723K | 300-2194s | PASS (3개 중 1개 partial) |
+| 6 | ISOPE LNG Mark III | ISOPE 2012 | 347K | 1016s | PASS |
+| 7 | NASA Cylindrical | NASA 2023 | 323K | 216s | PASS |
+| 8 | English DBC | English 2021 | 891K | ~3000s | PARTIAL (mDBC 필요) |
+| 9 | Zhao Horizontal Cyl | Zhao 2024 | 863K | 833s | PASS (primitives) |
+| 10 | Frosina Fuel Tank | Frosina 2018 | ~200K | ~300s | PASS (STL) |
+
+상세 결과: `docs/scenarios/e2e_dataset_scenarios.md`
+
+### 주요 교훈
+
+- **GPU VRAM**: Ollama 모델(8-20GB)이 VRAM 점유 시 솔버 실패 → 솔버 전 `keep_alive=0` 필수
+- **파티클 한계**: 700K+ 파티클 + 공진 → 불안정 가능, dp 증가로 해결
+- **DBC vs mDBC**: dp=0.002m 이하에서 DBC 불안정 (English 2021 논문 재확인)
+- **STL 경계**: `autofill=false` + `fillpoint` 패턴 권장 (Section 8 참조)
+
+---
+
+*본 매뉴얼은 slosim-agent v0.2.0 기준으로 작성되었습니다 (2026-02-15).*
 *최신 정보는 [GitHub](https://github.com/kimimgo/slosim-agent)를 참고하세요.*
