@@ -44,14 +44,12 @@ func CoderAgentTools(
 			tools.NewPartVTKTool(),
 			tools.NewMeasureToolTool(),
 			tools.NewReportTool(),
-			// v0.2: Visualization + AI Analysis
-			tools.NewPvpythonTool(),
+			// v0.2: AI Analysis (pvpython/animation replaced by pv-agent MCP server)
 			tools.NewMonitorTool(),
 			tools.NewAnalysisTool(),
 			// v0.3: Domain Expansion + Multi-Job
 			tools.NewSTLImportTool(),
 			tools.NewSeismicInputTool(),
-			tools.NewAnimationTool(),
 			// v1.0: Parametric Study + Production
 			tools.NewParametricStudyTool(),
 			tools.NewResultStoreTool(),

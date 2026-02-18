@@ -27,11 +27,21 @@ const (
 // MCPServer defines the configuration for a Model Control Protocol server.
 type MCPServer struct {
 	Command string            `json:"command"`
-	Env     []string          `json:"env"`
+	Env     map[string]string `json:"env"`
 	Args    []string          `json:"args"`
 	Type    MCPType           `json:"type"`
 	URL     string            `json:"url"`
 	Headers map[string]string `json:"headers"`
+}
+
+// EnvSlice converts the Env map to a slice suitable for exec.Cmd.Env,
+// inheriting the current process environment.
+func (m MCPServer) EnvSlice() []string {
+	env := os.Environ()
+	for k, v := range m.Env {
+		env = append(env, k+"="+v)
+	}
+	return env
 }
 
 type AgentName string

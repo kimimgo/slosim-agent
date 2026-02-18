@@ -44,7 +44,7 @@ func (a *analysisTool) Info() ToolInfo {
 		Parameters: map[string]any{
 			"sim_dir": map[string]any{
 				"type":        "string",
-				"description": "시뮬레이션 결과 디렉토리",
+				"description": "시뮬레이션 결과 디렉토리 (예: simulations/{case_name})",
 			},
 			"case_config": map[string]any{
 				"type":        "object",

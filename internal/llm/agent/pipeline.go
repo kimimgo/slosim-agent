@@ -77,6 +77,6 @@ package agent
 // - Multi-job queue with priority scheduling
 // - Real-time progress monitoring with TUI dashboard
 // - Parametric studies (automated parameter sweeps)
-// - pvpython integration for image/animation rendering
+// - pv-agent MCP server for image/animation rendering (replaced pvpython.go)
 //
 // ─────────────────────────────────────────────────────────────────────────────

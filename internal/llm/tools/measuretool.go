@@ -47,11 +47,11 @@ func (m *measureToolTool) Info() ToolInfo {
 			},
 			"points_file": map[string]any{
 				"type":        "string",
-				"description": "측정 포인트 파일 경로 (x y z 좌표)",
+				"description": "측정 포인트 파일 경로 (예: /data/{case_name}/measure/probe_points.txt)",
 			},
 			"out_csv": map[string]any{
 				"type":        "string",
-				"description": "CSV 출력 파일 경로",
+				"description": "CSV 출력 파일 경로 (예: /data/{case_name}/measure/pressure)",
 			},
 			"vars": map[string]any{
 				"type":        "array",

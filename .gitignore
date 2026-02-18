@@ -1,13 +1,36 @@
+# Build outputs
+slosim-agent
+*.exe
+
+# Simulation data
 DualSPHysics/
 simulations/
+result_store/
+parametric_studies/
 *.bi4
 *.vtk
 *.out
+
+# Datasets (large files, not tracked)
+datasets/
+
+# Tools (external dependencies, cloned separately)
+/tools/
+
+# Python
 __pycache__/
 *.pyc
 .venv/
 .uv/
+
+# IDE
 .vscode/
 .idea/
 .DS_Store
+
+# App config (user-specific)
 .opencode/
+
+# Logs
+firebase-debug.log
+*.log

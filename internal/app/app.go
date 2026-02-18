@@ -162,6 +162,9 @@ func (a *App) RunNonInteractive(ctx context.Context, prompt string, outputFormat
 
 // Shutdown performs a clean shutdown of the application
 func (app *App) Shutdown() {
+	// Close all MCP server sessions
+	agent.CloseAllMCPSessions()
+
 	// Cancel all watcher goroutines
 	app.cancelFuncsMutex.Lock()
 	for _, cancel := range app.watcherCancelFuncs {

@@ -49,7 +49,7 @@ func (p *partVTKTool) Info() ToolInfo {
 			},
 			"out_file": map[string]any{
 				"type":        "string",
-				"description": "VTK 출력 파일 경로",
+				"description": "VTK 출력 파일 경로 (예: /data/{case_name}/vtk/PartFluid)",
 			},
 			"only_fluid": map[string]any{
 				"type":        "boolean",
