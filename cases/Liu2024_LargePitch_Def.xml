@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Liu et al. (2024) - Large Tank Shallow Pitch Resonance
+     Tank:   1000 x 500 x 1000 mm (L x B x H)
+     Fill:   h=200mm (20%), shallow regime
+     Motion: Pitch rotation at resonance, f=0.66Hz, A=2 deg
+     Center: Bottom center [0.5, 0.25, 0]
+     Fluid:  Water (rho=998)
+     dp=0.008m (large tank) -->
+<case>
+    <casedef>
+        <constantsdef>
+            <gravity x="0" y="0" z="-9.81" />
+            <rhop0 value="998" />
+            <rhopgradient value="2" />
+            <hswl value="0" auto="true" />
+            <gamma value="7" />
+            <speedsystem value="0" auto="true" />
+            <coefsound value="20" />
+            <speedsound value="0" auto="true" />
+            <coefh value="1.2" />
+            <cflnumber value="0.2" />
+        </constantsdef>
+        <mkconfig boundcount="240" fluidcount="9" />
+        <geometry>
+            <definition dp="0.008" units_comment="metres (m)">
+                <pointmin x="-0.1" y="-0.05" z="-0.1" />
+                <pointmax x="1.1" y="0.55" z="1.1" />
+            </definition>
+            <commands>
+                <mainlist>
+                    <setshapemode>dp | bound</setshapemode>
+                    <setdrawmode mode="full" />
+                    <!-- Fluid: 1000 x 500 x 200 mm -->
+                    <setmkfluid mk="0" />
+                    <drawbox>
+                        <boxfill>solid</boxfill>
+                        <point x="0" y="0" z="0" />
+                        <size x="1.000" y="0.500" z="0.200" />
+                    </drawbox>
+                    <!-- Tank walls: 1000 x 500 x 1000 mm (no top) -->
+                    <setmkbound mk="0" />
+                    <drawbox>
+                        <boxfill>bottom | left | right | front | back</boxfill>
+                        <point x="0" y="0" z="0" />
+                        <size x="1.000" y="0.500" z="1.000" />
+                    </drawbox>
+                    <shapeout file="Liu_Large" />
+                </mainlist>
+            </commands>
+        </geometry>
+        <motion>
+            <objreal ref="0">
+                <begin mov="1" start="0" />
+                <!-- Pitch rotation: f=0.66 Hz (resonance), A=2 deg -->
+                <mvrotsinu id="1" duration="30" anglesunits="degrees">
+                    <axisp1 x="0.5" y="0.25" z="0" />
+                    <axisp2 x="0.5" y="-0.25" z="0" />
+                    <freq v="0.66" units_comment="Hz" />
+                    <ampl v="2.0" units_comment="degrees" />
+                    <phase v="0" units_comment="degrees" />
+                </mvrotsinu>
+            </objreal>
+        </motion>
+    </casedef>
+    <execution>
+        <special>
+            <gauges>
+                <swl name="SWL_Left">
+                    <point0 x="0.010" y="0.250" z="0.0" />
+                    <point2 x="0.010" y="0.250" z="1.0" />
+                    <pointdp value="0.5" />
+                    <masslimit value="0.2" />
+                    <savevtk value="false" />
+                </swl>
+                <swl name="SWL_Right">
+                    <point0 x="0.990" y="0.250" z="0.0" />
+                    <point2 x="0.990" y="0.250" z="1.0" />
+                    <pointdp value="0.5" />
+                    <masslimit value="0.2" />
+                    <savevtk value="false" />
+                </swl>
+            </gauges>
+        </special>
+        <parameters>
+            <parameter key="SavePosDouble" value="0" />
+            <parameter key="StepAlgorithm" value="2" comment="2:Symplectic" />
+            <parameter key="Kernel" value="2" comment="2:Wendland" />
+            <parameter key="ViscoTreatment" value="1" comment="1:Artificial" />
+            <parameter key="Visco" value="0.01" />
+            <parameter key="ViscoBoundFactor" value="1" />
+            <parameter key="DensityDT" value="2" comment="2:Fourtakas" />
+            <parameter key="DensityDTvalue" value="0.1" />
+            <parameter key="Shifting" value="0" />
+            <parameter key="RigidAlgorithm" value="1" />
+            <parameter key="DtIni" value="0.0001" />
+            <parameter key="DtMin" value="0.00001" />
+            <parameter key="CoefDtMin" value="0.05" />
+            <parameter key="TimeMax" value="30.0" units_comment="seconds (~20 periods)" />
+            <parameter key="TimeOut" value="0.3" units_comment="seconds (101 frames)" />
+            <parameter key="PartsOutMax" value="1" />
+            <parameter key="RhopOutMin" value="700" />
+            <parameter key="RhopOutMax" value="1300" />
+            <simulationdomain>
+                <posmin x="default - 15%" y="default" z="default - 10%" />
+                <posmax x="default + 15%" y="default" z="default + 80%" />
+            </simulationdomain>
+        </parameters>
+    </execution>
+</case>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Frosina 2018 - Simplified Automotive Fuel Tank
+     Tank:   ~500x350x250mm beveled box (30mm top chamfer)
+     Fill:   50% (h=125mm)
+     Motion: Emergency braking - sinusoidal x-impulse (~0.5g peak)
+     Fluid:  Water (rho=998)
+     dp=0.008m -->
+<case>
+    <casedef>
+        <constantsdef>
+            <gravity x="0" y="0" z="-9.81" />
+            <rhop0 value="998" />
+            <rhopgradient value="2" />
+            <hswl value="0" auto="true" />
+            <gamma value="7" />
+            <speedsystem value="0" auto="true" />
+            <coefsound value="20" />
+            <speedsound value="0" auto="true" />
+            <coefh value="1.2" />
+            <cflnumber value="0.2" />
+        </constantsdef>
+        <mkconfig boundcount="240" fluidcount="9" />
+        <geometry>
+            <definition dp="0.008" units_comment="metres (m)">
+                <pointmin x="-0.1" y="-0.1" z="-0.1" />
+                <pointmax x="0.6" y="0.45" z="0.4" />
+            </definition>
+            <commands>
+                <mainlist>
+                    <setshapemode>dp | bound</setshapemode>
+                    <setdrawmode mode="full" />
+                    <!-- Boundary: fuel tank from STL -->
+                    <setmkbound mk="0" />
+                    <drawfilestl file="fuel_tank.stl" autofill="false">
+                        <drawmove x="0" y="0" z="0" />
+                    </drawfilestl>
+                    <!-- Fill boundary interior (void fill from center) -->
+                    <fillpoint x="0.25" y="0.175" z="0.125">
+                        <modefill>void</modefill>
+                    </fillpoint>
+                    <!-- Fluid: 50% fill (h=0.125m) -->
+                    <setmkfluid mk="0" />
+                    <drawbox>
+                        <boxfill>solid</boxfill>
+                        <point x="0.008" y="0.008" z="0.008" />
+                        <size x="0.484" y="0.334" z="0.117" />
+                    </drawbox>
+                    <shapeout file="FuelTank" />
+                </mainlist>
+            </commands>
+        </geometry>
+        <motion>
+            <objreal ref="0">
+                <begin mov="1" start="0" />
+                <mvrectsinu id="1" duration="5" anglesunits="degrees">
+                    <freq x="0.5" y="0" z="0" units_comment="Hz (T=2s, half period = 1s braking)" />
+                    <ampl x="0.050" y="0" z="0" units_comment="50mm amplitude - approx 0.5g peak accel" />
+                    <phase x="0" y="0" z="0" units_comment="degrees" />
+                </mvrectsinu>
+            </objreal>
+        </motion>
+    </casedef>
+    <execution>
+        <special>
+            <gauges>
+                <swl name="SWL_Front">
+                    <point0 x="0.49" y="0.175" z="0.0" />
+                    <point2 x="0.49" y="0.175" z="0.25" />
+                    <pointdp value="0.5" />
+                    <masslimit value="0.2" />
+                    <savevtk value="false" />
+                </swl>
+                <swl name="SWL_Rear">
+                    <point0 x="0.01" y="0.175" z="0.0" />
+                    <point2 x="0.01" y="0.175" z="0.25" />
+                    <pointdp value="0.5" />
+                    <masslimit value="0.2" />
+                    <savevtk value="false" />
+                </swl>
+            </gauges>
+        </special>
+        <parameters>
+            <parameter key="SavePosDouble" value="0" />
+            <parameter key="StepAlgorithm" value="2" comment="2:Symplectic" />
+            <parameter key="Kernel" value="2" comment="2:Wendland" />
+            <parameter key="ViscoTreatment" value="1" comment="1:Artificial" />
+            <parameter key="Visco" value="0.01" />
+            <parameter key="ViscoBoundFactor" value="1" />
+            <parameter key="DensityDT" value="2" comment="2:Fourtakas" />
+            <parameter key="DensityDTvalue" value="0.1" />
+            <parameter key="Shifting" value="0" />
+            <parameter key="RigidAlgorithm" value="1" />
+            <parameter key="DtIni" value="0.0001" />
+            <parameter key="DtMin" value="0.00001" />
+            <parameter key="CoefDtMin" value="0.05" />
+            <parameter key="TimeMax" value="5.0" units_comment="seconds" />
+            <parameter key="TimeOut" value="0.05" units_comment="seconds (101 frames)" />
+            <parameter key="PartsOutMax" value="1" />
+            <parameter key="RhopOutMin" value="700" />
+            <parameter key="RhopOutMax" value="1300" />
+            <simulationdomain>
+                <posmin x="default - 20%" y="default - 10%" z="default - 10%" />
+                <posmax x="default + 20%" y="default + 10%" z="default + 50%" />
+            </simulationdomain>
+        </parameters>
+    </execution>
+</case>
