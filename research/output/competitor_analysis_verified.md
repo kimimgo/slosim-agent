@@ -1,7 +1,9 @@
-# Competitor Analysis — Verified from Paper Full Text (Cycle 2)
+# Competitor Analysis — Verified from Paper Full Text (Cycle 3)
 
 Date: 2026-02-18
-Source: arXiv PDF full text extraction via PyMuPDF
+Source: arXiv full text extraction via 8 parallel Opus agents + PyMuPDF
+
+See also: `competitor_deep_analysis.md` for detailed per-paper analysis with implications.
 
 ---
 
@@ -9,7 +11,8 @@ Source: arXiv PDF full text extraction via PyMuPDF
 
 | System | Year | Solver | Architecture | LLM | Benchmark | Success Metric | Cost | Ablation |
 |--------|------|--------|-------------|-----|-----------|---------------|------|---------|
-| MetaOpenFOAM | 2024 | OpenFOAM 10 | 4-agent MetaGPT v0.8.0 | GPT-4o (T=0.01) | 8 self-built cases × n=10 | 85% avg Pass@1 (score 4/4, human-verified) | $0.22/case (44K tok avg) | RAG removal + temp sensitivity |
+| MetaOpenFOAM 1.0 | 2024 | OpenFOAM 10 | 4-agent MetaGPT v0.8.0 | GPT-4o (T=0.01) | 8 self-built cases × n=10 | 85% avg Pass@1 (score 4/4, human-verified) | $0.22/case (44K tok avg) | RAG removal + temp sensitivity |
+| MetaOpenFOAM 2.0 | 2025 | OpenFOAM | 4-agent MetaGPT v0.8.0 + QDCOT/ICOT | GPT-4o (T=0.01) | 13 cases | 86.9% Pass@1, executability 6.3/7 | $0.15/case | QDCOT+ICOT scaling laws |
 | Foam-Agent 2.0 | 2025 | OpenFOAM | 6-agent composable + MCP | Claude 3.5 Sonnet (T=0.6) | 110 tasks, 7 physics categories | 88.2% execution success | ~334K tok/case (cost N/A) | Reviewer + RAG + File Dependency |
 | ChatCFD | 2026 | OpenFOAM | 4-stage pipeline + structured KB | DeepSeek-R1 + V3 (dual) | 315 cases (205 tutorial + 110 perturbed) | 82.1% exec / 68.12% physical fidelity | $0.208/case (192K tok) | Solver Template DB removal → 48% |
 | OpenFOAMGPT 2.0 | 2025 | OpenFOAM v2406 Docker | 4-agent pipeline + Prompt Pool | **Claude-3.7-Sonnet** (T=0) | 455 cases (6 study types) | 100% reproducibility | Cloud (Claude API) | None |
@@ -22,7 +25,14 @@ Source: arXiv PDF full text extraction via PyMuPDF
 
 ---
 
-## Key Corrections from Paper Full Text
+## Key Corrections from Paper Full Text (Cycle 2 + Deep Analysis)
+
+### 0. MetaOpenFOAM 2.0 — NEW (previously missing from analysis)
+- arXiv:2502.00498 (2025-02), Tsinghua University
+- QDCOT (Query Decomposition CoT) + ICOT (Iterative Correction CoT) — scaling laws discovered
+- 13 cases (vs v1.0's 8), 86.9% Pass@1, executability 6.3/7 (vs v1.0's 2.1/7)
+- $0.15/case (down from $0.22 in v1.0)
+- **Critical finding**: RAG 거부, fresh prompt 전략 (OpenFOAMGPT 2.0과 유사)
 
 ### 1. OpenFOAMGPT 2.0 — LLM is Claude, NOT GPT
 - Paper explicitly states: "All intelligent agents within the framework are powered by the Claude-3.7-Sonnet"
@@ -42,6 +52,9 @@ Source: arXiv PDF full text extraction via PyMuPDF
 - General agents use Qwen3-32B (same model as our system!)
 - MetaGPT v0.8.1 framework
 - NACA 0012 results: U accuracy 96.4%, p accuracy 93.2% (avg across AoA)
+- **30P-30N critical finding**: Qwen3-235B(general)=0% vs 8B(fine-tuned)=80% completion → domain FT > model size
+- Overall success rate: **52.86%** (NACA 0012 averaged across AoA)
+- FT hyperparameters NOT disclosed — reproducibility issue
 
 ### 4. ChatCFD — Physical Fidelity Definition Clarified
 - 68.12% = LLM (DeepSeek-R1 "Physics Interpreter") evaluates whether runnable simulation is "scientifically meaningful"
@@ -115,4 +128,27 @@ Success rates are NOT directly comparable across papers:
 | Pasimodo+RAG | Llama/Gemma (3B-27B) | Local | Yes |
 | **SloshAgent** | **Qwen3 32B** | **Local ($0)** | **Yes** |
 
-Trend: 2025 후반부터 로컬/오픈웨이트(Qwen3, Gemma) 전환 가속. 2024 초 GPT-4 독점 → 2025 후반 DeepSeek/Qwen 이중 모델 → 2026 로컬 LoRA fine-tune 시대.
+Trend: 2024 GPT-4 독점 → 2025 중반 DeepSeek/Qwen 전환 → 2025 후반 로컬 LoRA fine-tune → 2026 prompt-only + structured tools
+
+### AutoCFD Deep Analysis (from Cycle 3)
+- **Code open-sourced**: https://github.com/YYgroup/AutoCFD
+- NL2FOAM **28,716 pairs**: 16 base cases → parameter variation → LLM paraphrasing → execution filtering
+- LoRA rank=8, 0.02B/7.6B trainable, RTX 4090 x4, Llama-Factory, epoch 2 optimal
+- **CoT ablation**: +10.5% accuracy, +20.9%p pass@1 (critical for physics reasoning)
+- Fine-tuned 7B >> 72B general: accuracy +57.3%p, cost 11x cheaper ($0.020 vs $0.227)
+- **Mesh: "LLMs cannot reliably generate [meshes]"** — explicit statement
+
+### MooseAgent Deep Analysis (from Cycle 3)
+- **Code open-sourced**: https://github.com/taozhan18/MooseAgent
+- LangGraph implementation details sparse (reproducibility concern)
+- 8,000+ input files auto-annotated via MOOSE repo sampling + LLM comment generation
+- **Failure mode**: infinite error loop — agent repeatedly calls same failing function
+- Max 3 iterations (more doesn't help)
+- Plasticity case (60%) most challenging — complex material models
+
+### Pasimodo+RAG Deep Analysis (from Cycle 3)
+- **Their future work = our implemented features**: tool-calling, simulation execution, error recovery
+- Influx_External vs Inflow_External confusion — RAG retrieved wrong component by name similarity
+- Error feedback partially works but requires expert manual analysis — NOT autonomous
+- 16 pages, 66 references, most thorough academic treatment of limitations
+- Key quote: "simple RAG search with similarity does not work sufficiently"
