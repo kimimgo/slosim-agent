@@ -63,12 +63,31 @@ def load_spheric_peaks(filepath: str) -> np.ndarray:
 def load_simulation_pressure(filepath: str) -> pd.DataFrame:
     """Load MeasureTool pressure output (CSV).
 
-    Expected format: semicolon-separated, with # header row.
-    Columns vary but typically: Time;PressurePoint1;PressurePoint2;...
+    MeasureTool format:
+      Row 0-2: Position metadata (PosX/PosY/PosZ, starting with space)
+      Row 3: Header (Part;Time [s];Press_0 [Pa];...)
+      Row 4+: Data (semicolon-separated)
     """
+    lines = Path(filepath).read_text().strip().split("\n")
+
+    # Find header row: first row containing "Time" or "Part"
+    header_idx = 0
+    for i, line in enumerate(lines):
+        if "Time" in line or "Part" in line:
+            header_idx = i
+            break
+
     # Try semicolon first (DualSPHysics standard)
     try:
-        df = pd.read_csv(filepath, sep=";", comment="#")
+        df = pd.read_csv(filepath, sep=";", skiprows=header_idx, header=0)
+        # Drop non-numeric columns or "Part" column if present
+        if "Part" in df.columns:
+            df = df.drop(columns=["Part"])
+        # Clean column names
+        df.columns = [c.strip() for c in df.columns]
+        # Ensure all columns are numeric
+        df = df.apply(pd.to_numeric, errors="coerce")
+        df = df.dropna(how="all")
         if len(df.columns) >= 2:
             return df
     except Exception:
@@ -76,7 +95,11 @@ def load_simulation_pressure(filepath: str) -> pd.DataFrame:
 
     # Fallback to comma
     try:
-        df = pd.read_csv(filepath, comment="#")
+        df = pd.read_csv(filepath, skiprows=header_idx, header=0)
+        if "Part" in df.columns:
+            df = df.drop(columns=["Part"])
+        df = df.apply(pd.to_numeric, errors="coerce")
+        df = df.dropna(how="all")
         if len(df.columns) >= 2:
             return df
     except Exception:
@@ -281,6 +304,7 @@ def main():
     parser.add_argument("--label", default="Simulation", help="Label for this run")
     parser.add_argument("--trim-start", type=float, default=0.5, help="Trim initial transient [s]")
     parser.add_argument("--time-range", type=float, nargs=2, help="Plot time range [start end]")
+    parser.add_argument("--probe-idx", type=int, nargs="+", help="Probe column indices (1-based) to compare. Default: all pressure probes")
     args = parser.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
@@ -292,19 +316,17 @@ def main():
     exp_df = load_spheric_timeseries(args.exp_file)
     print(f"  {len(exp_df)} rows, time range: {exp_df['time'].min():.4f} - {exp_df['time'].max():.4f}s")
 
-    # Find simulation pressure files
+    # Find simulation pressure file (only *Press*.csv, not Rhop or Vel)
     sim_dir = Path(args.sim_dir)
-    sim_files = sorted(sim_dir.glob("*Press*.csv")) + sorted(sim_dir.glob("*pressure*.csv"))
-
-    if not sim_files:
-        # Try parent directory
-        sim_files = sorted(sim_dir.glob("*.csv"))
+    sim_files = sorted(sim_dir.glob("*Press*.csv"))
 
     if not sim_files:
         print(f"ERROR: No simulation pressure CSV found in {args.sim_dir}")
         sys.exit(1)
 
-    print(f"Found {len(sim_files)} simulation file(s)")
+    # Deduplicate (in case glob finds the same file twice)
+    sim_files = list(dict.fromkeys(sim_files))
+    print(f"Found {len(sim_files)} simulation pressure file(s)")
 
     all_metrics = []
 
@@ -313,8 +335,13 @@ def main():
         sim_df = load_simulation_pressure(str(sim_file))
         print(f"  {len(sim_df)} rows, {len(sim_df.columns)} columns")
 
-        # Compare each pressure column
-        for col_idx in range(1, min(len(sim_df.columns), 5)):  # Up to 4 probe points
+        # Determine which probes to compare
+        if args.probe_idx:
+            probe_indices = [i for i in args.probe_idx if i < len(sim_df.columns)]
+        else:
+            probe_indices = list(range(1, len(sim_df.columns)))
+
+        for col_idx in probe_indices:
             col_name = sim_df.columns[col_idx]
             print(f"  Probe {col_idx} ({col_name}):")
 

@@ -66,33 +66,32 @@
     <execution>
         <special>
             <gauges>
-                <!-- SWL gauge at Sensor 1 location (lateral wall, low) -->
+                <default>
+                    <savevtkpart value="false" />
+                    <computedt value="0.005" units_comment="200Hz gauge output" />
+                    <computetime start="0" end="7" />
+                    <output value="true" />
+                </default>
                 <swl name="SWL_Left">
                     <point0 x="0.005" y="0.031" z="0.0" />
                     <point2 x="0.005" y="0.031" z="0.508" />
                     <pointdp value="0.5" />
                     <masslimit value="0.2" />
-                    <savevtk value="false" />
                 </swl>
-                <!-- SWL gauge at center -->
                 <swl name="SWL_Center">
                     <point0 x="0.450" y="0.031" z="0.0" />
                     <point2 x="0.450" y="0.031" z="0.508" />
                     <pointdp value="0.5" />
                     <masslimit value="0.2" />
-                    <savevtk value="false" />
                 </swl>
-                <!-- SWL gauge at Sensor 1 location (right wall) -->
                 <swl name="SWL_Right">
                     <point0 x="0.895" y="0.031" z="0.0" />
                     <point2 x="0.895" y="0.031" z="0.508" />
                     <pointdp value="0.5" />
                     <masslimit value="0.2" />
-                    <savevtk value="false" />
                 </swl>
                 <force name="Force_Wall">
                     <target mkbound="0" />
-                    <savevtk value="false" />
                 </force>
             </gauges>
         </special>
@@ -111,7 +110,7 @@
             <parameter key="DtMin" value="0.00001" />
             <parameter key="CoefDtMin" value="0.05" />
             <parameter key="TimeMax" value="7.0" units_comment="seconds" />
-            <parameter key="TimeOut" value="0.07" units_comment="seconds (101 frames)" />
+            <parameter key="TimeOut" value="0.005" units_comment="seconds (1401 frames, 200Hz)" />
             <parameter key="PartsOutMax" value="1" />
             <parameter key="RhopOutMin" value="700" />
             <parameter key="RhopOutMax" value="1300" />
