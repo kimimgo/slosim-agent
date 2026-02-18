@@ -1,0 +1,22 @@
+{
+  "full": {
+    "tool_called_pct": 70.0,
+    "accuracy_pct": 45.95238095238095,
+    "valid_pct": 60.0
+  },
+  "no-domain": {
+    "tool_called_pct": 100.0,
+    "accuracy_pct": 43.666666666666664,
+    "valid_pct": 80.0
+  },
+  "no-rules": {
+    "tool_called_pct": 90.0,
+    "accuracy_pct": 54.52380952380953,
+    "valid_pct": 80.0
+  },
+  "generic": {
+    "tool_called_pct": 80.0,
+    "accuracy_pct": 39.38095238095238,
+    "valid_pct": 80.0
+  }
+}
