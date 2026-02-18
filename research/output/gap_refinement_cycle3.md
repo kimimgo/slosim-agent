@@ -159,7 +159,7 @@ All 10+ existing LLM-for-simulation systems target general-purpose mesh-based so
 - **Zero** competitor compares to published experimental benchmark data (SPHERIC, ISOPE, etc.)
 - ISOPE benchmark: 9/16 CFD pressure peaks outside ±2σ of experiments — validation is genuinely hard
 
-**What SloshAgent provides**: SPHERIC Test 10 validation — 100-repeat experimental pressure statistics, 3 fluids, quantitative metrics (Pearson r > 0.9 target, NRMSE).
+**What SloshAgent provides**: SPHERIC Test 10 validation — 100-repeat experimental pressure statistics, 2 fluids (water + sunflower oil), quantitative metrics (Pearson r > 0.9 target, NRMSE).
 
 ### GAP-4: Sloshing Industry Automation Gap ($4.13B Market, Zero AI Tools) (Industry Gap)
 **Confidence: 85%**

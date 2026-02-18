@@ -4,7 +4,7 @@
 - **Problem**: Sloshing — violent fluid motion in partially-filled containers — causes catastrophic failures across industries: SpaceX Falcon 1 loss (2007), Tomakomai oil fires ($15B damage, 2003), and 1,300+ tanker truck rollovers annually. Predicting sloshing loads requires 200+ CFD simulations per LNG tank assessment, each demanding expert-level knowledge of XML configuration (200+ page guide), 5+ silent error patterns, and physics-specific parameter tuning. Yet 75-80% of CFD project time is consumed by pre-processing alone.
 - **Gap**: While 10+ LLM agents automate general-purpose mesh-based CFD (OpenFOAM), no AI system addresses sloshing simulation — the domain where automation is most needed. The $4.13B maritime AI market has zero sloshing simulation tools. Furthermore, particle-based SPH — the natural solver for violent free-surface flows — has never been integrated with an LLM agent.
 - **Approach**: We present SloshAgent, the first AI agent that automates the entire sloshing simulation pipeline: natural language input → DualSPHysics XML configuration → GPU-accelerated SPH simulation → post-processing → experimental validation. The system uses a local Qwen3 32B model (zero LLM cost) with 14 domain-specific tools and a 136-line sloshing-specialized prompt.
-- **Results**: On SPHERIC Test 10 benchmark (100-repeat experimental data, 3 fluids), SloshAgent achieves expert-level accuracy (Pearson r > 0.9). Domain prompt ablation shows 20-40% accuracy improvement over generic prompts — the first such study for computational mechanics. Case setup time reduces from days to minutes.
+- **Results**: On SPHERIC Test 10 benchmark (100-repeat experimental data, 2 fluids), SloshAgent achieves expert-level accuracy (Pearson r > 0.9). Domain prompt ablation shows 20-40% accuracy improvement over generic prompts — the first such study for computational mechanics. Case setup time reduces from days to minutes.
 - **Contributions**: (1) First sloshing simulation automation agent, (2) first LLM integration with a particle-based solver (SPH), (3) first experimental benchmark validation by any LLM-simulation agent, (4) first domain prompt ablation for computational mechanics, (5) proof-of-concept for a $4.13B industry with zero AI tools.
 
 ## 1. Introduction (1 page)
@@ -63,7 +63,7 @@ SPH (Smoothed Particle Hydrodynamics) is the natural solver for sloshing: it han
 
 1. **First sloshing simulation automation agent**: NL → XML → GPU simulation → validation, for a domain where automation is most needed (200+ cases/tank, $4.13B market, zero AI tools)
 2. **First LLM agent for particle-based simulation**: 14 tools for the DualSPHysics pipeline — the first tool interface design for any Lagrangian particle solver (SPH/DEM/MPM)
-3. **First experimental benchmark validation**: SPHERIC Test 10 (100-repeat data, 3 fluids, Pearson r, NRMSE) — the only LLM-simulation system validated against published experimental data
+3. **First experimental benchmark validation**: SPHERIC Test 10 (100-repeat data, 2 fluids, Pearson r, NRMSE) — the only LLM-simulation system validated against published experimental data
 4. **First domain prompt ablation for computational mechanics**: SloshingCoderPrompt ON/OFF isolating sloshing physics knowledge, SPH constraints, and XML syntax rules
 5. **Industry PoC**: $0 LLM cost (local Qwen3 32B), GPU-accelerated SPH on consumer hardware (RTX 4090), parametric study automation
 
@@ -176,7 +176,7 @@ specific      │                          │                     │
 - **Hardware**: NVIDIA RTX 4090 (24GB VRAM), CUDA 12.6
 - **LLM**: Qwen3 32B via Ollama (local inference, zero cloud dependency, zero LLM cost)
 - **Solver**: DualSPHysics v5.4 GPU in Docker (CUDA 12.6, lowercase symlinks)
-- **Benchmarks**: SPHERIC Test 10 (FTP raw data, 100 repetitions, 3 fluids), 20 NL sloshing scenarios
+- **Benchmarks**: SPHERIC Test 10 (FTP raw data, 100 repetitions, 2 fluids), 20 NL sloshing scenarios
 - **Existing assets**: 20 XML cases, 17 simulation results (8 PASS, 2 PARTIAL), probe measurement files
 
 ### 4.2 EXP-1: SPHERIC Benchmark Reproduction (RQ2 — Validation Gap)

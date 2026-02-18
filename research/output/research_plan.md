@@ -85,7 +85,7 @@ First domain-specialized LLM agent system that autonomously configures, executes
 
 ### EXP-1: SPHERIC Test 10 벤치마크 재현
 - **Purpose**: 에이전트 E2E 정확도 검증 (RQ2 직접 답변)
-- **Dataset**: SPHERIC Test 10 FTP raw data (100회 반복, 3종 유체)
+- **Dataset**: SPHERIC Test 10 FTP raw data (100회 반복, 2종 유체: water + sunflower oil)
   - `datasets/spheric/case_1/` (압력 시계열 8파일)
 - **Baseline**: English2021 mDBC 검증 결과 (DualSPHysics 직접 실행)
 - **Procedure**:

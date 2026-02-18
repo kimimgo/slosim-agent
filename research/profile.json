@@ -11,7 +11,7 @@
   ],
   "researcher_capabilities": {
     "available_data": [
-      "SPHERIC Benchmark FTP data (Test 10: 100 repetitions, 3 fluids, pressure time series)",
+      "SPHERIC Benchmark FTP data (Test 10: 100 repetitions, 2 fluids (water + sunflower oil), pressure time series)",
       "DualSPHysics official test cases (05_SloshingTank)",
       "7 published paper PDFs with experimental data (Chen2018, Liu2024, English2021, ISOPE2012, NASA2023, Frosina2018, Zhao2024)",
       "17 pre-run simulation result directories (8 PASS, 2 PARTIAL)",

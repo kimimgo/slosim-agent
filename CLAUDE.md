@@ -252,7 +252,7 @@ research/
 | 자산 | 위치 | 내용 |
 |------|------|------|
 | **논문 PDF 7편** | `datasets/papers/` | Chen2018, Liu2024, English2021, ISOPE2012, NASA2023, Frosina2018, Zhao2024 |
-| **SPHERIC 실험 데이터** | `datasets/spheric/case_{1,2,3}/` | Test 10: 100회 반복, 3종 유체, 압력 시계열 |
+| **SPHERIC 실험 데이터** | `datasets/spheric/case_{1,2,3}/` | Test 10: 100회 반복, 2종 유체 (water + oil), 압력 시계열 |
 | **XML 케이스 20개** | `cases/` | 벤치마크 재현 케이스 (SPHERIC, Chen, Liu, English 등) |
 | **시뮬레이션 결과 17개** | `simulations/` | GPU 실행 완료 (8 PASS, 2 PARTIAL) |
 | **탱크 파라미터** | `datasets/TANK_GEOMETRIES_FROM_PAPERS.md` | 8개 논문 상세 치수 + 10개 JSON 프리셋 |
