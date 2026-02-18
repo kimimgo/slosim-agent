@@ -1,0 +1,372 @@
+{
+  "experiment": "EXP-2: NL→XML Generation Accuracy",
+  "rq": "RQ1",
+  "date": "2026-02-18",
+  "evaluation": {
+    "gencase_pass": "XML이 GenCase를 통과하는가 (binary)",
+    "parameter_accuracy": "각 파라미터의 정확도 (%)",
+    "physical_validity": "물리적으로 합리적인 설정인가 (expert judgment)",
+    "tolerances": {
+      "tank_dimensions": "exact match",
+      "dp": "±20%",
+      "frequency": "±5%",
+      "fill_level": "±10%",
+      "motion_type": "exact match"
+    }
+  },
+  "scenarios": [
+    {
+      "id": "S01",
+      "level": 1,
+      "domain": "General",
+      "nl_input": "가로 0.9m, 세로 0.062m, 높이 0.508m 직사각형 탱크, 물 93mm 채움, 0.613Hz로 좌우 흔들기",
+      "ground_truth": {
+        "tank_length": 0.9,
+        "tank_width": 0.062,
+        "tank_height": 0.508,
+        "fluid_height": 0.093,
+        "frequency": 0.613,
+        "motion_type": "sway",
+        "dp_range": [0.005, 0.02],
+        "source": "SPHERIC Test 10"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "SPHERIC Test 10 exact parameters. 가장 기본적인 명시적 파라미터 케이스."
+    },
+    {
+      "id": "S02",
+      "level": 1,
+      "domain": "General",
+      "nl_input": "600mm × 300mm × 650mm 탱크에 물 150mm, 주파수 1.2Hz, 진폭 30mm 수평 정현파",
+      "ground_truth": {
+        "tank_length": 0.6,
+        "tank_width": 0.3,
+        "tank_height": 0.65,
+        "fluid_height": 0.15,
+        "frequency": 1.2,
+        "amplitude": 0.03,
+        "motion_type": "sway",
+        "dp_range": [0.005, 0.015],
+        "source": "Chen2018 shallow fill"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "Chen2018 기반 파라미터. mm→m 단위 변환 테스트."
+    },
+    {
+      "id": "S03",
+      "level": 1,
+      "domain": "General",
+      "nl_input": "1m × 0.5m × 0.6m 소형 탱크, 50% 충전, 공진 주파수로 가진",
+      "ground_truth": {
+        "tank_length": 1.0,
+        "tank_width": 0.5,
+        "tank_height": 0.6,
+        "fluid_height": 0.3,
+        "frequency_formula": "f1 = (1/2π)√(gπ/L·tanh(πh/L))",
+        "frequency_expected": 0.878,
+        "motion_type": "sway",
+        "dp_range": [0.005, 0.02],
+        "source": "derived"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "50% 충전 → 0.3m. 공진 주파수 자동 계산 필요 (f1 ≈ 0.878 Hz)."
+    },
+    {
+      "id": "S04",
+      "level": 1,
+      "domain": "General",
+      "nl_input": "실험 탱크 크기로 물 반 채우고 천천히 흔들어줘",
+      "ground_truth": {
+        "tank_length": 0.6,
+        "tank_width": 0.3,
+        "tank_height": 0.4,
+        "fluid_height": 0.2,
+        "frequency_range": [0.3, 0.8],
+        "motion_type": "sway",
+        "source": "default preset '실험 탱크'"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "프리셋 '실험 탱크' 사용. '천천히' → 저주파. 모호한 요청의 합리적 해석 테스트."
+    },
+    {
+      "id": "S05",
+      "level": 2,
+      "domain": "LNG",
+      "nl_input": "LNG 화물창 30% 충전 상태에서 공진 주파수 가진",
+      "ground_truth": {
+        "tank_length": 40.0,
+        "tank_width": 40.0,
+        "tank_height": 27.0,
+        "fluid_height": 8.1,
+        "frequency_formula": "f1 for L=40m, h=8.1m",
+        "frequency_expected": 0.0698,
+        "motion_type": "sway",
+        "dp_range": [0.2, 1.0],
+        "source": "LNG preset + f1 calculation"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "LNG 프리셋(40×40×27m) 사용. 30% × 27m = 8.1m. f1 자동 계산."
+    },
+    {
+      "id": "S06",
+      "level": 2,
+      "domain": "Automotive",
+      "nl_input": "자동차 연료탱크 크기로 절반 채우고 급제동 시나리오",
+      "ground_truth": {
+        "tank_length_range": [0.3, 0.6],
+        "tank_width_range": [0.2, 0.4],
+        "tank_height_range": [0.15, 0.3],
+        "fluid_fill_ratio": 0.5,
+        "motion_type": "sway",
+        "motion_profile": "deceleration or high-frequency",
+        "source": "automotive domain inference"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "자동차 연료탱크 → 소형(~0.4×0.3×0.2m). 급제동 → 높은 감속 또는 비정현파."
+    },
+    {
+      "id": "S07",
+      "level": 2,
+      "domain": "Nuclear",
+      "nl_input": "원자력 사용후연료 저장조 크기, 수심 10m, 0.3Hz 지진 가진",
+      "ground_truth": {
+        "tank_length_range": [10.0, 30.0],
+        "tank_width_range": [5.0, 15.0],
+        "tank_height_range": [12.0, 20.0],
+        "fluid_height": 10.0,
+        "frequency": 0.3,
+        "motion_type": "sway",
+        "dp_range": [0.1, 0.5],
+        "source": "nuclear spent fuel pool domain"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "대형 탱크. 수심 10m 명시적. 0.3Hz 저주파 지진 가진."
+    },
+    {
+      "id": "S08",
+      "level": 2,
+      "domain": "Aerospace",
+      "nl_input": "소형 원통형 추진제 탱크, LOX, 70% 충전, 1Hz 횡방향 가진",
+      "ground_truth": {
+        "tank_shape": "cylindrical",
+        "tank_radius_range": [0.2, 1.0],
+        "tank_height_range": [0.5, 2.0],
+        "fluid_fill_ratio": 0.7,
+        "frequency": 1.0,
+        "motion_type": "sway",
+        "fluid_density": 1141,
+        "source": "aerospace propellant tank"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "원통형 탱크 + LOX(액체산소, ρ=1141 kg/m³). geometry tool 필요 가능."
+    },
+    {
+      "id": "S09",
+      "level": 3,
+      "domain": "Paper",
+      "nl_input": "Chen2018 Case 3 재현: 40% fill level, f/f1=0.9",
+      "ground_truth": {
+        "tank_length": 0.6,
+        "tank_width": 0.3,
+        "tank_height": 0.65,
+        "fluid_height": 0.26,
+        "fill_ratio": 0.4,
+        "frequency_ratio": 0.9,
+        "frequency_expected": 1.135,
+        "amplitude": 0.007,
+        "motion_type": "sway",
+        "source": "Chen2018 Table 1, Case 3"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "Chen2018 정확한 파라미터. h=260mm (40% of 650mm). f1 계산 후 ×0.9."
+    },
+    {
+      "id": "S10",
+      "level": 3,
+      "domain": "Paper",
+      "nl_input": "Liu2024 pitch sloshing: 50% fill, 주파수 0.8Hz, 진폭 4도",
+      "ground_truth": {
+        "tank_length": 1.0,
+        "tank_width": 0.5,
+        "tank_height": 1.0,
+        "fluid_height": 0.5,
+        "frequency": 0.8,
+        "amplitude_deg": 4.0,
+        "motion_type": "roll",
+        "source": "Liu2024"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "Liu2024 pitch 모션. 진폭 4도 → roll motion 변환."
+    },
+    {
+      "id": "S11",
+      "level": 3,
+      "domain": "Paper",
+      "nl_input": "SPHERIC Test 10 water 조건 재현",
+      "ground_truth": {
+        "tank_length": 0.9,
+        "tank_width": 0.062,
+        "tank_height": 0.508,
+        "fluid_height": 0.093,
+        "frequency": 0.613,
+        "amplitude_deg": 4.0,
+        "motion_type": "roll",
+        "dp_range": [0.004, 0.008],
+        "source": "SPHERIC Test 10 lateral water"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "논문명으로 파라미터 자동 매핑. S01과 동일 결과여야 하지만 입력이 추상적."
+    },
+    {
+      "id": "S12",
+      "level": 3,
+      "domain": "Paper",
+      "nl_input": "English2021 mDBC 검증 케이스 재현",
+      "ground_truth": {
+        "tank_length": 0.9,
+        "tank_width": 0.062,
+        "tank_height": 0.508,
+        "fluid_height": 0.093,
+        "frequency": 0.613,
+        "amplitude_deg": 4.0,
+        "motion_type": "roll",
+        "boundary_method": "mdbc",
+        "source": "English2021 = SPHERIC Test 10 with mDBC"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "English2021 → SPHERIC Test 10 + mDBC. boundary_method 자동 전환 테스트."
+    },
+    {
+      "id": "S13",
+      "level": 4,
+      "domain": "LNG",
+      "nl_input": "LNG 탱크에 수직 배플 2개 설치, 50% 충전, 공진 가진",
+      "ground_truth": {
+        "tank_length": 40.0,
+        "tank_width": 40.0,
+        "tank_height": 27.0,
+        "fluid_height": 13.5,
+        "baffle_count": 2,
+        "baffle_type": "vertical",
+        "frequency_formula": "f1 for L=40m, h=13.5m",
+        "motion_type": "sway",
+        "source": "LNG preset + baffle geometry"
+      },
+      "expected_tools": ["xml_generator", "stl_import"],
+      "notes": "복합: LNG 프리셋 + 배플 geometry + 공진 계산. stl_import 또는 geometry 확장 필요."
+    },
+    {
+      "id": "S14",
+      "level": 4,
+      "domain": "Seismic",
+      "nl_input": "2003년 토카치오키 지진파로 석유 탱크 슬로싱 시뮬레이션",
+      "ground_truth": {
+        "tank_length_range": [10.0, 50.0],
+        "tank_height_range": [10.0, 20.0],
+        "seismic_event": "2003 Tokachi-Oki",
+        "motion_type": "seismic",
+        "source": "seismic_input tool + petroleum tank"
+      },
+      "expected_tools": ["seismic_input", "xml_generator"],
+      "notes": "지진파 입력 → seismic_input tool 사용. 토카치오키(2003) 지진 데이터 필요."
+    },
+    {
+      "id": "S15",
+      "level": 4,
+      "domain": "STL",
+      "nl_input": "fuel_tank.stl 형상 임포트하고 50% 물 채워서 0.5Hz 가진",
+      "ground_truth": {
+        "stl_file": "fuel_tank.stl",
+        "fluid_fill_ratio": 0.5,
+        "frequency": 0.5,
+        "motion_type": "sway",
+        "source": "stl_import + xml_generator"
+      },
+      "expected_tools": ["stl_import", "xml_generator"],
+      "notes": "STL 임포트 + 유체 충전. fuel_tank.stl이 cases/에 있어야 함."
+    },
+    {
+      "id": "S16",
+      "level": 4,
+      "domain": "Multi",
+      "nl_input": "Chen2018 6개 충전 레벨 파라메트릭 스터디 실행",
+      "ground_truth": {
+        "tank_length": 0.6,
+        "tank_width": 0.3,
+        "tank_height": 0.65,
+        "fill_levels_mm": [120, 150, 195, 260, 325, 390],
+        "fill_ratios": [0.185, 0.231, 0.300, 0.400, 0.500, 0.600],
+        "frequency_ratio": 0.9,
+        "amplitude": 0.007,
+        "n_cases": 6,
+        "source": "Chen2018 parametric study"
+      },
+      "expected_tools": ["parametric_study", "xml_generator"],
+      "notes": "파라메트릭 스터디 오케스트레이션. 6개 XML 자동 생성 + 순차 실행."
+    },
+    {
+      "id": "S17",
+      "level": 5,
+      "domain": "Edge",
+      "nl_input": "dp 0.001로 아주 정밀하게 시뮬레이션",
+      "ground_truth": {
+        "dp_requested": 0.001,
+        "expected_behavior": "warning",
+        "warning_reason": "dp=0.001 → extreme particle count, likely >10M particles",
+        "recommended_action": "dp 하한 경고 후 0.005 이상으로 조정 제안",
+        "source": "edge case"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "극도로 작은 dp → 입자 수 폭발. 에이전트가 경고하고 조정을 제안해야 함."
+    },
+    {
+      "id": "S18",
+      "level": 5,
+      "domain": "Edge",
+      "nl_input": "공기만 있는 빈 탱크 흔들기",
+      "ground_truth": {
+        "fluid_height": 0,
+        "expected_behavior": "error",
+        "error_reason": "SPH requires fluid particles, empty tank has no particles to simulate",
+        "recommended_action": "유체 없음 → 시뮬레이션 불가 안내",
+        "source": "edge case"
+      },
+      "expected_tools": [],
+      "notes": "유체 없음. 에이전트가 시뮬레이션 불가를 안내해야 함."
+    },
+    {
+      "id": "S19",
+      "level": 5,
+      "domain": "Edge",
+      "nl_input": "탱크 100% 가득 채우고 흔들기",
+      "ground_truth": {
+        "fluid_fill_ratio": 1.0,
+        "expected_behavior": "warning",
+        "warning_reason": "100% fill = no free surface = no sloshing possible",
+        "recommended_action": "자유표면 없음 경고, 95% 이하 충전 권장",
+        "source": "edge case"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "100% 충전 → 자유표면 없음 → 슬로싱 의미 없음. 에이전트가 경고해야 함."
+    },
+    {
+      "id": "S20",
+      "level": 5,
+      "domain": "Edge",
+      "nl_input": "10m × 10m × 10m 탱크, dp=0.002",
+      "ground_truth": {
+        "tank_length": 10.0,
+        "tank_width": 10.0,
+        "tank_height": 10.0,
+        "dp": 0.002,
+        "expected_behavior": "warning",
+        "estimated_particles": 125000000,
+        "warning_reason": "~125M particles, exceeds RTX 4090 VRAM (24GB)",
+        "recommended_action": "스케일 경고, dp 증가 또는 탱크 축소 권장",
+        "source": "edge case"
+      },
+      "expected_tools": ["xml_generator"],
+      "notes": "125M particles → GPU 메모리 초과. 에이전트가 스케일 문제를 감지해야 함."
+    }
+  ]
+}
