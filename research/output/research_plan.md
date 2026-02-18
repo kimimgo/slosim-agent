@@ -13,59 +13,70 @@ First domain-specialized LLM agent system that autonomously configures, executes
 
 | Our System | Competitor | Differentiator |
 |-----------|-----------|---------------|
-| **SPH particle-based** (DualSPHysics GPU) | MetaOpenFOAM/Foam-Agent/ChatCFD/OpenFOAMGPT/FoamGPT/AutoCFD/CFD-Copilot | All 7 mesh-based OpenFOAM |
-| **Autonomous agent** (14 tools + ReAct) | Pasimodo+RAG | RAG = assistance, not autonomous |
-| **Sloshing domain-specialized** (136-line prompt) | All above (general-purpose CFD) | No domain specialization for sloshing |
-| **Benchmark-validated** (SPHERIC Test 10, r>0.9) | ChatCFD (68.12% phys plausibility) | First physical accuracy on SPH benchmark |
-| **Local open-weight** (Qwen3 32B) | MetaOpenFOAM/ChatCFD (GPT-4/DeepSeek) | IP protection, zero cloud cost |
-| **GPU-native execution** (RTX 4090) | MooseAgent (CPU FEM) | SPH is inherently GPU-parallel |
+| **Lagrangian particle-based** (DualSPHysics GPU) | All 10+ systems (MetaOpenFOAM~PhyNiKCE) | All mesh-based OpenFOAM; entire particle column empty |
+| **Autonomous agent** (14 tools + ReAct) | Pasimodo+RAG (0/2 model creation) | RAG = Q&A assistance, not autonomous execution |
+| **Experimental validation** (SPHERIC Test 10, r>0.9) | All (execution success only) | First NL→experimentally-validated physics pipeline |
+| **Knowledge ablation** (136-line domain prompt) | All (architectural ablation only) | First domain-knowledge ablation for simulation |
+| **Zero fine-tuning** (Qwen3 32B prompt-only) | AutoCFD/FoamGPT/CFD-Copilot (28K+ pairs) | Prompt engineering vs expensive dataset creation |
+| **GPU-native execution** (RTX 4090, CUDA 12.6) | All OpenFOAM systems (CPU) | SPH is inherently GPU-parallel, $0 LLM + consumer GPU |
 
-## Competitive Landscape (8 direct competitors)
+## Competitive Landscape (11 direct competitors — Verified Cycle 2)
 
-| # | System | Solver | Best Metric | Weakness vs Ours |
-|---|--------|--------|------------|-----------------|
-| C1 | MetaOpenFOAM | OpenFOAM | 85% pass, $0.22 | Mesh-based, cloud LLM |
-| C2 | OpenFOAMGPT 2.0 | OpenFOAM | 100% reproducibility | Academic cases only |
-| C3 | Foam-Agent 2.0 | OpenFOAM | 88.2% success | MCP similar but mesh-only |
-| C4 | ChatCFD | OpenFOAM | 82.1% exec, 68.1% phys | Cloud LLM, no SPH |
-| C5 | FoamGPT | OpenFOAM | 26.36% CFDLLMBench | Low success rate |
-| C6 | AutoCFD | OpenFOAM | 88.7% accuracy | 16 basic cases only |
-| C7 | MooseAgent | MOOSE (FEM) | 93% success | FEM not SPH |
-| C8 | Pasimodo+RAG | Pasimodo (SPH) | Qualitative only | RAG-only, closed-source |
+| # | System | Solver | LLM (Verified) | Best Metric | Weakness vs Ours |
+|---|--------|--------|----------------|------------|-----------------|
+| C1 | MetaOpenFOAM | OpenFOAM 10 | GPT-4o (T=0.01) | 85% avg Pass@1, $0.22 | Mesh-based, cloud LLM, 8 self-built cases |
+| C2 | OpenFOAMGPT 2.0 | OpenFOAM v2406 | **Claude-3.7-Sonnet** | 100% repro (455 cases) | Cloud LLM, academic cases, no ablation |
+| C3 | Foam-Agent 2.0 | OpenFOAM | Claude 3.5 Sonnet | 88.2% exec (110 tasks) | Execution only, no physical validation |
+| C4 | ChatCFD | OpenFOAM | DeepSeek-R1+V3 | 82.1% exec / 68.12% phys (LLM-judge) | Physical fidelity=LLM-evaluated, not exp. |
+| C5 | PhyNiKCE | OpenFOAM | Neurosymbolic | 96% over ChatCFD (340 runs) | Still OpenFOAM-only, no particle methods |
+| C6 | FoamGPT | OpenFOAM | Qwen3-8B (LoRA) | 26.36% CFDLLMBench | Very low success rate |
+| C7 | CFD-Copilot | OpenFOAM v2406 | Qwen3-8B LoRA + Qwen3-32B | U 96.4%, p 93.2% | Fine-tuning needed (49K pairs), mesh-only |
+| C8 | AutoCFD | OpenFOAM | Qwen2.5-7B (fine-tuned) | 88.7% accuracy (21 cases) | Fine-tuning needed (28.7K pairs), mesh-only |
+| C9 | MooseAgent | MOOSE (FEM) | **DeepSeek-R1+V3** | 93% success (9 cases) | FEM not SPH, cloud LLM |
+| C10 | MCP-SIM | FEniCS (FEM) | N/A (6 agents) | 100% on 12 PDE tasks | FEM/PDE, no CFD/SPH |
+| C11 | Pasimodo+RAG | Pasimodo (SPH) | Llama/Gemma (3-27B) | **0/2 model creation** | RAG-only, closed-source, cannot execute sims |
 
 ---
 
 ## Approved Research Gaps (6)
 
-### GAP-1: SPH + LLM Agent 조합 연구 전무 [CRITICAL]
-- **Evidence**: 2,175편 survey "sph-specific" coverage gap; "sloshing+LLM" web search = 0건; 8개 LLM+CFD 시스템 전부 OpenFOAM
-- **Implication**: 핵심 novelty claim의 근거. Research space matrix에서 SPH×LLM Agent 셀이 비어 있음.
+### GAP-1: Lagrangian Particle Simulation + LLM Agent = Zero Research [CRITICAL] — Confidence 95%
+- **Evidence**: 6가지 검색 패턴(SPH+LLM, DualSPHysics+AI, particle+LLM, DEM+LLM, MPM+LLM)에서 zero results; 10+ OpenFOAM 시스템 전부 mesh-based; Pasimodo+RAG는 Pure RAG(0/2 model creation)
+- **Refined Claim**: "To our knowledge, no prior work has combined LLM agents with particle-based simulation methods (SPH, DEM, MPM). All existing LLM-for-simulation agents target mesh-based solvers."
+- **Implication**: 핵심 novelty — SPH뿐 아니라 전체 Lagrangian 입자법 영역이 비어 있음
 - **Maps to**: EXP-1, EXP-2
 
-### GAP-2: Particle-Based Solver용 Tool Interface 설계 패턴 부재 [HIGH]
-- **Evidence**: MetaOpenFOAM=4 agents, Foam-Agent=MCP, MooseAgent=LangGraph; SPH 비동기 GPU + IsError + Run.csv 모니터링 패턴 전무
-- **Implication**: 14개 DualSPHysics 도구 인터페이스가 논문 기여. ChemCrow(18 tools), MDCrow(40 tools)와 동일 레벨.
+### GAP-2: Lagrangian Particle Solver용 Tool Interface 설계 패턴 부재 [HIGH] — Confidence 95%
+- **Evidence**: 11개 경쟁 시스템 tool counts 검증 — Foam-Agent 11 MCP, ChemCrow 18, MDCrow 40+, CFD-Copilot 100+; 전부 mesh-based I/O 패턴 (config dict → solver → postProcess). Particle solver의 XML→binary particle→GPU telemetry→particle-to-mesh 패턴 전무
+- **Refined Claim**: "No prior work has designed tool abstractions for Lagrangian particle solvers, which require fundamentally different patterns: XML-based case definition, binary particle I/O, GPU-specific telemetry monitoring, and post-processing via particle-to-mesh conversion."
+- **Implication**: 14개 DualSPHysics 도구가 ChemCrow(18)/MDCrow(40+) 수준의 기여
 - **Maps to**: EXP-2, EXP-5
 
-### GAP-3: 슬로싱 도메인 특화 프롬프트 체계적 평가 부재 [HIGH]
-- **Evidence**: ChatCFD가 최초 physical plausibility 지표(68.12%) 도입했으나 도메인 프롬프트 ablation 없음; ChemCrow은 화학 특화
-- **Implication**: Ablation study로 정량적 기여 가능 (20-40% 향상)
+### GAP-3: 도메인 지식 Ablation 연구 전무 (전체 시뮬레이션 분야) [HIGH] — Confidence 90%
+- **Evidence**: 9개 경쟁자 ablation 전수 조사 — MetaOpenFOAM(RAG/Reviewer/Temperature), Foam-Agent(Reviewer/RAG/File dep), ChatCFD(RAG/reflection), MooseAgent(RAG만); **전부 architectural ablation**. Domain knowledge(방정식, 제약조건, 용어) ablation = zero.
+- **Refined Claim**: "While ablation studies for simulation agents exist (RAG, reviewer, temperature), no work has systematically ablated domain-specific knowledge from system prompts. Existing ablations test architectural components, not knowledge components."
+- **Closest**: PhyNiKCE (structured vs zero-shot) — instruction FORMAT이지 knowledge CONTENT 아님
+- **Implication**: Ablation study로 정량적 기여 가능 (20-40% 향상) — 최초의 knowledge ablation
 - **Maps to**: EXP-4
 
-### GAP-4: NL→벤치마크 검증 E2E 파이프라인 부재 [MEDIUM-HIGH]
-- **Evidence**: FoamGPT 최고 26.36% 실행률; OpenFOAMGPT 100% 재현성이나 학술 케이스만; 벤치마크 대비 정량 검증 없음
-- **Implication**: SPHERIC Test 10 raw data (100회 반복)로 정량 검증 가능
+### GAP-4: NL→실험 데이터 검증 E2E 파이프라인 부재 [MEDIUM-HIGH] — Confidence 90%
+- **Evidence**: 모든 경쟁자가 "execution success"(코드 실행 여부)만 측정. ChatCFD의 68.12% physical fidelity도 LLM-as-judge(실험 데이터 아님). OpenFOAMGPT/AutoCFD만 reference simulation 비교 — **published experimental benchmark 대비 검증은 zero**
+- **Refined Claim**: "No existing LLM-for-simulation system validates against published experimental benchmark data. 'Success' is universally measured as execution completion. SloshAgent is the first to close the loop from natural language to experimentally-validated physics (SPHERIC Test 10, 100-repeat pressure statistics)."
+- **Implication**: SPHERIC Test 10 raw data로 Pearson r, NRMSE 정량 검증 — 가장 강력한 차별화
 - **Maps to**: EXP-1, EXP-3
 
-### GAP-5: 슬로싱 산업 PoC 및 현장 기대효과 검증 부재 [MEDIUM-HIGH]
-- **Evidence**: 4대 산업 정량 데이터 확보 — LNG(200+ cases/tank), 자동차($2K-$20K/project), 원자력(ASCE 4-98), 우주(Falcon 1 실패). AI PoC 부재.
-- **Practitioner Pain Points**: 초보자 2-4주 vs 전문가 2-3일, CFD 컨설팅 $80-120/hr, DualSPHysics 포럼 상위 에러(boundary excluded, STL autofill, mvrotsinu 속성 혼동)
-- **Implication**: 파라메트릭 자동화 + baffle 설계로 실용성 입증
+### GAP-5: 슬로싱 시뮬레이션 AI 자동화 부재 (산업 PoC) [MEDIUM-HIGH] — Confidence 85%
+- **Evidence**: Maritime AI 시장 $4.3B('24), CAGR 40.6%; DualSPHysics 52K+ downloads, 687 stars, 746 citations; DesignSPHysics는 permanent beta (mDBC 미지원, FreeCAD 호환 문제, complex geometry 제한); nanoFluidX/PreonLab $10K+/year enterprise pricing; LNG 300+ 선박 발주 중, 한국 75% 점유
+- **Refined Claim**: "Despite a $4.3B maritime AI market and 52,000+ DualSPHysics users, no AI tool automates sloshing simulation from natural language. DesignSPHysics is in permanent beta with critical limitations, commercial alternatives cost $10K+/year."
+- **Practitioner Pain Points**: 초보자 2-4주 vs 전문가 2-3일, $80-120/hr consulting, SNU ANN은 experimental DB prediction만 (시뮬레이션 자동화 아님)
+- **Implication**: 파라메트릭 자동화 + baffle 설계로 실용성 입증 — $0 LLM cost 대비 $10K+ 상용
 - **Maps to**: EXP-3, EXP-5
 
-### GAP-6: 로컬/오픈웨이트 LLM 시뮬레이션 적용 [MEDIUM]
-- **Evidence**: arXiv:2504.02888 Qwen vs GPT-4 비교 — 오픈웨이트 LLM이 CFD에 경쟁력 있음 확인. MetaOpenFOAM/ChatCFD는 클라우드 의존.
-- **Implication**: Qwen3 32B 로컬 배포 전략의 근거. 32B vs 8B 비교는 향후 연구.
+### GAP-6: Fine-tuning 없이 오픈웨이트 LLM으로 시뮬레이션 오케스트레이션 [MEDIUM] — Confidence 80%
+- **Evidence**: AutoCFD(Qwen2.5-7B, 28.7K pairs fine-tuning), FoamGPT(Qwen3-8B LoRA), CFD-Copilot(Qwen3-8B LoRA 49K pairs) — 전부 fine-tuning 필요. MDCrow(Llama3-405B) — 로컬 배포 비실용적. **Zero fine-tuning으로 general-purpose 오픈웨이트 모델이 시뮬레이션 오케스트레이션에 성공한 사례 없음**
+- **Refined Claim**: "While fine-tuned open-weight models have been explored for CFD, no prior work demonstrates that a general-purpose open-weight model without domain-specific fine-tuning can orchestrate scientific simulations through prompt engineering alone."
+- **Implication**: Prompt-only vs fine-tuning trade-off가 genuine contribution. Qwen3 32B vs 8B 비교는 향후 연구.
+- **Note**: CFD-Copilot도 Qwen3-32B 사용하지만 general agent용이며, generation은 fine-tuned Qwen3-8B 사용
 - **Maps to**: Future Work
 
 ---

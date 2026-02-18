@@ -24,15 +24,18 @@
 
 ### 1.2 LLM Agents for Scientific Simulation
 - AI4Science trajectory: ChemCrow (chemistry, 18 tools, Nature MI 2024), Coscientist (lab automation, Nature 2023), MooseAgent (FEM, 93% success)
-- CFD automation explosion (2024-2025): 8+ systems all targeting OpenFOAM
-  - MetaOpenFOAM (Tsinghua 2024): 4 agents, 85% pass, $0.22/case
-  - Foam-Agent 2.0 (NeurIPS ML4PS 2025): 88.2% success, MCP architecture
-  - ChatCFD (2025): 82.1% execution, 68.12% physical plausibility (first such metric)
-  - OpenFOAMGPT 2.0 (2025): 450+ simulations, 100% reproducibility
-  - FoamGPT (NeurIPS ML4PS 2025): Qwen3-8B fine-tuned, CFDLLMBench 26.36%
-- **Gap**: All mesh-based (OpenFOAM). Zero work on particle-based SPH solvers.
+- CFD automation explosion (2024-2026): 10+ systems all targeting mesh-based OpenFOAM
+  - MetaOpenFOAM (Tsinghua 2024): GPT-4o, 4 agents, 85% avg Pass@1, $0.22/case
+  - Foam-Agent 2.0 (NeurIPS ML4PS 2025): Claude 3.5 Sonnet, 88.2% success, 11 MCP functions
+  - ChatCFD (2026): DeepSeek-R1+V3, 315 cases, 82.1% exec / 68.12% physical fidelity (first such metric)
+  - OpenFOAMGPT 2.0 (2025): **Claude-3.7-Sonnet** (not GPT), 455 sims, 100% reproducibility
+  - FoamGPT (NeurIPS ML4PS 2025): Qwen3-8B LoRA, CFDLLMBench 26.36%
+  - CFD-Copilot (2025): Qwen3-8B LoRA (49K pairs) + Qwen3-32B, 100+ MCP tools
+  - PhyNiKCE (2026): Neurosymbolic, 96% improvement over ChatCFD (most sophisticated yet)
+- **Gap 1**: All mesh-based (OpenFOAM). Zero work on particle-based methods (SPH, DEM, MPM).
   - SPH is fundamentally different: no mesh, Lagrangian particle-based, GPU-native, excels at violent free-surface flows (sloshing)
-- Closest SPH work: Pasimodo+RAG (arXiv:2502.03916) — RAG assistance for closed-source SPH, not autonomous agent, no sloshing, no GPU execution
+- **Gap 2**: All systems measure "execution success" (did the code run?). None validates against published experimental benchmarks. "The relevant metric is not 'did the code run?' but 'does the physics match reality?'"
+- Closest SPH work: Pasimodo+RAG (arXiv:2502.03916) — Pure RAG Q&A (NOT agent), scored **0/2 on model creation**, no sloshing, no GPU execution
 
 ### 1.3 Contributions
 1. First domain-specialized LLM agent system for autonomous SPH sloshing simulation
@@ -53,11 +56,12 @@
 - **MetaOpenFOAM** (Chen et al., 2024, arXiv:2407.21320): MetaGPT role-based 4-agent + LangChain RAG, 8 benchmarks 85% pass, $0.22/case. Most similar architecture to ours.
 - **Foam-Agent 2.0** (Yue et al., 2025, arXiv:2509.18178): NeurIPS ML4PS, hierarchical multi-index retrieval + dependency-aware file generation + MCP architecture with ParaView post-processing. 88.2% success on 110 tasks. MCP pattern matches our pv-agent design.
 - **ChatCFD** (Fan et al., 2025, arXiv:2506.02019): DeepSeek-R1/V3, 315 benchmarks 82.1% execution, **first "physical plausibility" metric (68.12%)**. Multimodal input (papers, mesh files).
-- **OpenFOAMGPT 2.0** (Pandey et al., 2025): GPT-4o + o1 + RAG, conversation-driven E2E, 450+ simulations 100% reproducibility. Temperature=0 for determinism.
-- **FoamGPT** (Yue et al., NeurIPS ML4PS 2025): LoRA fine-tuning on OpenFOAM tutorials, CFDLLMBench standardized evaluation (26.36% execution success).
-- **CFD-Copilot** (2025, arXiv:2512.07917): MCP standard + domain fine-tuned LLM, NACA 0012 benchmarks.
-- **AutoCFD** (Dong et al., 2025): Fine-tuned Qwen2.5-7B, NL2FOAM 28.7K pairs, 88.7% accuracy.
-- **Key difference**: All 7 systems target mesh-based OpenFOAM; SPH is fundamentally different (no mesh, particle-based, Lagrangian, GPU-native)
+- **OpenFOAMGPT 2.0** (Pandey et al., 2025): **Claude-3.7-Sonnet** (NOT GPT — "GPT" is heritage naming), 4-agent Prompt Pool (no RAG), 455 cases 100% reproducibility. T=0 for determinism.
+- **FoamGPT** (Yue et al., NeurIPS ML4PS 2025): LoRA fine-tuning Qwen3-8B on OpenFOAM tutorials, CFDLLMBench standardized evaluation (26.36% execution success).
+- **CFD-Copilot** (2025, arXiv:2512.07917): MetaGPT v0.8.1 + MCP (100+ post-processing tools), Qwen3-8B LoRA (49,205 NL2FOAM pairs) + Qwen3-32B general agents, NACA 0012 U 96.4% / p 93.2%.
+- **AutoCFD** (Dong et al., 2025): Fine-tuned Qwen2.5-7B, NL2FOAM 28.7K pairs, 88.7% accuracy, $0.020/case.
+- **PhyNiKCE** (Hong Kong PolyU, 2026, arXiv:2602.11666): Neurosymbolic — neural planning + deterministic CSP validation, 96% relative improvement over ChatCFD, 340 runs. Most sophisticated CFD-LLM to date, but still OpenFOAM-only.
+- **Key difference**: All 10+ systems target mesh-based OpenFOAM; the entire Lagrangian particle simulation + LLM space (SPH, DEM, MPM) is completely vacant
 
 ### 2.3 SPH Sloshing Simulation
 - DualSPHysics: GPU-accelerated SPH (485 citations), open-source, CUDA
@@ -67,29 +71,33 @@
 - English2021: mDBC validation for sloshing with DualSPHysics
 - ML surrogates (non-competing): Neural SPH (GNN), GNS-WP (sloshing benchmark), AAAI 2025 fuel sloshing NN, DRLinSPH (RL + SPH active control)
 
-**Table 1**: Comparison of LLM-based simulation systems
+**Table 1**: Comparison of LLM-based simulation systems (Verified from paper full text, Cycle 2)
 | System | Year | Domain | Solver | Architecture | Success Metric | LLM | Cost |
 |--------|------|--------|--------|-------------|---------------|-----|------|
-| MetaOpenFOAM | 2024 | General CFD | OpenFOAM | 4-agent MetaGPT | 85% pass rate | GPT-4 | $0.22/case |
-| OpenFOAMGPT 2.0 | 2025 | General CFD | OpenFOAM | RAG + multi-agent | 100% reproducibility | GPT-4o+o1 | Cloud |
-| Foam-Agent 2.0 | 2025 | General CFD | OpenFOAM | MCP + multi-index | 88.2% success | Claude 3.5 | Cloud |
-| ChatCFD | 2025 | General CFD | OpenFOAM | Structured reasoning | 82.1% exec / 68.1% phys | DeepSeek | Cloud |
-| FoamGPT | 2025 | General CFD | OpenFOAM | LoRA fine-tune | 26.36% (CFDLLMBench) | Qwen3-8B | Local |
-| AutoCFD | 2025 | General CFD | OpenFOAM | Fine-tune + multi-agent | 88.7% accuracy | Qwen2.5-7B | Local |
-| MooseAgent | 2025 | Multi-physics | MOOSE (FEM) | LangGraph multi-agent | 93% success | GPT-4 | <$0.14 |
-| Pasimodo+RAG | 2025 | General SPH | Pasimodo (closed) | RAG only | Qualitative | Local LLM | Local |
-| **SloshAgent** | **2026** | **Sloshing SPH** | **DualSPHysics GPU** | **14 tools + ReAct** | **SPHERIC r>0.9** | **Qwen3 32B** | **Local** |
+| MetaOpenFOAM | 2024 | General CFD | OpenFOAM 10 | 4-agent MetaGPT v0.8.0 | 85% avg Pass@1 (8 cases×n=10, human-verified) | GPT-4o (T=0.01) | $0.22/case (44K tok) |
+| OpenFOAMGPT 2.0 | 2025 | General CFD | OpenFOAM v2406 | 4-agent Prompt Pool (no RAG) | 100% reproducibility (455 cases, 6 types) | **Claude-3.7-Sonnet** (T=0) | Cloud (Claude API) |
+| Foam-Agent 2.0 | 2025 | General CFD | OpenFOAM | 6-agent + 11 MCP functions | 88.2% exec success (110 tasks, 7 physics) | Claude 3.5 Sonnet (T=0.6) | ~334K tok/case |
+| ChatCFD | 2026 | General CFD | OpenFOAM | 4-stage + structured KB | 82.1% exec / 68.12% phys fidelity (LLM-judge, 315 cases) | DeepSeek-R1 + V3 (dual) | $0.208/case (192K tok) |
+| PhyNiKCE | 2026 | General CFD | OpenFOAM | Neurosymbolic (neural+CSP) | 96% improvement over ChatCFD (13 configs, 340 runs) | N/A (neurosymbolic) | N/A |
+| FoamGPT | 2025 | General CFD | OpenFOAM | LoRA fine-tune | 26.36% (CFDLLMBench) | Qwen3-8B (LoRA) | Local |
+| CFD-Copilot | 2025 | General CFD | OpenFOAM v2406 | MetaGPT v0.8.1 + 100+ MCP tools | U 96.4%, p 93.2% (NACA 0012) | Qwen3-8B (LoRA, 49K pairs) + Qwen3-32B | Local |
+| AutoCFD | 2025 | General CFD | OpenFOAM | Fine-tune + multi-agent | 88.7% accuracy (21 cases) | Qwen2.5-7B (28.7K pairs) | $0.020/case |
+| MooseAgent | 2025 | Multi-physics | MOOSE (FEM) | 3-part LangGraph, ~5 agents | 93% avg success (9 cases×n=5) | **DeepSeek-R1 + V3** (dual, T=0.01) | <$0.14/case (61K tok) |
+| Pasimodo+RAG | 2025 | General SPH | Pasimodo (closed) | Pure RAG Q&A (NOT agent) | **0/2 on model creation** | Llama 3.2 3B / Gemma 3 27B | Local |
+| **SloshAgent** | **2026** | **Sloshing SPH** | **DualSPHysics v5.4 GPU** | **14 tools + ReAct + MCP** | **SPHERIC r>0.9 (exp. validation)** | **Qwen3 32B (local, zero fine-tuning)** | **$0 LLM** |
 
-**Research Space Matrix**:
+**Research Space Matrix** (Updated Cycle 2):
 ```
-                  OpenFOAM(FVM)    FEM(MOOSE)     SPH(DualSPHysics)
-LLM Agent     │ 7 systems        │ MooseAgent   │ SloshAgent (Ours) ★
-              │ (MetaOpenFOAM,   │              │ (ONLY ONE)
-              │  Foam-Agent...)  │              │
-ML Surrogate  │ ML4CFD, AirFoil  │ FEM-NN       │ Neural SPH, GNS-WP
-Sloshing-     │ (none)           │ (none)        │ SloshAgent (Ours) ★
-specific      │                  │               │ (ONLY ONE)
+                  Mesh-based (OpenFOAM)    FEM (MOOSE/FEniCS)    Lagrangian Particle (SPH/DEM/MPM)
+LLM Agent     │ 10+ systems              │ MooseAgent, MCP-SIM │ SloshAgent (Ours) ★
+              │ (MetaOpenFOAM, Foam-Agent│                     │ (ONLY ONE — entire column empty)
+              │  ChatCFD, PhyNiKCE...)   │                     │
+ML Surrogate  │ ML4CFD, AirFoil          │ FEM-NN              │ Neural SPH, GNS-WP
+Sloshing-     │ (none)                   │ (none)              │ SloshAgent (Ours) ★
+specific      │                          │                     │ (ONLY ONE)
 ```
+
+**Key narrative**: "The CFD-LLM landscape has grown rapidly, with at least 10 systems targeting OpenFOAM alone. Yet this entire body of work addresses a single solver paradigm: mesh-based finite volume methods. Lagrangian particle methods — which dominate sloshing, wave impact, and free-surface applications — remain entirely unaddressed."
 
 ## 3. System Design (1.5 pages)
 
@@ -211,9 +219,15 @@ specific      │                  │               │ (ONLY ONE)
 - AutoCFD (Dong et al., 2025)
 
 **FEM/MD Agents (solver-type comparison):**
-- MooseAgent (Zhang et al., arXiv:2504.08621, 2025)
-- MDCrow (arXiv:2502.09565, 2025)
+- MooseAgent (Zhang et al., arXiv:2504.08621, 2025) — DeepSeek-R1+V3 (NOT GPT-4)
+- MDCrow (arXiv:2502.09565, 2025) — 40+ tools, GPT-4o 72%
 - MechAgents (2024, 133 citations)
+- MCP-SIM (KAIST, Nature npj AI, 2025) — FEM/PDE, 6 agents, "Memory-Coordinated Physics-aware"
+- PhyNiKCE (Hong Kong PolyU, arXiv:2602.11666, Feb 2026) — Neurosymbolic CFD, 96% over ChatCFD
+
+**CFD Benchmarks:**
+- CFDLLMBench (Foam-Agent team, NeurIPS 2025) — 110 basic + 16 advanced OpenFOAM cases
+- SciAgentGym (2025) — 1,780 tools, 259 tasks (NO CFD tasks included)
 
 **SPH & Sloshing Domain:**
 - DualSPHysics (Dominguez et al., 2022, 485 citations)
