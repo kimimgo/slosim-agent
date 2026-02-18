@@ -1,0 +1,71 @@
+{
+  "topic": "AI Agent-Driven Sloshing Simulation: Automating DualSPHysics CFD Workflows with Domain-Specialized LLM Agents",
+  "motivation": "CFD sloshing simulations require deep domain expertise for case setup, solver configuration, and result interpretation. This creates a high barrier for non-specialist engineers. An AI agent that understands sloshing physics can democratize access to high-fidelity SPH simulation.",
+  "hypothesis": "A domain-specialized LLM agent with structured tool interfaces can autonomously configure, execute, and analyze DualSPHysics sloshing simulations with accuracy comparable to expert-configured baselines, while reducing setup time by an order of magnitude.",
+  "existing_approaches": [
+    "ChatGPT/GPT-4 for general code generation (no CFD domain specialization)",
+    "AutoCFD/ML-augmented CFD (mesh optimization, surrogate models)",
+    "LLM-based scientific workflow automation (ChemCrow, Coscientist for chemistry)",
+    "Traditional GUI-based CFD setup (DesignSPHysics for DualSPHysics)"
+  ],
+  "researcher_capabilities": {
+    "available_data": [
+      "SPHERIC Benchmark FTP data (Test 10: 100 repetitions, 3 fluids, pressure time series)",
+      "DualSPHysics official test cases (05_SloshingTank)",
+      "7 published paper PDFs with experimental data (Chen2018, Liu2024, English2021, ISOPE2012, NASA2023, Frosina2018, Zhao2024)",
+      "17 pre-run simulation result directories",
+      "20 XML case files (benchmark reproductions)",
+      "10 parametric JSON presets from 8 papers"
+    ],
+    "compute_resources": "NVIDIA RTX 4090 (24GB VRAM), CUDA 12.6, DualSPHysics v5.4 GPU solver in Docker",
+    "existing_code": [
+      "slosim-agent: Go+BubbleTea TUI with 14 DualSPHysics tools, Qwen3 32B/8B local LLM",
+      "pv-agent: ParaView MCP server for post-processing/rendering",
+      "Docker pipeline: GenCase → DualSPHysics GPU → PartVTK → pvpython → ffmpeg"
+    ],
+    "research_background": "",
+    "accessible_benchmarks": [
+      "SPHERIC Test 10 (water, oil, sunflower oil — FTP raw data)",
+      "Chen2018 6 fill levels (600x300x650mm)",
+      "Liu2024 pitch sloshing (3 fill x 5 freq x 3 amp)",
+      "English2021 mDBC validation",
+      "ISOPE2012 Mark III LNG benchmark"
+    ]
+  },
+  "target_venue": "CS conference/journal (AI for Science, HCI+AI, or Software Engineering)",
+  "deadline": null,
+  "constraints": [
+    "Local LLM only (Qwen3 32B/8B via Ollama) — no cloud API dependency",
+    "Single GPU (RTX 4090) — simulation scale limited to ~500K particles",
+    "DualSPHysics v5.4 specific — not generalizable to all SPH solvers yet"
+  ],
+  "related_projects": [],
+  "research_questions": [
+    "RQ1: Can an LLM agent generate valid DualSPHysics XML configurations from natural language descriptions of sloshing scenarios?",
+    "RQ2: How does the simulation accuracy of agent-generated cases compare to expert-configured benchmarks (SPHERIC Test 10, published paper reproductions)?",
+    "RQ3: What tool interface design patterns enable reliable agent-solver integration for iterative CFD workflows?",
+    "RQ4: How does domain-specialized prompting (sloshing physics knowledge) improve agent performance compared to generic LLM agents?"
+  ],
+  "known_gaps": [
+    "No existing AI agent for SPH-based sloshing simulation",
+    "LLM tool-use for CFD solver pipelines is unexplored",
+    "Domain-specialized prompting for computational mechanics lacks systematic evaluation",
+    "Gap between general-purpose code LLMs and domain-expert CFD setup"
+  ],
+  "key_references": [
+    "English2021 - mDBC sloshing validation with DualSPHysics",
+    "Chen2018 - OpenFOAM sloshing parametric study",
+    "Liu2024 - Large tank pitch sloshing",
+    "ChemCrow (Bran et al. 2024) - LLM agent for chemistry",
+    "Coscientist (Boiko et al. 2023) - AI-driven scientific discovery",
+    "DesignSPHysics - GUI for DualSPHysics setup",
+    "Schick et al. 2024 - Toolformer: LLMs learn to use tools"
+  ],
+  "expected_contributions": [
+    "First AI agent system for SPH sloshing simulation automation",
+    "Tool interface design pattern for LLM-CFD solver integration",
+    "Benchmark evaluation: agent vs expert on SPHERIC and published cases",
+    "Domain-specialized prompt engineering methodology for computational mechanics"
+  ],
+  "novelty_claim": "First domain-specialized LLM agent that autonomously drives the complete DualSPHysics sloshing simulation pipeline from natural language to validated results."
+}

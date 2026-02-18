@@ -31,6 +31,10 @@ __pycache__/
 # App config (user-specific)
 .opencode/
 
+# Research outputs (tracked selectively)
+# research/profile.json and research/progress.json are tracked
+# Generated outputs are tracked when committed manually
+
 # Logs
 firebase-debug.log
 *.log
