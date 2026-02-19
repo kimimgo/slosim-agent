@@ -1,4 +1,4 @@
-# Session Handoff — 2026-02-19 (Updated: Phase 5 Complete)
+# Session Handoff — 2026-02-19 (Updated: Phase 6 In Progress)
 
 ## 브랜치: `research/paper`
 
@@ -97,16 +97,34 @@
 - [x] LaTeX shell + BibTeX 35+ entries
 - **총 8,720 words**
 
+### Phase 6: 통계 보강 + 논문 개정 (진행 중, Agent Team 3+1명)
+- [x] EXP-2/EXP-4 Bootstrap BCa 95% CI + permutation test + effect size
+  - 핵심: 32B vs 8B 전체 accuracy **유의차 없음** (p=0.715)
+  - FULL vs GENERIC: d=0.58 (medium), p_bonf=0.678 (ns, n=10 한계)
+  - **레벨 난이도 효과 유의** (L1+L2 vs L3+L5, p=0.001)
+- [x] SPHERIC 100-repeat(실제 102회) 심층 분석
+  - 4 peaks 모두 비정규 (Shapiro-Wilk p<0.005) → ±2σ band 사용 정당화
+  - z-scores: |z| < 2.0 전부 확인, 5/7이 ±1σ 이내 (71%)
+  - Fig 2 violin plot + z-score bar chart 생성
+- [x] Chen2018 정성적 비교 — 4/4 물리 트렌드 일치
+  - 직접 NRMSE 불가 (wall pressure vs free surface elevation)
+  - SWL 단조증가, 얕은물 비선형, freq lock-in, near-resonant 최대 응답
+- [x] 논문 본문 전면 개정 (9,467 words)
+  - "zero"/"No system" → "to the best of our knowledge" qualifier
+  - 모든 claim에 CI/p-value/effect size 병기
+  - EXP-4: "significant" → "medium effect size (d=0.58), directional"
+  - EXP-2: complexity-accuracy boundary (p=0.001) 최강 finding으로 승격
+- [ ] LaTeX 완전 변환 (진행 중)
+
 ---
 
-## 다음 작업 (Phase 6: 리비전 및 제출)
+## 다음 작업 (Phase 6b: 제출 준비)
 
-### 선택적 보강
-- [ ] LaTeX 본문 완전 변환 (현재 shell + markdown 참조 형태)
-- [ ] Figure 해상도/스타일 통일 (publication-ready)
-- [ ] Chen2018 Figure digitization (EXP-3 정량 비교)
+### 남은 보강 (선택적)
+- [ ] 추가 LLM baseline (DeepSeek-R1 32B, Dolphin-Llama3 8B 등 — Ollama에 설치됨)
 - [ ] mDBC 지원 추가 후 Oil 재검증
 - [ ] 타겟 학회/저널 선정 및 포맷 맞춤
+- [ ] Figure 해상도/스타일 통일 (publication-ready)
 
 ### 제출 준비
 - [ ] Camera-ready LaTeX 완성
@@ -120,50 +138,42 @@
 | 파일 | 용도 |
 |------|------|
 | **논문 초안** | |
-| `research/paper_draft/sloshagent_paper.md` | 통합 논문 (8,720 words) |
-| `research/paper_draft/sloshagent_paper.tex` | LaTeX shell |
-| `research/paper_draft/00_abstract.md` | Abstract |
-| `research/paper_draft/01_introduction.md` | Introduction |
-| `research/paper_draft/02_related_work.md` | Related Work |
-| `research/paper_draft/03_system_design.md` | System Design |
-| `research/paper_draft/04_experiments.md` | Experiments |
-| `research/paper_draft/05_discussion.md` | Discussion |
-| `research/paper_draft/06_conclusion.md` | Conclusion |
+| `research/paper_draft/sloshagent_paper.md` | 통합 논문 (9,467 words) |
+| `research/paper_draft/sloshagent_paper.tex` | LaTeX 본문 (완전 변환 진행 중) |
+| `research/paper_draft/00_abstract.md` ~ `06_conclusion.md` | 섹션별 markdown |
 | `research/references.bib` | BibTeX 참고문헌 (35+ entries) |
-| **분석** | |
+| **Phase 6 통계 분석** | |
+| `research/experiments/statistical_analysis.md` | EXP-2/EXP-4 Bootstrap CI + p-values |
+| `research/experiments/statistical_analysis.json` | 통계 결과 JSON |
+| `research/experiments/exp1_spheric/deep_statistical_analysis.md` | SPHERIC 심층 분석 |
+| `research/experiments/exp1_spheric/deep_stats.json` | SPHERIC 통계 JSON |
+| `research/experiments/exp3_parametric/comparison/chen2018_comparison.md` | Chen2018 비교 |
+| `research/experiments/figures/fig2_spheric_validation.png` | SPHERIC violin plot |
+| `research/experiments/figures/fig2b_zscore.png` | z-score bar chart |
+| `research/scripts/statistical_analysis.py` | 통계 분석 스크립트 |
+| `research/scripts/spheric_deep_analysis.py` | SPHERIC 분석 스크립트 |
+| **기존 분석** | |
 | `research/experiments/unified_results.md` | GAP-RQ-EXP 통합 결과 |
 | `research/experiments/exp1_spheric/analysis_summary.md` | EXP-1 정량 분석 |
 | `research/experiments/model_comparison.md` | 8B vs 32B 비교 |
-| **실험 설계** | |
-| `research/output/experiment_design.md` | 실험 설계서 |
-| `research/output/paper_skeleton.md` | 논문 뼈대 (Phase 5 이전) |
-| `research/output/gap_refinement_cycle3.md` | GAP analysis (5 gaps) |
-| **실험 결과** | |
-| `research/experiments/exp1_spheric/` | EXP-1 SPHERIC 결과 |
-| `research/experiments/exp2_nl2xml/` | EXP-2 NL→XML 결과 |
-| `research/experiments/exp3_parametric/` | EXP-3 파라메트릭 결과 |
-| `research/experiments/exp4_ablation/` | EXP-4 어블레이션 결과 |
-| `research/experiments/exp5_industrial/` | EXP-5 산업 PoC 결과 |
 
 ## 커밋 히스토리
 
 ```
+ba4570b Phase 6 논문 본문 개정 — 통계 결과 반영 + claim 보정
+1a66af5 Chen2018 정성적 비교 분석
+cb58789 Phase 6 통계 분석 — Bootstrap CI + SPHERIC 심층 분석
 691b631 Phase 4-5 완료 — 논문 초안 전체 (8,720 words)
 2f7d0e7 32B 결과 + 8B vs 32B 비교 분석
 c7612d3 Phase 3 EXP-2/EXP-4 (Qwen3 8B)
-3c498a4 Phase 2 완료 세션 핸드오프
 e576e26 EXP-3 Chen2018 + EXP-5 Industrial PoC
 3231de6 EXP-1 SPHERIC Test 10 벤치마크
-fc0ed7e 세션 핸드오프 문서
 a1d0dab Phase 1 인프라 준비
-092ddec SPHERIC 유체 수 오류 수정
-8a1a8fa 검증 데이터셋 인덱스
-ff8ba5c 실험 설계서
 ```
 
 ## 브랜치 구조
 
 ```
-research/paper  ← 메인 연구 브랜치 (Phase 1-5 전체)
-paper/draft     ← 워크트리 작업 브랜치 (논문 초안, research/paper에 머지됨)
+research/paper  ← 메인 연구 브랜치 (Phase 1-6 전체)
+paper/revise    ← Phase 6 워크트리 브랜치
 ```
