@@ -84,9 +84,11 @@
 - Agent가 자동으로 6개 fill level 파라메트릭 스터디 수행 시간 측정
 - Go 바이너리 빌드 + Ollama 연동 필요
 
-### 32B 모델 결과 (백그라운드 실행 중)
-- 32B 완료 후 8B vs 32B 비교 테이블 추가
-- Fig 4에 model 비교 추가 가능
+### 32B 모델 결과 (완료, 커밋 예정)
+- [x] 32B EXP-2: 47% 정확도, 17/20 tool called (8B: 46%, 15/20)
+- [x] 32B EXP-4: FULL=60%, NO-RULES=57%, NO-DOMAIN=50%, GENERIC=35%
+- [x] **32B만 기대한 어블레이션 순서 유지** (FULL > NO-RULES > NO-DOMAIN > GENERIC)
+- [x] 8B vs 32B 비교 테이블 및 Fig 4 comparison 생성
 
 ### Phase 4: 분석 및 시각화
 - 전체 실험 결과 통합 분석
