@@ -1,0 +1,17 @@
+# 6. Conclusion
+
+Sloshing --- the violent motion of liquid in partially filled containers --- causes catastrophic failures across aerospace, maritime, petrochemical, nuclear, and transportation industries, with cumulative documented damages exceeding \$15 billion. Predicting sloshing loads requires over 200 simulations per LNG tank design, each demanding expert-level configuration of specialized solvers. Despite a \$4.13 billion maritime AI market, no AI system has previously automated any part of this workflow.
+
+This paper presented SloshAgent, the first AI agent that automates the entire sloshing simulation pipeline --- from natural language input to experimentally validated results --- using DualSPHysics, the leading open-source GPU-accelerated SPH solver. We summarize five contributions, each linked to experimental evidence:
+
+**First sloshing simulation automation agent (EXP-2).** SloshAgent converts natural language descriptions into valid DualSPHysics XML configurations with 85\% tool call success and 70\% physical validity across 20 scenarios spanning five complexity levels. For standard use cases (explicit and domain-level descriptions), parameter accuracy reaches 82\%.
+
+**First LLM agent for particle-based simulation (Architecture).** We designed 14 domain-specific tools covering the complete DualSPHysics pipeline --- the first tool interface for any Lagrangian particle solver (SPH, DEM, or MPM) --- including an IsError pattern for LLM self-correction of silent SPH failures and asynchronous GPU job management.
+
+**First experimental benchmark validation by an LLM-simulation agent (EXP-1).** Agent-generated SPHERIC Test 10 simulations reproduce all detected water impact pressure peaks within the $\pm 2\sigma$ experimental scatter band (7/7 peaks, 100\%), following the standard SPHERIC/ISOPE validation protocol. The oil case failure (DBC boundary limitation) is an honest solver constraint, not an agent deficiency.
+
+**First domain prompt ablation for computational mechanics (EXP-4).** A four-condition ablation of the 136-line SloshingCoderPrompt demonstrates a clear contribution hierarchy on the 32B model: FULL (60\%) $>$ NO-RULES (57\%) $>$ NO-DOMAIN (50\%) $>$ GENERIC (35\%), yielding +25 percentage points from domain knowledge encoding. The unexpected 8B inversion (FULL underperforms NO-RULES) reveals a model capacity threshold for effective prompt engineering --- itself a novel finding for LLM agent deployment.
+
+**Industry proof-of-concept at zero LLM cost (EXP-3, EXP-5).** Automated parametric studies (six fill levels from a single prompt) and industrial scenarios (91.9\% baffle amplitude reduction, seismic tank excitation) demonstrate practical applicability. The entire stack runs on local hardware (Qwen3 32B via Ollama, RTX 4090) with no cloud API dependencies.
+
+**Future work.** Four directions emerge from this study. First, multi-solver integration (SPHinXsys, OpenFOAM VOF) would test the generalizability of the tool interface patterns beyond DualSPHysics. Second, a formal user study with naval architects and mechanical engineers would validate the non-expert accessibility claim. Third, lightweight fine-tuning or retrieval-augmented generation could address the L3 (paper-specific) and L5 (edge case) accuracy gaps without increasing prompt length. Fourth, an LNG industry pilot with classification society involvement would bridge the gap between academic validation and production deployment.

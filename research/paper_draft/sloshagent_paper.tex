@@ -1,0 +1,228 @@
+\documentclass[10pt,twocolumn]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage[margin=1in]{geometry}
+\usepackage{natbib}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage{tabularx}
+
+\title{\textbf{SloshAgent: Automating Sloshing Simulation with a Domain-Specialized LLM Agent}}
+
+\author{
+  Anonymous Authors \\
+  \textit{Under Review}
+}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+% ============================================================
+% ABSTRACT
+% ============================================================
+\begin{abstract}
+Sloshing---the dynamic motion of liquid in partially filled containers---is a cross-industry safety hazard responsible for catastrophic failures including the 2003 Tomakomai oil fire (\$15B+ losses), 2007 SpaceX Falcon~1 launch failure, and over 1,300 tanker truck rollovers annually. Each LNG carrier tank requires over 200 sloshing simulations for certification, yet the \$4.13B maritime AI market offers zero tools for sloshing simulation automation. Meanwhile, over ten LLM-based agents now automate mesh-based CFD workflows (OpenFOAM), but none addresses sloshing or integrates any particle-based solver.
+
+We present SloshAgent, the first AI agent that automates the entire sloshing simulation pipeline---from natural language to experimentally validated results---using DualSPHysics, the leading open-source GPU-accelerated Smoothed Particle Hydrodynamics (SPH) solver. SloshAgent comprises 14 domain-specific tools and a 136-line sloshing-specialized system prompt encoding physics formulas, SPH constraints, and parameter inference rules, all running locally on Qwen3~32B via Ollama at zero cloud API cost.
+
+We evaluate SloshAgent through five experiments. (1)~SPHERIC Test~10 benchmark validation: all detected water impact pressure peaks fall within the $\pm 2\sigma$ experimental scatter band (7/7, 100\%), the first time any LLM-simulation agent has been validated against published experimental data. (2)~Natural-language-to-XML generation across 20 scenarios at five complexity levels achieves 85\% tool call success, 47\% parameter accuracy overall (82\% for standard use cases), and 70\% physical validity. (3)~Automated parametric study of six fill levels from a single prompt produces physically consistent sloshing trends. (4)~The first domain knowledge ablation for computational mechanics yields +25 percentage points accuracy (FULL vs.\ GENERIC) on the 32B model; the 8B model exhibits an inversion where the full prompt degrades tool-calling reliability, revealing a model capacity threshold for prompt engineering. (5)~Industrial proof-of-concept demonstrates 91.9\% sloshing amplitude reduction with an anti-slosh baffle and seismic tank excitation, both from single natural language prompts.
+\end{abstract}
+
+% ============================================================
+% NOTE: Full paper body is in sloshagent_paper.md (8,720 words)
+% This LaTeX file provides the document structure and formatting.
+% Each section corresponds to a markdown file in paper_draft/.
+%
+% For full submission, convert each section's markdown tables
+% to LaTeX \begin{table} environments and add figure includes.
+% ============================================================
+
+\section{Introduction}
+
+\textit{See 01\_introduction.md for full text (1,360 words).}
+
+\subsection{Sloshing: A Cross-Industry Safety Problem}
+
+% Table 1: Sloshing accidents
+\begin{table}[h]
+\centering
+\caption{Real-world sloshing failures across industries.}
+\label{tab:accidents}
+\small
+\begin{tabular}{llll}
+\toprule
+\textbf{Incident} & \textbf{Year} & \textbf{Domain} & \textbf{Damage} \\
+\midrule
+SpaceX Falcon 1 & 2007 & Aerospace & \$30M+ loss \\
+Tomakomai Fire & 2003 & Petrochemical & \$15B+ \\
+Alaska Earthquake & 1964 & Petrochemical & \$2.5B \\
+Fukushima SFP & 2011 & Nuclear & Safety revised \\
+Tanker Rollovers & Annual & Transport & 1,300+/yr \\
+LNG Carriers & Ongoing & Maritime & Barred fill \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The Sloshing Simulation Bottleneck}
+\subsection{LLM Agents and Their Blind Spot}
+\subsection{Contributions}
+
+Five contributions:
+\begin{enumerate}[noitemsep]
+  \item First sloshing simulation automation agent
+  \item First LLM agent for particle-based simulation (14 tools)
+  \item First experimental benchmark validation (SPHERIC Test~10)
+  \item First domain prompt ablation for computational mechanics
+  \item Industry PoC (\$0 LLM cost, consumer GPU)
+\end{enumerate}
+
+% ============================================================
+\section{Related Work}
+
+\textit{See 02\_related\_work.md for full text (1,355 words).}
+
+\subsection{Sloshing Simulation: State of Practice}
+\subsection{LLM Agents for CFD/Simulation}
+
+% Table 2: Competitor comparison (abbreviated)
+\begin{table*}[t]
+\centering
+\caption{Comparison of LLM-based simulation agents.}
+\label{tab:competitors}
+\small
+\begin{tabular}{llllllll}
+\toprule
+\textbf{System} & \textbf{Year} & \textbf{Solver} & \textbf{LLM} & \textbf{Benchmark} & \textbf{Metric} & \textbf{Cost} \\
+\midrule
+MetaOpenFOAM 2.0 & 2025 & OpenFOAM & GPT-4o & 13 cases & 86.9\% Pass@1 & \$0.22/case \\
+OpenFOAMGPT 2.0 & 2025 & OpenFOAM & Claude-3.7 & 455 cases & 100\% repro & Cloud \\
+Foam-Agent 2.0 & 2025 & OpenFOAM & Claude 3.5 & 110 tasks & 88.2\% exec & 334K tok \\
+ChatCFD & 2026 & OpenFOAM & DeepSeek & 315 cases & 82.1\% exec & \$0.21/case \\
+CFD-Copilot & 2025 & OpenFOAM & Qwen3-8B & NACA 0012 & 96.4\% U & Local \\
+AutoCFD & 2025 & OpenFOAM & Qwen2.5-7B & 21 cases & 88.7\% acc & \$0.02/case \\
+MooseAgent & 2025 & MOOSE & DeepSeek & 9 cases & 93\% avg & \$0.14/case \\
+Pasimodo+RAG & 2025 & Pasimodo & Llama/Gemma & 28 prompts & 0/2 create & Local \\
+\midrule
+\textbf{SloshAgent} & \textbf{2026} & \textbf{DualSPHysics} & \textbf{Qwen3-32B} & \textbf{SPHERIC} & \textbf{7/7 peaks} & \textbf{\$0} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{LLM Agents for Scientific Discovery}
+
+% ============================================================
+\section{System Design}
+
+\textit{See 03\_system\_design.md for full text (1,238 words).}
+
+\subsection{Architecture Overview}
+% Fig 1: Architecture diagram
+\begin{figure}[h]
+\centering
+\includegraphics[width=\columnwidth]{../experiments/figures/fig1_architecture.png}
+\caption{SloshAgent architecture: natural language input $\rightarrow$ domain-specialized prompt $\rightarrow$ ReAct agent loop with 14 SPH tools and 12 MCP post-processing tools $\rightarrow$ GPU simulation $\rightarrow$ experimental validation.}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{Tool Interface Design for Sloshing SPH}
+\subsection{Domain-Specialized Sloshing Prompt}
+\subsection{XML Generation Pipeline}
+
+% ============================================================
+\section{Experiments}
+
+\textit{See 04\_experiments.md for full text (3,007 words).}
+
+\subsection{Experimental Setup}
+\subsection{EXP-1: SPHERIC Benchmark Validation (RQ2)}
+
+% Table 3: SPHERIC results
+\begin{table}[h]
+\centering
+\caption{SPHERIC Test~10 peak pressure validation.}
+\label{tab:spheric}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Case} & \textbf{$N_p$} & \textbf{In $\pm 2\sigma$} & \textbf{Mean $|$err$|$} & \textbf{Max $|z|$} \\
+\midrule
+Water Low & 136K & 3/3 (100\%) & 34.0\% & 1.76 \\
+Water High & 344K & 4/4 (100\%) & 23.4\% & 1.26 \\
+Oil Low & 136K & N/A & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{EXP-2: NL$\rightarrow$XML Generation Accuracy (RQ1)}
+
+% Table 4: NL->XML results
+\begin{table}[h]
+\centering
+\caption{NL$\rightarrow$XML generation accuracy by complexity level.}
+\label{tab:nl2xml}
+\small
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Level} & $n$ & \textbf{32B Acc} & \textbf{8B Acc} & \textbf{32B Tool} & \textbf{8B Tool} \\
+\midrule
+L1 Basic & 4 & 96\% & 96\% & 4/4 & 4/4 \\
+L2 Domain & 4 & 67\% & 42\% & 4/4 & 3/4 \\
+L3 Paper & 4 & 15\% & 15\% & 3/4 & 3/4 \\
+L4 Complex & 4 & 58\% & 50\% & 3/4 & 3/4 \\
+L5 Edge & 4 & 0\% & 25\% & 3/4 & 2/4 \\
+\midrule
+\textbf{Total} & \textbf{20} & \textbf{47\%} & 46\% & \textbf{17/20} & 15/20 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{EXP-3: Parametric Study Automation (RQ3)}
+\subsection{EXP-4: Domain Prompt Ablation (RQ4)}
+
+% Table 5: Ablation results
+\begin{table}[h]
+\centering
+\caption{Domain prompt ablation: 32B vs 8B.}
+\label{tab:ablation}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Condition} & \textbf{32B Acc} & \textbf{8B Acc} & \textbf{32B Tool} & \textbf{8B Tool} \\
+\midrule
+FULL & \textbf{60\%} & 46\% & 10/10 & 7/10 \\
+NO-DOMAIN & 50\% & 44\% & 10/10 & 10/10 \\
+NO-RULES & 57\% & \textbf{55\%} & 10/10 & 9/10 \\
+GENERIC & 35\% & 39\% & 6/10 & 8/10 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{EXP-5: Industrial Proof of Concept}
+
+% ============================================================
+\section{Discussion}
+
+\textit{See 05\_discussion.md for full text (1,000 words).}
+
+\subsection{Limitations}
+\subsection{From Sloshing to General Particle Simulation}
+\subsection{Industry Impact Projection}
+
+% ============================================================
+\section{Conclusion}
+
+\textit{See 06\_conclusion.md for full text (455 words).}
+
+% ============================================================
+\bibliographystyle{plainnat}
+\bibliography{../references}
+
+\end{document}
