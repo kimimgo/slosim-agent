@@ -124,7 +124,25 @@ Models: Qwen3 32B (primary) / Qwen3 8B (comparison)
 - Dominant frequency transitions from low (0.142 Hz at 18.5%) to excitation-locked (0.993 Hz at 40%+)
 - 120mm (18.5%) case shows anomalous low-frequency dominance — shallow water nonlinear effects
 
-**Limitation**: Direct NRMSE comparison vs Chen2018 published figures requires digitization (not yet performed). The physical trends are consistent but quantitative validation is incomplete.
+**Chen2018 Comparison (Qualitative, 2026-02-19)**:
+
+Chen2018 (OpenFOAM VOF) reports pressure-frequency response peaks extracted from Figure 16 annotations:
+
+| Chen2018 h/L | h [mm] | Max P/ρgh | ω_max/ω₁ | Spring type | Closest EXP-3 fill |
+|-------------|--------|-----------|----------|-------------|-------------------|
+| 0.150 | 90 | 0.659 | 1.06 | Soft | (120mm, h/L=0.20) |
+| 0.250 | 150 | 1.066 | 1.00 | Critical | **150mm (exact match)** |
+| 0.330 | 198 | 0.845 | 0.96 | Hard | (195mm, h/L=0.325) |
+| 0.433 | 260 | 0.493 | 0.94 | Hard | **260mm (exact match)** |
+| 0.596 | 358 | 0.290 | 0.92 | Hard | (390mm, h/L=0.650) |
+
+Physical trend consistency with Chen2018:
+1. **Soft-to-Hard spring transition** (h/L ≈ 0.25): EXP-3 dom_freq locks to f_exc at h≥260mm (hard-spring, ω_max<ω₁) — consistent
+2. **Shallow nonlinearity** (120mm): EXP-3 dom_freq=0.142 Hz (anomalous) ↔ Chen2018 hydraulic jump in 3rd period — consistent
+3. **SWL monotonic increase** (150–390mm): Both methods confirm increasing sloshing intensity with fill level — consistent
+4. **Near-resonance at 390mm**: Chen2018 ω_max/ω₁=0.92 ≈ our f/f₁=0.9 → EXP-3 390mm case is near-resonant — explains highest SWL
+
+**Limitation**: Direct NRMSE comparison is precluded by (a) different measurement variables — Chen2018 measures wall pressure P/ρgh; EXP-3 measures free surface elevation SWL; (b) raw time-series data not published in Chen2018; (c) 10s vs. 30s simulation duration. At directly comparable fill levels (150mm, 260mm), SloshAgent SWL amplitude ratios (η/h = 0.25, 0.19) are approximately 0.33–0.47× of Chen2018 P/ρgh estimates at f/f₁=0.9, consistent with known measurement-location and boundary-condition differences between SPH-DBC and VOF. Full analysis: `exp3_parametric/comparison/chen2018_comparison.md`.
 
 ---
 
