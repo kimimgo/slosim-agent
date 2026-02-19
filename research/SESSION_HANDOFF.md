@@ -1,4 +1,4 @@
-# Session Handoff — 2026-02-19 (Updated: Phase 6 In Progress)
+# Session Handoff — 2026-02-19 (Updated: Phase 6 Complete)
 
 ## 브랜치: `research/paper`
 
@@ -97,7 +97,7 @@
 - [x] LaTeX shell + BibTeX 35+ entries
 - **총 8,720 words**
 
-### Phase 6: 통계 보강 + 논문 개정 (진행 중, Agent Team 3+1명)
+### Phase 6: 통계 보강 + 논문 개정 (완료)
 - [x] EXP-2/EXP-4 Bootstrap BCa 95% CI + permutation test + effect size
   - 핵심: 32B vs 8B 전체 accuracy **유의차 없음** (p=0.715)
   - FULL vs GENERIC: d=0.58 (medium), p_bonf=0.678 (ns, n=10 한계)
@@ -114,11 +114,11 @@
   - 모든 claim에 CI/p-value/effect size 병기
   - EXP-4: "significant" → "medium effect size (d=0.58), directional"
   - EXP-2: complexity-accuracy boundary (p=0.001) 최강 finding으로 승격
-- [ ] LaTeX 완전 변환 (진행 중)
+- [x] LaTeX 완전 변환 (703줄, 10 tables, 7 figures, 커밋 `ba87946`)
 
 ---
 
-## 다음 작업 (Phase 6b: 제출 준비)
+## 다음 작업 (Phase 7: 제출 준비)
 
 ### 남은 보강 (선택적)
 - [ ] 추가 LLM baseline (DeepSeek-R1 32B, Dolphin-Llama3 8B 등 — Ollama에 설치됨)
@@ -127,7 +127,7 @@
 - [ ] Figure 해상도/스타일 통일 (publication-ready)
 
 ### 제출 준비
-- [ ] Camera-ready LaTeX 완성
+- [ ] 타겟 학회 포맷으로 LaTeX 클래스 전환 (acmart, IEEEtran 등)
 - [ ] Supplementary materials (코드, 데이터)
 - [ ] Cover letter
 
@@ -160,6 +160,7 @@
 ## 커밋 히스토리
 
 ```
+ba87946 LaTeX 완전 변환 — 703줄, 10 tables, 7 figures
 ba4570b Phase 6 논문 본문 개정 — 통계 결과 반영 + claim 보정
 1a66af5 Chen2018 정성적 비교 분석
 cb58789 Phase 6 통계 분석 — Bootstrap CI + SPHERIC 심층 분석
