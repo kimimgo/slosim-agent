@@ -1,4 +1,4 @@
-# Session Handoff — 2026-02-19
+# Session Handoff — 2026-02-19 (Updated: Phase 5 Complete)
 
 ## 브랜치: `research/paper`
 
@@ -78,24 +78,40 @@
 
 ---
 
-## 다음 작업
+### Phase 4: 통합 분석 (완료, Agent Team)
+- [x] EXP-1 SPHERIC 정량 분석: **"Pearson r > 0.9" 주장 기각** → peak-within-±2σ (7/7=100%)
+  - 시계열 r은 impact pressure에 부적절 (CV=20-36%, 실험 반복 간에도 불가)
+  - SPHERIC/ISOPE 표준 peak-in-band metric으로 전환
+- [x] GAP-RQ-EXP 통합 결과표: 5 GAP × 5 EXP 매핑 (3 COVERED, 2 PARTIAL)
+- [x] Fig 1 아키텍처 다이어그램 (matplotlib)
+- [x] 8B vs 32B 비교 분석: 32B를 primary model로 결정
 
-### Phase 3c: EXP-3 Agent-driven Parametric (시간 측정) — 선택적
-- Agent가 자동으로 6개 fill level 파라메트릭 스터디 수행 시간 측정
-- Go 바이너리 빌드 + Ollama 연동 필요
+### Phase 5: 논문 작성 (완료, Agent Team 5명 병렬)
+- [x] Abstract (305 words)
+- [x] Introduction (1,360 words): 슬로싱 중심 내러티브, 실사고 6건 테이블
+- [x] Related Work (1,355 words): 11개 경쟁 시스템 Table 1
+- [x] System Design (1,238 words): 14 tools, SloshingCoderPrompt, IsError 패턴
+- [x] Experiments (3,007 words): EXP-1~5 전체 결과 + 정직한 한계 기술
+- [x] Discussion (1,000 words): 8개 한계점 (DBC, 47% accuracy, 8B inversion)
+- [x] Conclusion (455 words): 5 contributions + future work
+- [x] LaTeX shell + BibTeX 35+ entries
+- **총 8,720 words**
 
-### 32B 모델 결과 (완료, 커밋 예정)
-- [x] 32B EXP-2: 47% 정확도, 17/20 tool called (8B: 46%, 15/20)
-- [x] 32B EXP-4: FULL=60%, NO-RULES=57%, NO-DOMAIN=50%, GENERIC=35%
-- [x] **32B만 기대한 어블레이션 순서 유지** (FULL > NO-RULES > NO-DOMAIN > GENERIC)
-- [x] 8B vs 32B 비교 테이블 및 Fig 4 comparison 생성
+---
 
-### Phase 4: 분석 및 시각화
-- 전체 실험 결과 통합 분석
-- 논문용 최종 Figure/Table 생성
+## 다음 작업 (Phase 6: 리비전 및 제출)
 
-### Phase 5: 논문 작성
-- paper_skeleton.md 기반 본문 작성
+### 선택적 보강
+- [ ] LaTeX 본문 완전 변환 (현재 shell + markdown 참조 형태)
+- [ ] Figure 해상도/스타일 통일 (publication-ready)
+- [ ] Chen2018 Figure digitization (EXP-3 정량 비교)
+- [ ] mDBC 지원 추가 후 Oil 재검증
+- [ ] 타겟 학회/저널 선정 및 포맷 맞춤
+
+### 제출 준비
+- [ ] Camera-ready LaTeX 완성
+- [ ] Supplementary materials (코드, 데이터)
+- [ ] Cover letter
 
 ---
 
@@ -103,27 +119,51 @@
 
 | 파일 | 용도 |
 |------|------|
+| **논문 초안** | |
+| `research/paper_draft/sloshagent_paper.md` | 통합 논문 (8,720 words) |
+| `research/paper_draft/sloshagent_paper.tex` | LaTeX shell |
+| `research/paper_draft/00_abstract.md` | Abstract |
+| `research/paper_draft/01_introduction.md` | Introduction |
+| `research/paper_draft/02_related_work.md` | Related Work |
+| `research/paper_draft/03_system_design.md` | System Design |
+| `research/paper_draft/04_experiments.md` | Experiments |
+| `research/paper_draft/05_discussion.md` | Discussion |
+| `research/paper_draft/06_conclusion.md` | Conclusion |
+| `research/references.bib` | BibTeX 참고문헌 (35+ entries) |
+| **분석** | |
+| `research/experiments/unified_results.md` | GAP-RQ-EXP 통합 결과 |
+| `research/experiments/exp1_spheric/analysis_summary.md` | EXP-1 정량 분석 |
+| `research/experiments/model_comparison.md` | 8B vs 32B 비교 |
+| **실험 설계** | |
 | `research/output/experiment_design.md` | 실험 설계서 |
-| `research/output/paper_skeleton.md` | 논문 뼈대 |
-| `research/scripts/run_exp2_exp4.py` | EXP-2/EXP-4 테스트 하네스 |
-| `research/scripts/compare_spheric.py` | SPHERIC 비교 |
-| `research/scripts/analyze_chen2018.py` | Chen2018 분석 |
-| `research/scripts/analyze_exp5.py` | EXP-5 분석 |
-| `research/experiments/exp1_spheric/` | EXP-1 결과 |
-| `research/experiments/exp2_nl2xml/` | EXP-2 결과 (Table 3, results) |
-| `research/experiments/exp3_parametric/` | EXP-3 결과 |
-| `research/experiments/exp4_ablation/` | EXP-4 결과 (Table 5, Fig 4) |
-| `research/experiments/exp5_industrial/` | EXP-5 결과 |
+| `research/output/paper_skeleton.md` | 논문 뼈대 (Phase 5 이전) |
+| `research/output/gap_refinement_cycle3.md` | GAP analysis (5 gaps) |
+| **실험 결과** | |
+| `research/experiments/exp1_spheric/` | EXP-1 SPHERIC 결과 |
+| `research/experiments/exp2_nl2xml/` | EXP-2 NL→XML 결과 |
+| `research/experiments/exp3_parametric/` | EXP-3 파라메트릭 결과 |
+| `research/experiments/exp4_ablation/` | EXP-4 어블레이션 결과 |
+| `research/experiments/exp5_industrial/` | EXP-5 산업 PoC 결과 |
 
 ## 커밋 히스토리
 
 ```
-[pending] Phase 3: EXP-2 NL→XML + EXP-4 어블레이션 테스트 (Qwen3 8B)
-e576e26 EXP-3 Chen2018 파라메트릭 + EXP-5 Industrial PoC 완료
-3231de6 EXP-1 SPHERIC Test 10 벤치마크 검증 완료
-fc0ed7e 세션 핸드오프 문서 작성
+691b631 Phase 4-5 완료 — 논문 초안 전체 (8,720 words)
+2f7d0e7 32B 결과 + 8B vs 32B 비교 분석
+c7612d3 Phase 3 EXP-2/EXP-4 (Qwen3 8B)
+3c498a4 Phase 2 완료 세션 핸드오프
+e576e26 EXP-3 Chen2018 + EXP-5 Industrial PoC
+3231de6 EXP-1 SPHERIC Test 10 벤치마크
+fc0ed7e 세션 핸드오프 문서
 a1d0dab Phase 1 인프라 준비
 092ddec SPHERIC 유체 수 오류 수정
 8a1a8fa 검증 데이터셋 인덱스
 ff8ba5c 실험 설계서
+```
+
+## 브랜치 구조
+
+```
+research/paper  ← 메인 연구 브랜치 (Phase 1-5 전체)
+paper/draft     ← 워크트리 작업 브랜치 (논문 초안, research/paper에 머지됨)
 ```
