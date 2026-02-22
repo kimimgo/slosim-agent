@@ -1,0 +1,27 @@
+[
+  {
+    "case": "Baffle_No",
+    "description": "1m x 0.5m x 0.6m, 50% fill, f1=0.758Hz, no baffle",
+    "still_level_mm": 300,
+    "amp_left_mm": "158.9",
+    "max_swl_mm": "522.0",
+    "min_swl_mm": "204.1"
+  },
+  {
+    "case": "Baffle_Yes",
+    "description": "1m x 0.5m x 0.6m, 50% fill, f1=0.758Hz, with baffle",
+    "still_level_mm": 300,
+    "amp_left_mm": "12.8",
+    "max_swl_mm": "318.8",
+    "min_swl_mm": "293.2",
+    "reduction_pct": "91.9"
+  },
+  {
+    "case": "Seismic",
+    "description": "10m x 5m x 8m, 60% fill, f=0.3Hz",
+    "still_level_mm": 4800,
+    "amp_left_mm": "2361.8",
+    "max_swl_mm": "4723.7",
+    "min_swl_mm": "0.0"
+  }
+]

@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!-- SPHERIC Benchmark Test 10 - Low Fill (18.3%), Lateral Impact
-     Source: Souto-Iglesias & Botia-Vera (2011), DOI:10.1016/j.oceaneng.2015.05.013
-     Tank:   900 x 62 x 508 mm (L x B x H), quasi-2D
-     Fill:   h=93mm (18.3%), shallow regime
-     Motion: Pitch rotation, T=1.630s (T/T1=0.85), A=4 deg
-     Center: Bottom center [0.45, 0.031, 0]
-     Fluid:  Water (rho=998, mu=8.94e-4)
-     dp=0.004m (fast), dp=0.002m for production accuracy -->
+<!-- EXP-5B: Seismic Excitation — Large Oil Storage Tank
+     Tank:   10000 x 5000 x 8000 mm (L x B x H)
+     Fill:   h=4800mm (60%)
+     Motion: Sway at 0.3Hz (above resonance f1=0.266Hz), A=50mm
+     Fluid:  Water (rho=998, proxy for light oil)
+     dp=0.10m (coarse for large tank) -->
 <case>
     <casedef>
         <constantsdef>
@@ -23,43 +21,41 @@
         </constantsdef>
         <mkconfig boundcount="240" fluidcount="9" />
         <geometry>
-            <definition dp="0.004" units_comment="metres (m)">
-                <pointmin x="-0.05" y="-0.01" z="-0.05" />
-                <pointmax x="0.95" y="0.08" z="0.6" />
+            <definition dp="0.10" units_comment="metres (m)">
+                <pointmin x="-1.0" y="-0.5" z="-1.0" />
+                <pointmax x="11.0" y="5.5" z="9.0" />
             </definition>
             <commands>
                 <mainlist>
                     <setshapemode>dp | bound</setshapemode>
                     <setdrawmode mode="full" />
-                    <!-- Fluid: 900 x 62 x 93 mm -->
+                    <!-- Fluid: 10.0 x 5.0 x 4.8 m -->
                     <setmkfluid mk="0" />
                     <drawbox>
                         <boxfill>solid</boxfill>
                         <point x="0" y="0" z="0" />
-                        <size x="0.900" y="0.062" z="0.093" />
+                        <size x="10.0" y="5.0" z="4.8" />
                     </drawbox>
-                    <!-- Tank walls: 900 x 62 x 508 mm (no top) -->
+                    <!-- Tank walls: 10.0 x 5.0 x 8.0 m (no top) -->
                     <setmkbound mk="0" />
                     <drawbox>
                         <boxfill>bottom | left | right | front | back</boxfill>
                         <point x="0" y="0" z="0" />
-                        <size x="0.900" y="0.062" z="0.508" />
+                        <size x="10.0" y="5.0" z="8.0" />
                     </drawbox>
-                    <shapeout file="SPHERIC_Tank" />
+                    <shapeout file="Seismic" />
                 </mainlist>
             </commands>
         </geometry>
         <motion>
             <objreal ref="0">
                 <begin mov="1" start="0" />
-                <!-- Pitch rotation: f=0.613 Hz (T=1.630s, T/T1=0.85), A=4 deg -->
-                <mvrotsinu id="1" duration="7" anglesunits="degrees">
-                    <axisp1 x="0.45" y="0.031" z="0" />
-                    <axisp2 x="0.45" y="-0.031" z="0" />
-                    <freq v="0.613" units_comment="Hz" />
-                    <ampl v="4.0" units_comment="degrees" />
-                    <phase v="0" units_comment="degrees" />
-                </mvrotsinu>
+                <!-- Seismic-like sway: f=0.3Hz (above resonance), A=50mm -->
+                <mvrectsinu id="1" duration="20">
+                    <freq x="0.3" y="0" z="0" units_comment="Hz" />
+                    <ampl x="0.050" y="0" z="0" units_comment="metres" />
+                    <phase x="0" y="0" z="0" units_comment="degrees" />
+                </mvrectsinu>
             </objreal>
         </motion>
     </casedef>
@@ -67,32 +63,23 @@
         <special>
             <gauges>
                 <default>
-                    <savevtkpart value="false" />
-                    <computedt value="0.005" units_comment="200Hz gauge output" />
-                    <computetime start="0" end="7" />
-                    <output value="true" />
+                    <savevtk value="false" />
+                    <computedt value="0.05" comment="20Hz gauge output" />
+                    <computetime start="0" end="20" />
+                    <output value="false" />
                 </default>
                 <swl name="SWL_Left">
-                    <point0 x="0.005" y="0.031" z="0.0" />
-                    <point2 x="0.005" y="0.031" z="0.508" />
-                    <pointdp value="0.5" />
-                    <masslimit value="0.2" />
-                </swl>
-                <swl name="SWL_Center">
-                    <point0 x="0.450" y="0.031" z="0.0" />
-                    <point2 x="0.450" y="0.031" z="0.508" />
+                    <point0 x="0.1" y="2.5" z="0.0" />
+                    <point2 x="0.1" y="2.5" z="8.0" />
                     <pointdp value="0.5" />
                     <masslimit value="0.2" />
                 </swl>
                 <swl name="SWL_Right">
-                    <point0 x="0.895" y="0.031" z="0.0" />
-                    <point2 x="0.895" y="0.031" z="0.508" />
+                    <point0 x="9.9" y="2.5" z="0.0" />
+                    <point2 x="9.9" y="2.5" z="8.0" />
                     <pointdp value="0.5" />
                     <masslimit value="0.2" />
                 </swl>
-                <force name="Force_Wall">
-                    <target mkbound="0" />
-                </force>
             </gauges>
         </special>
         <parameters>
@@ -106,17 +93,17 @@
             <parameter key="DensityDTvalue" value="0.1" />
             <parameter key="Shifting" value="0" />
             <parameter key="RigidAlgorithm" value="1" />
-            <parameter key="DtIni" value="0.0001" />
-            <parameter key="DtMin" value="0.00001" />
+            <parameter key="DtIni" value="0.001" />
+            <parameter key="DtMin" value="0.0001" />
             <parameter key="CoefDtMin" value="0.05" />
-            <parameter key="TimeMax" value="7.0" units_comment="seconds" />
-            <parameter key="TimeOut" value="0.005" units_comment="seconds (1401 frames, 200Hz)" />
+            <parameter key="TimeMax" value="20.0" units_comment="seconds" />
+            <parameter key="TimeOut" value="0.1" units_comment="seconds (10Hz)" />
             <parameter key="PartsOutMax" value="1" />
             <parameter key="RhopOutMin" value="700" />
             <parameter key="RhopOutMax" value="1300" />
             <simulationdomain>
-                <posmin x="default - 15%" y="default" z="default - 10%" />
-                <posmax x="default + 15%" y="default" z="default + 80%" />
+                <posmin x="default - 5%" y="default" z="default - 5%" />
+                <posmax x="default + 5%" y="default" z="default + 40%" />
             </simulationdomain>
         </parameters>
     </execution>

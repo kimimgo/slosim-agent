@@ -1,0 +1,68 @@
+[
+  {
+    "fill_mm": 120,
+    "fill_pct": "18.5",
+    "f1_hz": "0.8512",
+    "f_exc_hz": "0.7661",
+    "amp_left_mm": "66.6",
+    "amp_right_mm": "69.8",
+    "max_swl_mm": "224.2",
+    "min_swl_mm": "90.9",
+    "dom_freq_hz": "0.142"
+  },
+  {
+    "fill_mm": 150,
+    "fill_pct": "23.1",
+    "f1_hz": "0.9237",
+    "f_exc_hz": "0.8313",
+    "amp_left_mm": "35.9",
+    "amp_right_mm": "38.6",
+    "max_swl_mm": "192.3",
+    "min_swl_mm": "120.6",
+    "dom_freq_hz": "0.851"
+  },
+  {
+    "fill_mm": 195,
+    "fill_pct": "30.0",
+    "f1_hz": "1.0011",
+    "f_exc_hz": "0.9010",
+    "amp_left_mm": "41.4",
+    "amp_right_mm": "42.9",
+    "max_swl_mm": "243.2",
+    "min_swl_mm": "160.5",
+    "dom_freq_hz": "0.851"
+  },
+  {
+    "fill_mm": 260,
+    "fill_pct": "40.0",
+    "f1_hz": "1.0680",
+    "f_exc_hz": "0.9612",
+    "amp_left_mm": "45.6",
+    "amp_right_mm": "51.4",
+    "max_swl_mm": "310.0",
+    "min_swl_mm": "217.2",
+    "dom_freq_hz": "0.993"
+  },
+  {
+    "fill_mm": 325,
+    "fill_pct": "50.0",
+    "f1_hz": "1.1033",
+    "f_exc_hz": "0.9930",
+    "amp_left_mm": "48.2",
+    "amp_right_mm": "59.3",
+    "max_swl_mm": "376.3",
+    "min_swl_mm": "278.7",
+    "dom_freq_hz": "0.993"
+  },
+  {
+    "fill_mm": 390,
+    "fill_pct": "60.0",
+    "f1_hz": "1.1216",
+    "f_exc_hz": "1.0094",
+    "amp_left_mm": "50.8",
+    "amp_right_mm": "62.3",
+    "max_swl_mm": "443.0",
+    "min_swl_mm": "340.8",
+    "dom_freq_hz": "0.993"
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "case": "Water Low",
+    "particles": "136K",
+    "dp_m": "0.004",
+    "output_hz": "200",
+    "n_sim_peaks": 3,
+    "peaks_within_2sigma": "3/3",
+    "max_pressure_mbar": "76.7",
+    "sim_peaks_mbar": [
+      "31.1",
+      "58.9",
+      "76.7"
+    ]
+  },
+  {
+    "case": "Water High",
+    "particles": "344K",
+    "dp_m": "0.004",
+    "output_hz": "100",
+    "n_sim_peaks": 7,
+    "peaks_within_2sigma": "4/4",
+    "max_pressure_mbar": "50.0",
+    "sim_peaks_mbar": [
+      "44.2",
+      "29.4",
+      "31.4",
+      "45.3"
+    ]
+  },
+  {
+    "case": "Oil Low",
+    "particles": "136K",
+    "dp_m": "0.004",
+    "output_hz": "200",
+    "n_sim_peaks": 0,
+    "peaks_within_2sigma": "N/A (no peaks)",
+    "max_pressure_mbar": "0.0",
+    "sim_peaks_mbar": []
+  }
+]
