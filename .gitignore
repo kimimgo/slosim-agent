@@ -30,6 +30,7 @@ __pycache__/
 
 # App config (user-specific)
 .opencode/
+.env
 
 # Logs
 firebase-debug.log

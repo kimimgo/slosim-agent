@@ -218,6 +218,10 @@ func (g *geminiClient) send(ctx context.Context, messages []message.Message, too
 
 		content := ""
 
+		if resp == nil {
+			return nil, fmt.Errorf("gemini: received nil response")
+		}
+
 		if len(resp.Candidates) > 0 && resp.Candidates[0].Content != nil {
 			for _, part := range resp.Candidates[0].Content.Parts {
 				switch {
@@ -321,6 +325,9 @@ func (g *geminiClient) stream(ctx context.Context, messages []message.Message, t
 					}
 				}
 
+				if resp == nil {
+					continue
+				}
 				finalResp = resp
 
 				if len(resp.Candidates) > 0 && resp.Candidates[0].Content != nil {

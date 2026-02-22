@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/opencode-ai/opencode/internal/llm/models"
@@ -265,9 +264,6 @@ func setDefaults(debug bool) {
 func setProviderDefaults() {
 	// Set all API keys we can find in the environment
 	// Note: Viper does not default if the json apiKey is ""
-	if apiKey := os.Getenv("ANTHROPIC_API_KEY"); apiKey != "" {
-		viper.SetDefault("providers.anthropic.apiKey", apiKey)
-	}
 	if apiKey := os.Getenv("OPENAI_API_KEY"); apiKey != "" {
 		viper.SetDefault("providers.openai.apiKey", apiKey)
 	}
@@ -283,45 +279,8 @@ func setProviderDefaults() {
 	if apiKey := os.Getenv("XAI_API_KEY"); apiKey != "" {
 		viper.SetDefault("providers.xai.apiKey", apiKey)
 	}
-	if apiKey := os.Getenv("AZURE_OPENAI_ENDPOINT"); apiKey != "" {
-		// api-key may be empty when using Entra ID credentials – that's okay
-		viper.SetDefault("providers.azure.apiKey", os.Getenv("AZURE_OPENAI_API_KEY"))
-	}
-	if apiKey, err := LoadGitHubToken(); err == nil && apiKey != "" {
-		viper.SetDefault("providers.copilot.apiKey", apiKey)
-		if viper.GetString("providers.copilot.apiKey") == "" {
-			viper.Set("providers.copilot.apiKey", apiKey)
-		}
-	}
 
-	// Use this order to set the default models
-	// 1. Copilot
-	// 2. Anthropic
-	// 3. OpenAI
-	// 4. Google Gemini
-	// 5. Groq
-	// 6. OpenRouter
-	// 7. AWS Bedrock
-	// 8. Azure
-	// 9. Google Cloud VertexAI
-
-	// copilot configuration
-	if key := viper.GetString("providers.copilot.apiKey"); strings.TrimSpace(key) != "" {
-		viper.SetDefault("agents.coder.model", models.CopilotGPT4o)
-		viper.SetDefault("agents.summarizer.model", models.CopilotGPT4o)
-		viper.SetDefault("agents.task.model", models.CopilotGPT4o)
-		viper.SetDefault("agents.title.model", models.CopilotGPT4o)
-		return
-	}
-
-	// Anthropic configuration
-	if key := viper.GetString("providers.anthropic.apiKey"); strings.TrimSpace(key) != "" {
-		viper.SetDefault("agents.coder.model", models.Claude4Sonnet)
-		viper.SetDefault("agents.summarizer.model", models.Claude4Sonnet)
-		viper.SetDefault("agents.task.model", models.Claude4Sonnet)
-		viper.SetDefault("agents.title.model", models.Claude4Sonnet)
-		return
-	}
+	// Default model priority: Local > OpenAI > Gemini > Groq > OpenRouter > XAI
 
 	// OpenAI configuration
 	if key := viper.GetString("providers.openai.apiKey"); strings.TrimSpace(key) != "" {
@@ -367,81 +326,8 @@ func setProviderDefaults() {
 		viper.SetDefault("agents.title.model", models.XAiGrok3MiniFastBeta)
 		return
 	}
-
-	// AWS Bedrock configuration
-	if hasAWSCredentials() {
-		viper.SetDefault("agents.coder.model", models.BedrockClaude37Sonnet)
-		viper.SetDefault("agents.summarizer.model", models.BedrockClaude37Sonnet)
-		viper.SetDefault("agents.task.model", models.BedrockClaude37Sonnet)
-		viper.SetDefault("agents.title.model", models.BedrockClaude37Sonnet)
-		return
-	}
-
-	// Azure OpenAI configuration
-	if os.Getenv("AZURE_OPENAI_ENDPOINT") != "" {
-		viper.SetDefault("agents.coder.model", models.AzureGPT41)
-		viper.SetDefault("agents.summarizer.model", models.AzureGPT41)
-		viper.SetDefault("agents.task.model", models.AzureGPT41Mini)
-		viper.SetDefault("agents.title.model", models.AzureGPT41Mini)
-		return
-	}
-
-	// Google Cloud VertexAI configuration
-	if hasVertexAICredentials() {
-		viper.SetDefault("agents.coder.model", models.VertexAIGemini25)
-		viper.SetDefault("agents.summarizer.model", models.VertexAIGemini25)
-		viper.SetDefault("agents.task.model", models.VertexAIGemini25Flash)
-		viper.SetDefault("agents.title.model", models.VertexAIGemini25Flash)
-		return
-	}
 }
 
-// hasAWSCredentials checks if AWS credentials are available in the environment.
-func hasAWSCredentials() bool {
-	// Check for explicit AWS credentials
-	if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") != "" {
-		return true
-	}
-
-	// Check for AWS profile
-	if os.Getenv("AWS_PROFILE") != "" || os.Getenv("AWS_DEFAULT_PROFILE") != "" {
-		return true
-	}
-
-	// Check for AWS region
-	if os.Getenv("AWS_REGION") != "" || os.Getenv("AWS_DEFAULT_REGION") != "" {
-		return true
-	}
-
-	// Check if running on EC2 with instance profile
-	if os.Getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI") != "" ||
-		os.Getenv("AWS_CONTAINER_CREDENTIALS_FULL_URI") != "" {
-		return true
-	}
-
-	return false
-}
-
-// hasVertexAICredentials checks if VertexAI credentials are available in the environment.
-func hasVertexAICredentials() bool {
-	// Check for explicit VertexAI parameters
-	if os.Getenv("VERTEXAI_PROJECT") != "" && os.Getenv("VERTEXAI_LOCATION") != "" {
-		return true
-	}
-	// Check for Google Cloud project and location
-	if os.Getenv("GOOGLE_CLOUD_PROJECT") != "" && (os.Getenv("GOOGLE_CLOUD_REGION") != "" || os.Getenv("GOOGLE_CLOUD_LOCATION") != "") {
-		return true
-	}
-	return false
-}
-
-func hasCopilotCredentials() bool {
-	// Check for explicit Copilot parameters
-	if token, _ := LoadGitHubToken(); token != "" {
-		return true
-	}
-	return false
-}
 
 // readConfig handles the result of reading a configuration file.
 func readConfig(err error) error {
@@ -653,57 +539,23 @@ func Validate() error {
 // getProviderAPIKey gets the API key for a provider from environment variables
 func getProviderAPIKey(provider models.ModelProvider) string {
 	switch provider {
-	case models.ProviderAnthropic:
-		return os.Getenv("ANTHROPIC_API_KEY")
 	case models.ProviderOpenAI:
 		return os.Getenv("OPENAI_API_KEY")
 	case models.ProviderGemini:
 		return os.Getenv("GEMINI_API_KEY")
 	case models.ProviderGROQ:
 		return os.Getenv("GROQ_API_KEY")
-	case models.ProviderAzure:
-		return os.Getenv("AZURE_OPENAI_API_KEY")
 	case models.ProviderOpenRouter:
 		return os.Getenv("OPENROUTER_API_KEY")
-	case models.ProviderBedrock:
-		if hasAWSCredentials() {
-			return "aws-credentials-available"
-		}
-	case models.ProviderVertexAI:
-		if hasVertexAICredentials() {
-			return "vertex-ai-credentials-available"
-		}
+	case models.ProviderLocal:
+		return "dummy"
 	}
 	return ""
 }
 
 // setDefaultModelForAgent sets a default model for an agent based on available providers
 func setDefaultModelForAgent(agent AgentName) bool {
-	if hasCopilotCredentials() {
-		maxTokens := int64(5000)
-		if agent == AgentTitle {
-			maxTokens = 80
-		}
-
-		cfg.Agents[agent] = Agent{
-			Model:     models.CopilotGPT4o,
-			MaxTokens: maxTokens,
-		}
-		return true
-	}
 	// Check providers in order of preference
-	if apiKey := os.Getenv("ANTHROPIC_API_KEY"); apiKey != "" {
-		maxTokens := int64(5000)
-		if agent == AgentTitle {
-			maxTokens = 80
-		}
-		cfg.Agents[agent] = Agent{
-			Model:     models.Claude37Sonnet,
-			MaxTokens: maxTokens,
-		}
-		return true
-	}
-
 	if apiKey := os.Getenv("OPENAI_API_KEY"); apiKey != "" {
 		var model models.ModelID
 		maxTokens := int64(5000)
@@ -786,38 +638,6 @@ func setDefaultModelForAgent(agent AgentName) bool {
 
 		cfg.Agents[agent] = Agent{
 			Model:     models.QWENQwq,
-			MaxTokens: maxTokens,
-		}
-		return true
-	}
-
-	if hasAWSCredentials() {
-		maxTokens := int64(5000)
-		if agent == AgentTitle {
-			maxTokens = 80
-		}
-
-		cfg.Agents[agent] = Agent{
-			Model:           models.BedrockClaude37Sonnet,
-			MaxTokens:       maxTokens,
-			ReasoningEffort: "medium", // Claude models support reasoning
-		}
-		return true
-	}
-
-	if hasVertexAICredentials() {
-		var model models.ModelID
-		maxTokens := int64(5000)
-
-		if agent == AgentTitle {
-			model = models.VertexAIGemini25Flash
-			maxTokens = 80
-		} else {
-			model = models.VertexAIGemini25
-		}
-
-		cfg.Agents[agent] = Agent{
-			Model:     model,
 			MaxTokens: maxTokens,
 		}
 		return true
@@ -939,52 +759,3 @@ func UpdateTheme(themeName string) error {
 	})
 }
 
-// Tries to load Github token from all possible locations
-func LoadGitHubToken() (string, error) {
-	// First check environment variable
-	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
-		return token, nil
-	}
-
-	// Get config directory
-	var configDir string
-	if xdgConfig := os.Getenv("XDG_CONFIG_HOME"); xdgConfig != "" {
-		configDir = xdgConfig
-	} else if runtime.GOOS == "windows" {
-		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
-			configDir = localAppData
-		} else {
-			configDir = filepath.Join(os.Getenv("HOME"), "AppData", "Local")
-		}
-	} else {
-		configDir = filepath.Join(os.Getenv("HOME"), ".config")
-	}
-
-	// Try both hosts.json and apps.json files
-	filePaths := []string{
-		filepath.Join(configDir, "github-copilot", "hosts.json"),
-		filepath.Join(configDir, "github-copilot", "apps.json"),
-	}
-
-	for _, filePath := range filePaths {
-		data, err := os.ReadFile(filePath)
-		if err != nil {
-			continue
-		}
-
-		var config map[string]map[string]interface{}
-		if err := json.Unmarshal(data, &config); err != nil {
-			continue
-		}
-
-		for key, value := range config {
-			if strings.Contains(key, "github.com") {
-				if oauthToken, ok := value["oauth_token"].(string); ok {
-					return oauthToken, nil
-				}
-			}
-		}
-	}
-
-	return "", fmt.Errorf("GitHub token not found in standard locations")
-}

@@ -23,6 +23,8 @@ type openaiOptions struct {
 	disableCache    bool
 	reasoningEffort string
 	extraHeaders    map[string]string
+	temperature     *float64
+	maxTools        int
 }
 
 type OpenAIOption func(*openaiOptions)
@@ -160,10 +162,19 @@ func (o *openaiClient) finishReason(reason string) message.FinishReason {
 }
 
 func (o *openaiClient) preparedParams(messages []openai.ChatCompletionMessageParamUnion, tools []openai.ChatCompletionToolParam) openai.ChatCompletionNewParams {
+	// Enforce max tools limit for local providers (Ollama Qwen3 bug workaround)
+	if o.options.maxTools > 0 && len(tools) > o.options.maxTools {
+		tools = tools[:o.options.maxTools]
+	}
+
 	params := openai.ChatCompletionNewParams{
 		Model:    openai.ChatModel(o.providerOptions.model.APIModel),
 		Messages: messages,
 		Tools:    tools,
+	}
+
+	if o.options.temperature != nil {
+		params.Temperature = openai.Float(*o.options.temperature)
 	}
 
 	if o.providerOptions.model.CanReason == true {
@@ -408,6 +419,18 @@ func WithOpenAIExtraHeaders(headers map[string]string) OpenAIOption {
 func WithOpenAIDisableCache() OpenAIOption {
 	return func(options *openaiOptions) {
 		options.disableCache = true
+	}
+}
+
+func WithTemperature(temp float64) OpenAIOption {
+	return func(options *openaiOptions) {
+		options.temperature = &temp
+	}
+}
+
+func WithMaxTools(max int) OpenAIOption {
+	return func(options *openaiOptions) {
+		options.maxTools = max
 	}
 }
 
