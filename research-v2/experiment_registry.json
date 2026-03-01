@@ -1,0 +1,139 @@
+{
+  "version": "2.0",
+  "created": "2026-03-01",
+  "branch": "research-v2",
+  "description": "SPHERIC 벤치마크 재검증 + AI 에이전트 평가",
+  "experiments": {
+    "EXP-1": {
+      "name": "SPHERIC Test 10 재검증",
+      "status": "DESIGNED",
+      "phase": "convergence_study",
+      "depends_on": [],
+      "subcases": {
+        "water_lateral": {
+          "template": "cases/SPHERIC_Test10_Low_Def.xml",
+          "dataset": "datasets/spheric/case_1/",
+          "pass_criteria": "M1>=3/4 AND M2<30% AND M3_monotone AND M4<10%"
+        },
+        "oil_lateral": {
+          "template": "cases/SPHERIC_Test10_Oil_Low_Def.xml",
+          "dataset": "datasets/spheric/case_3/",
+          "pass_criteria": "M7>=3/4 AND M1>=2/4"
+        },
+        "water_roof": {
+          "template": "cases/SPHERIC_Test10_High_Def.xml",
+          "dataset": "datasets/spheric/case_2/",
+          "pass_criteria": "M1>=3/4 AND M2<40%"
+        }
+      },
+      "runs": {
+        "001": {
+          "case_file": "research-v2/exp1_spheric/cases/run_001_water_lat_dp004_dbc.xml",
+          "subcase": "water_lateral",
+          "dp": 0.004,
+          "bc": "DBC",
+          "particles_approx": 136000,
+          "depth_layers": 23,
+          "computedt": 0.0001,
+          "status": "PENDING",
+          "est_time_min": 3,
+          "est_disk_gb": 3
+        },
+        "002": {
+          "case_file": "research-v2/exp1_spheric/cases/run_002_water_lat_dp002_dbc.xml",
+          "subcase": "water_lateral",
+          "dp": 0.002,
+          "bc": "DBC",
+          "particles_approx": 545000,
+          "depth_layers": 46,
+          "computedt": 0.0001,
+          "status": "PENDING",
+          "est_time_min": 15,
+          "est_disk_gb": 12
+        },
+        "003": {
+          "case_file": "research-v2/exp1_spheric/cases/run_003_water_lat_dp001_dbc.xml",
+          "subcase": "water_lateral",
+          "dp": 0.001,
+          "bc": "DBC",
+          "particles_approx": 2200000,
+          "depth_layers": 93,
+          "computedt": 0.0001,
+          "status": "PENDING",
+          "est_time_min": 120,
+          "est_disk_gb": 25
+        },
+        "004": {
+          "case_file": "research-v2/exp1_spheric/cases/run_004_water_lat_dp002_mdbc.xml",
+          "subcase": "water_lateral",
+          "dp": 0.002,
+          "bc": "mDBC",
+          "particles_approx": 545000,
+          "depth_layers": 46,
+          "computedt": 0.0001,
+          "status": "PENDING",
+          "est_time_min": 15,
+          "est_disk_gb": 12
+        },
+        "005": {
+          "case_file": "research-v2/exp1_spheric/cases/run_005_oil_lat_dp002_mdbc.xml",
+          "subcase": "oil_lateral",
+          "dp": 0.002,
+          "bc": "mDBC",
+          "particles_approx": 545000,
+          "depth_layers": 46,
+          "computedt": 0.0001,
+          "status": "PENDING",
+          "est_time_min": 15,
+          "est_disk_gb": 12
+        },
+        "006": {
+          "case_file": "research-v2/exp1_spheric/cases/run_006_water_roof_dp002_mdbc.xml",
+          "subcase": "water_roof",
+          "dp": 0.002,
+          "bc": "mDBC",
+          "particles_approx": 545000,
+          "depth_layers": 175,
+          "computedt": 0.0001,
+          "status": "PENDING",
+          "est_time_min": 20,
+          "est_disk_gb": 12
+        }
+      },
+      "metrics": {
+        "M1": {"name": "Peak-in-band", "formula": "sim_peak in [mu-2sigma, mu+2sigma]", "threshold": ">=3/4 peaks"},
+        "M2": {"name": "Mean absolute peak error", "formula": "mean(|sim-exp_mean|/exp_mean)", "threshold": "<30%"},
+        "M3": {"name": "Convergence monotonicity", "formula": "|p_fine-p_med| < |p_med-p_coarse|", "threshold": "monotone decrease"},
+        "M4": {"name": "GCI", "formula": "ASME V&V 20", "threshold": "<10%"},
+        "M5": {"name": "Cross-correlation", "formula": "max_tau corr(sim(t), exp(t-tau))", "threshold": "r_max>0.5"},
+        "M6": {"name": "Time shift", "formula": "tau at max corr", "threshold": "<1.0 period"},
+        "M7": {"name": "Oil peak detection", "formula": "detected peaks", "threshold": ">=3/4"},
+        "M8": {"name": "Impact spike FWHM", "formula": "half-width at half-max", "threshold": "<2x experimental"}
+      }
+    },
+    "EXP-2": {
+      "name": "Natural Language → XML Generation",
+      "status": "PLANNED",
+      "depends_on": ["EXP-1"],
+      "runs": {}
+    },
+    "EXP-3": {
+      "name": "Parametric Study Automation",
+      "status": "PLANNED",
+      "depends_on": ["EXP-1", "EXP-2"],
+      "runs": {}
+    },
+    "EXP-4": {
+      "name": "Ablation Study",
+      "status": "PLANNED",
+      "depends_on": ["EXP-1", "EXP-2"],
+      "runs": {}
+    },
+    "EXP-5": {
+      "name": "Industrial Application",
+      "status": "PLANNED",
+      "depends_on": ["EXP-1", "EXP-2", "EXP-3"],
+      "runs": {}
+    }
+  }
+}
