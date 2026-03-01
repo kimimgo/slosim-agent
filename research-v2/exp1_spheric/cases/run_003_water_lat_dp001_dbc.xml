@@ -71,19 +71,19 @@
                 <swl name="SWL_Left">
                     <point0 x="0.005" y="0.031" z="0.0" />
                     <point2 x="0.005" y="0.031" z="0.508" />
-                    <pointdp value="0.5" />
+                    <pointdp coefdp="0.5" />
                     <masslimit value="0.2" />
                 </swl>
                 <swl name="SWL_Center">
                     <point0 x="0.450" y="0.031" z="0.0" />
                     <point2 x="0.450" y="0.031" z="0.508" />
-                    <pointdp value="0.5" />
+                    <pointdp coefdp="0.5" />
                     <masslimit value="0.2" />
                 </swl>
                 <swl name="SWL_Right">
                     <point0 x="0.895" y="0.031" z="0.0" />
                     <point2 x="0.895" y="0.031" z="0.508" />
-                    <pointdp value="0.5" />
+                    <pointdp coefdp="0.5" />
                     <masslimit value="0.2" />
                 </swl>
                 <force name="Force_Wall">

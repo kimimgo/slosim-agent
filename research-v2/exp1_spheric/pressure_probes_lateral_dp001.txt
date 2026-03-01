@@ -1,0 +1,7 @@
+POINTS
+0.004  0.031  0.093  #P1_main (left wall +1.5h, water surface z=93mm)
+0.004  0.031  0.083  #P1_below10mm
+0.004  0.031  0.073  #P1_below20mm
+0.004  0.031  0.103  #P1_above10mm
+0.004  0.031  0.050  #P1_mid
+0.896  0.031  0.093  #P1_right (symmetric, right wall -1.5h)

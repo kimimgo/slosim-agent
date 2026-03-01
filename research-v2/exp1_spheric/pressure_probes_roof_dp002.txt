@@ -1,0 +1,6 @@
+POINTS
+0.450  0.031  0.501  #S3_main (ceiling center, z=508mm -1.5h)
+0.450  0.031  0.495  #S3_below6mm
+0.450  0.031  0.485  #S3_below16mm
+0.100  0.031  0.501  #Ceiling_left
+0.800  0.031  0.501  #Ceiling_right

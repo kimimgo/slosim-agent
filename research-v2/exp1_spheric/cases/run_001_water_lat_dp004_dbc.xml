@@ -70,19 +70,19 @@
                 <swl name="SWL_Left">
                     <point0 x="0.005" y="0.031" z="0.0" />
                     <point2 x="0.005" y="0.031" z="0.508" />
-                    <pointdp value="0.5" />
+                    <pointdp coefdp="0.5" />
                     <masslimit value="0.2" />
                 </swl>
                 <swl name="SWL_Center">
                     <point0 x="0.450" y="0.031" z="0.0" />
                     <point2 x="0.450" y="0.031" z="0.508" />
-                    <pointdp value="0.5" />
+                    <pointdp coefdp="0.5" />
                     <masslimit value="0.2" />
                 </swl>
                 <swl name="SWL_Right">
                     <point0 x="0.895" y="0.031" z="0.0" />
                     <point2 x="0.895" y="0.031" z="0.508" />
-                    <pointdp value="0.5" />
+                    <pointdp coefdp="0.5" />
                     <masslimit value="0.2" />
                 </swl>
                 <force name="Force_Wall">
@@ -105,7 +105,7 @@
             <parameter key="DtMin" value="0.00001" />
             <parameter key="CoefDtMin" value="0.05" />
             <parameter key="TimeMax" value="7.0" units_comment="seconds" />
-            <parameter key="TimeOut" value="0.01" units_comment="seconds (701 frames)" />
+            <parameter key="TimeOut" value="0.001" units_comment="seconds (7001 PART files, 1kHz MeasureTool)" />
             <parameter key="PartsOutMax" value="1" />
             <parameter key="RhopOutMin" value="700" />
             <parameter key="RhopOutMax" value="1300" />
