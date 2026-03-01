@@ -65,6 +65,7 @@
                     <computedt value="0.0001" units_comment="10kHz gauge output" />
                     <computetime start="0" end="7" />
                     <output value="true" />
+                    <outputdt value="0.0001" units_comment="10kHz CSV output" />
                 </default>
                 <swl name="SWL_Left">
                     <point0 x="0.005" y="0.031" z="0.0" />
