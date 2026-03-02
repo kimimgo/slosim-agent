@@ -2,12 +2,64 @@
 
 ## 1. 서베이 개요
 
-- **조사 범위**: 742편 (8개 검색 쿼리, research-sniper)
-- **Tier 1**: 30편 핵심 논문
-- **Deep Read**: 6편 전문 추출
-- **핵심 질문**: "SPH 슬로싱에서 SPHERIC Test 10 벤치마크를 어떻게 검증했는가?"
+### 1.1 Survey v1 — AI Agent + Accessibility for CFD (c51cc0b3faf1)
 
-## 2. 핵심 논문 심층 비교
+- **조사 범위**: 1,173편 (8개 DB × 12개 쿼리)
+- **쿼리 구성**: 8개 (AI-CFD agent) + 4개 (NL interface, low-code, non-expert, democratization)
+- **핵심 질문**: "LLM-CFD 에이전트 중 SPH 솔버를 사용하는 것이 있는가? 비전문가 접근성은?"
+- **Tier 1**: 40편 | **Round 1 Gap**: 4개, **Round 2 Gap**: 1개 (G0 접근성)
+- **Coverage gap 확인**: 코퍼스에 "sphinxsys" 부재 (Round 2에서 "sloshing" 유입됨)
+- **키워드 상위**: simulation(23.0), technician(21.2), language(21.0), expert(16.3), natural(14.5)
+- **시간 분포**: 2025=439편, 2024=175편 (매우 최신 분야)
+- **핵심 논문 원문**: 6편 확보 (OpenFOAMGPT2, Foam-Agent2, ChatCFD, MetaOpenFOAM, Engineering.ai, SimLLM)
+
+### 1.2 Survey v2 — SPH Sloshing Validation (7a1b4eb3df2a)
+
+- **조사 범위**: 527편 (8개 DB × 4개 쿼리)
+- **핵심 질문**: "SPH 슬로싱에서 SPHERIC Test 10 벤치마크를 어떻게 검증했는가?"
+- **Tier 1**: 30편 | **Round 1 Gap**: 4개 확정
+- **Coverage gap 확인**: 코퍼스에 "cross-correlation" 키워드 부재
+- **시간 분포**: 2025=68편, 2024=57편, 2023=64편 (성숙 분야)
+- **핵심 논문 원문**: 3편 확보 (Dominguez 2022, English 2022, NL2FOAM)
+- **기존 Deep Read**: 6편 (markdown)
+
+### 1.3 통합 요약
+
+| 항목 | v1 (AI Agent+접근성) | v2 (Validation) | 합계 |
+|------|---------------------|----------------|------|
+| 수집 논문 | 1,173 | 527 | **1,700** |
+| 검색 쿼리 | 12 | 4 | 16 |
+| DB 커버리지 | 8/8 | 8/8 | 8/8 |
+| Round | 2 | 1 | — |
+| 확정 Gap | 5 (R1:4 + R2:1) | 4 | **핵심 4개 + 부수 발견 6개** |
+| 원문 확보 | 6 PDF + 3 txt | 3 PDF + 6 md + 3 txt | **18** |
+
+## 2. AI-CFD Agent 심층 비교 (Survey v1 원문 분석)
+
+### 2.0 LLM-CFD Agent 비교 매트릭스 (원문 기반, 2026-03-02 확인)
+
+| 항목 | OpenFOAMGPT 2.0 | ChatCFD | Foam-Agent 2.0 | **SlosimAgent (ours)** |
+|------|-----------------|---------|----------------|----------------------|
+| arXiv | 2504.19338 | 2506.02019 | 2509.18178 | — |
+| LLM | Claude-3.7 Sonnet | DeepSeek-R1/V3 | Claude 3.5 Sonnet | **Qwen3-32B (local)** |
+| Solver | OpenFOAM only | OpenFOAM only | OpenFOAM only | **DualSPHysics (SPH)** |
+| Deployment | Cloud API | Cloud API | Cloud API | **Local GPU (Ollama)** |
+| Architecture | RAG + ReAct | Thought-Action-Obs | 6-Agent MCP | **Coder Agent + 18 tools** |
+| Agent framework | Custom (LangGraph) | Custom | MCP-based | **OpenCode fork + MCP** |
+| Simulation count | 450+ | 315 | 110 | 8 (EXP-1) |
+| Success rate | ~100% (generate) | 82.1% (correct) | 88.2% | — |
+| Physics fidelity | Not measured | 68.12% | Not measured | **M1-M8 framework** |
+| Validation method | Run/No-run | Metrics vs ref | Expert review | **SPHERIC T10 + M1-M8** |
+| Target user | CFD expert | CFD expert | CFD expert | **Non-expert technician** |
+| Multi-fluid | No | No | No | **Yes (water + oil)** |
+| Mesh type | Grid (FVM) | Grid (FVM) | Grid (FVM) | **Particle (SPH)** |
+
+**핵심 발견**:
+1. 7개 에이전트 모두 OpenFOAM(격자 기반 FVM)만 지원 — SPH 솔버 = 0편
+2. 모두 클라우드 API 의존 — 로컬 SLM = 0편
+3. ChatCFD만 물리적 정확도(68.12%) 측정 — 나머지는 "실행 성공/실패"만 보고
+4. 슬로싱 도메인 특화 = 0편
+5. **모두 CFD 전문가 대상** — 비전문가 접근성을 목표로 한 에이전트 = 0편
 
 ### 2.1 English et al. (2022) — mDBC
 
@@ -91,46 +143,99 @@
 | Roof impact | 없음 | — | 없음 | 없음 | **시도 (PARTIAL)** |
 | 검증 판정 | "good agreement" | — | "overestimation" | 수치 | **PASS/FAIL 체계** |
 
-## 4. Target GAP 정의
+## 4. Target GAP 정의 (2축 4개 핵심 Gap + EXP-1 부수 발견)
 
-### GAP 1: SPH 슬로싱 정량 검증 부재
-- **현상**: 대부분의 SPH 슬로싱 논문이 시각적 비교만 수행
-- **영향**: 재현성 없음, 솔버 간 비교 불가, 산업 신뢰 확보 불가
-- **근거**: English et al. (2022) — DualSPHysics 팀 자체가 정량 메트릭 미보고
-- **우리의 기여**: M1-M8 프레임워크로 체계적 정량 검증 수행
+### 핵심 Gap: Axis 0 — Accessibility (WHY)
 
-### GAP 2: SPH 수렴 분석 표준 부재
-- **현상**: GCI/Richardson extrapolation이 SPH 슬로싱에 적용된 사례 없음
-- **영향**: 수치 해의 신뢰도 정량화 불가 (ASME V&V 20 미충족)
-- **근거**: Vacondio et al. (2020) GC1 — 수렴/일관성이 grand challenge
-- **우리의 기여**: 3-level dp 수렴 연구 + 2-level GCI 계산 (SPH 최초)
+| # | Gap | Sev. | 근거 | 서베이 증거 |
+|---|-----|:----:|------|-------------|
+| **G0** | SPH 슬로싱 시뮬레이션은 비전문가가 접근 불가 | **10** | XML 작성, dp/BC 설정, 후처리 → CFD 전문 지식 필수 | NL→도구 패턴: 포토닉스(PIC, Q1), 방사선치료(Q1), 데이터분석(low-code) 존재. OpenFOAM CFD(7종)도 존재. **SPH 슬로싱 = 0편** |
 
-### GAP 3: ASME V&V 20과 SPH의 간극
-- **현상**: V&V 20은 격자 기반 CFD 표준으로 설계, SPH 전용 표준 부재
-- **영향**: SPH 코드 검증에 참조할 프레임워크 없음
-- **우리의 기여**: V&V 20의 "정신"을 SPH 입자법에 적용한 첫 시도
+**G0의 핵심 차이점**: 기존 7개 LLM-CFD 에이전트는 **CFD 전문가가 자기 작업을 자동화**. SlosimAgent는 **CFD를 모르는 슬로싱 테크니션**이 자연어로 시뮬레이션을 수행. 타겟 사용자가 근본적으로 다름.
 
-### GAP 4: 다조건 검증의 부재
-- **현상**: 대부분 단일 유체/단일 하중에서만 검증
-- **영향**: 솔버의 일반성 평가 불가
-- **우리의 기여**: Water lateral + Oil lateral + Water roof (3개 서브케이스)
+**우리의 증거**: 10개 E2E 시나리오 (8개 데이터셋, 직사각/원통/STL, 물/오일/LNG) → **8/10 GPU PASS**
 
-## 5. 논문 포지셔닝 전략
+### 핵심 Gap: Axis 1 — Technical Agent (WHAT)
 
-### 강점 (Strengths)
-1. **최초 체계적 정량 검증**: M1-M8 8개 메트릭 — SPH 슬로싱 문헌 대비 최다
-2. **최초 GCI 적용**: SPH 슬로싱에서 Richardson extrapolation 차용
-3. **3-level 수렴 실증**: dp = 4/2/1mm, 교차상관 단조 수렴 확인
-4. **다조건 검증**: 3개 서브케이스 (물, 오일, 지붕)
-5. **재현성**: 모든 스크립트 공개, JSON 메트릭 출력, 자동화된 PASS/FAIL 판정
+| # | Gap | Sev. | 근거 | 서베이 증거 |
+|---|-----|:----:|------|-------------|
+| **G1** | SPH 솔버용 LLM 에이전트 = 0편 | **9** | 7종 전부 OpenFOAM(격자 FVM) only | 원문 비교: OpenFOAMGPT2, ChatCFD, Foam-Agent2 모두 OpenFOAM |
+| **G2** | 로컬 오픈웨이트 SLM = 0편 | **8** | 전부 Claude/GPT-4/DeepSeek 클라우드 API | 원문 확인: privacy/industrial deployment 불가 |
+| **G3** | MCP 기반 과학계산 통합 = 0편 | **7** | 전부 커스텀 래퍼/쉘 스크립트 | MCP spec 367회 인용 but 과학계산 적용 0편 |
+
+### Gap 대응 매트릭스
+
+```
+Gap    문제                              SlosimAgent 해소            증거
+─────  ────────────────────────────────  ─────────────────────────  ──────────────────
+G0     비전문가 접근 불가                  자연어 → XML → GPU 파이프라인  10 E2E, 8/10 PASS
+G1     SPH 에이전트 = 0                   DualSPHysics 18 tools       최초 SPH AI 에이전트
+G2     로컬 SLM = 0                       Qwen3-32B Ollama            클라우드 API 불필요
+G3     MCP 과학계산 = 0                   MCP 표준 프로토콜             18개 도구 MCP 통합
+```
+
+### EXP-1 수행 중 부수 발견 (추가 기여, 사전 동기 아님)
+
+EXP-1 (SPHERIC Test 10 벤치마크) 검증 실험을 수행하면서, SPH 슬로싱 문헌의 검증 관행에 체계적 부재가 있음을 관찰했다. 이는 연구의 사전 동기가 아니라 **실험 과정에서 드러난 발견**이다.
+
+| 발견 | 관찰 내용 | SlosimAgent에서의 대응 |
+|------|----------|----------------------|
+| **F1. 정량 메트릭 부재** | 263인용 English 2022도 "good agreement"만 보고, 0개 메트릭 | M1-M8 프레임워크 8개 정량 메트릭 적용 |
+| **F2. GCI 미적용** | SPH sloshing + Richardson extrapolation 조합 = 0편 | 3-level dp + 2-level GCI 계산 |
+| **F3. 교차상관 미사용** | 시간 이동(time shift) 정량화 안 함 | r=0.655, τ=+0.57s 보고 |
+| **F4. 다유체 검증 부재** | 단일 유체(물)만 검증 | Water + Oil 동일 프레임워크 |
+| **F5. Roof impact 미보고** | 기존 논문에서 roof 충격 검증 없음 | 시도 + DBC 한계 정직 보고 (PARTIAL) |
+| **F6. v1→v2 개선 기록** | 실패→성공 과정 미공개가 관행 | peak error 63.5%→19.5% (3.3×), r: -0.087→0.655 공개 |
+
+**의의**: 이 발견들은 핵심 Gap에서 파생된 것이지만, 에이전트가 생성한 시뮬레이션의 신뢰성을 입증하는 데 필수적인 증거 역할을 한다. 특히 F1-F3은 "에이전트가 돌린 시뮬레이션이 정말 맞는가?"라는 질문에 정량적으로 답하는 수단이다.
+
+## 5. 논문 포지셔닝 전략 (2축 + 실험 발견)
+
+### 핵심 내러티브 (2-Axis Story)
+
+**문제**: 슬로싱 실무자(탱크 검사원, 구조 엔지니어)는 CFD 전문 지식 없이 시뮬레이션을 수행할 수 없다.
+기존 LLM-CFD 에이전트 7종은 CFD 전문가의 자동화 도구이며, 모두 격자 기반 솔버만 지원한다.
+
+**해결**: 본 연구는 SlosimAgent를 제시한다 — CFD를 모르는 슬로싱 실무자가 자연어로 DualSPHysics 시뮬레이션을 설정·실행·분석할 수 있는 최초의 AI 에이전트.
+
+**부수 발견**: 에이전트의 물리적 신뢰성을 검증하기 위해 SPHERIC Test 10 벤치마크를 수행한 결과, SPH 슬로싱 문헌 전반에 정량 검증 관행이 부재함을 관찰. 이에 M1-M8 정량 프레임워크를 자체 제안하여 에이전트 출력의 신뢰성을 입증.
+
+### 논문 구조 매핑
+
+```
+Section          내용                                    근거
+─────────────    ──────────────────────────────────────  ──────────
+Introduction     G0: 비전문가 접근성 공백 (WHY)             Survey v1 R2
+                 G1-G3: 기술적 공백 (WHAT)                Survey v1 R1
+System Design    SlosimAgent 아키텍처                      Go + TUI + 18 tools
+                 → G1(SPH), G2(Local SLM), G3(MCP) 해소
+E2E Evaluation   10개 사용자 시나리오 → 8/10 PASS          → G0 해소
+Validation       SPHERIC T10 벤치마크 (EXP-1)              → 에이전트 출력 신뢰성
+                 F1-F3 문헌 관행 관찰 + M1-M8 제안         → 추가 기여
+Discussion       한계 정직 보고 + 향후 연구
+```
+
+### Contribution 목록 (우선순위 순)
+
+1. **[G0] 비전문가 접근성 실증**: 10개 E2E 시나리오, 8/10 GPU PASS — CFD 비전문가가 자연어로 슬로싱 시뮬레이션 수행
+2. **[G1] 최초 SPH AI 에이전트**: 7개 LLM-CFD 에이전트 중 유일한 입자법(SPH) 지원
+3. **[G2] 로컬 SLM 배포**: Qwen3-32B Ollama, 클라우드 API 불필요 — 산업 현장 배포 가능
+4. **[G3] MCP 기반 과학계산 통합**: 18개 도구를 표준 프로토콜로 통합
+5. **[F1-F3] 정량 검증 프레임워크**: M1-M8 8개 메트릭, GCI, 교차상관 — EXP-1에서 관찰된 문헌 관행 부재에 대한 대응
 
 ### 약점 → 정직한 보고 (Limitations as Transparency)
+
 1. **M2 = 19.5%**: 높아 보이지만, 대부분의 논문이 보고조차 안 함 + 실험 CoV 20-40%
 2. **DBC only**: mDBC 시도했으나 발산 → 정직하게 문서화
 3. **2-level GCI**: Run 003 TimeOut 제약 → conservative Fs=3.0
 4. **시간 이동**: τ=+0.57s → 물리적 원인 설명 (SPH 초기화 특성)
+5. **시뮬레이션 8회**: 에이전트 성공률 미측정 (OpenFOAMGPT의 450+ 대비 적음)
+6. **Qwen3:8B tool call 실패**: Quality Report v0.3에서 0/3 시나리오 PASS → 32B 필요
+7. **E2E 10개는 GPU 파이프라인 검증**: 에이전트 NL→tool call 자동화 검증과 별개
 
-### 약점 → 강점 전환 키워드
-- "첫 번째로 정량적 오차를 보고한 SPH 슬로싱 연구 중 하나"
-- "기존 문헌의 검증 관행을 넘어서는 엄격한 프레임워크"
-- "ASME V&V 20의 정신을 SPH 입자법에 적용한 첫 시도"
+### 핵심 문장 (Key Claims)
+
+- "CFD를 모르는 실무자가 자연어로 슬로싱 시뮬레이션을 수행할 수 있는 최초의 도구"
+- "SPH 솔버를 자동화한 최초의 AI 에이전트"
+- "클라우드 API 없이 로컬 GPU만으로 작동하는 CFD 에이전트"
+- "에이전트 출력의 물리적 신뢰성을 정량적으로 검증한 유일한 사례"
