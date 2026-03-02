@@ -1,0 +1,26 @@
+```xml
+<DualSPHysics>
+  <Case Name="CylindricalTank" Description="Cylindrical tank with water oscillation">
+    <Geometry>
+      <Cylinder Name="Tank" Type="solid" Center="0 0 0" Radius="1.42" Height="3" />
+    </Geometry>
+    <Fluid>
+      <Water Name="Water" Density="1000" Viscosity="0" />
+    </Fluid>
+    <Domain>
+      <Box Name="FluidDomain" Type="fluid" Xmin="-1.42" Xmax="1.42" Ymin="0" Ymax="1.5" Zmin="-1.42" Zmax="1.42" />
+    </Domain>
+    <Motion>
+      <Sinusoidal Name="TankMotion" Object="Tank" Axis="x" Amplitude="0.01" Frequency="0.5" Phase="0" />
+    </Motion>
+    <Simulation>
+      <Time Tmax="10" Dt="0.001" />
+      <Particles Spacing="0.01" />
+      <Kernel Type="Wendland" />
+    </Simulation>
+    <Output>
+      <Save Type="binary" Interval="0.1" />
+    </Output>
+  </Case>
+</DualSPHysics>
+```

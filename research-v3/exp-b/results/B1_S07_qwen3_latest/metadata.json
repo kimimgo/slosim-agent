@@ -1,0 +1,12 @@
+{
+    "scenario": "S07",
+    "model": "qwen3:latest",
+    "condition": "B1_no_domain_prompt",
+    "exit_code": 0,
+    "duration_seconds": 23,
+    "start_time": "2026-03-03T00:24:16",
+    "end_time": "2026-03-03T00:24:39",
+    "hostname": "user",
+    "generic_prompt": true,
+    "has_tools": true
+}
