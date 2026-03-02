@@ -18,7 +18,10 @@
 ## 2. EXP-A 결과 요약
 
 **M-A3 Parameter Fidelity**: 70% (32B) ≡ 70% (8B)
-**Determinism**: stddev=0.0 across all 3 trials (temperature=0)
+**Determinism (M-A3 parameters)**: stddev=0.0 across all 3 trials (temperature=0)
+**Determinism (full XML)**: 32B 9/10 identical, 8B 4/10 identical
+  - 8B 차이는 비채점 영역 (comments, GenCase 후처리, simulationdomain 설정)
+  - M-A3 채점 대상 파라미터는 3 trials 모두 동일
 
 | 난이도 | 32B M-A3 | 8B M-A3 | 비고 |
 |--------|:---:|:---:|------|
