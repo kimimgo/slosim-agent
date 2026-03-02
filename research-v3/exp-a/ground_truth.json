@@ -1,0 +1,113 @@
+{
+  "S01": {
+    "tier": "Easy",
+    "description": "SPHERIC Oil Low Fill",
+    "tank": {"x": 0.9, "y": 0.062, "z": 0.508},
+    "fluid": {"density": 990, "fill_ratio": 0.18, "fill_height": 0.09144, "type": "oil"},
+    "viscosity": {"value": 0.045, "unit": "Pa·s", "treatment": "laminar_sps_or_artificial"},
+    "motion": {"type": "pitch_rotation", "xml_tag": "mvrotsinu", "freq_hz": 0.6515, "amplitude_deg": 4, "axis": "y", "center_z": 0},
+    "timemax": 7.68,
+    "dp_range": [0.003, 0.008],
+    "checks": ["rhop0!=1000", "motion_type=mvrotsinu", "viscosity_reflects_oil"]
+  },
+  "S02": {
+    "tier": "Easy",
+    "description": "Chen Shallow Sway",
+    "tank": {"x": 0.6, "y": 0.3, "z": 0.65},
+    "fluid": {"density": 1000, "fill_ratio": null, "fill_height": 0.083, "type": "water"},
+    "viscosity": {"value": null, "unit": null, "treatment": "default"},
+    "motion": {"type": "horizontal_sway", "xml_tag": "mvrectsinu", "freq_hz": 0.756, "amplitude_m": 0.007, "axis": "x"},
+    "timemax": 10,
+    "dp_range": [0.003, 0.01],
+    "checks": ["tank_size_correct", "fill_height=0.083", "motion_type=mvrectsinu"]
+  },
+  "S03": {
+    "tier": "Medium",
+    "description": "Chen Near-Critical",
+    "tank": {"x": 0.6, "y": 0.3, "z": 0.65},
+    "fluid": {"density": 1000, "fill_ratio": null, "fill_height": 0.185, "type": "water"},
+    "viscosity": {"value": null, "unit": null, "treatment": "default"},
+    "motion": {"type": "horizontal_sway", "xml_tag": "mvrectsinu", "freq_hz": 1.008, "amplitude_m": 0.007, "axis": "x"},
+    "timemax": 10,
+    "dp_range": [0.003, 0.01],
+    "checks": ["fill_height=0.185", "freq=1.008"]
+  },
+  "S04": {
+    "tier": "Medium",
+    "description": "Liu Large Pitch 30s",
+    "tank": {"x": 1.0, "y": 0.5, "z": 1.0},
+    "fluid": {"density": 1000, "fill_ratio": null, "fill_height": 0.2, "type": "water"},
+    "viscosity": {"value": null, "unit": null, "treatment": "default"},
+    "motion": {"type": "pitch_rotation", "xml_tag": "mvrotsinu", "freq_hz": 0.66, "amplitude_deg": 2, "axis": "y", "center_z": 0},
+    "timemax": 30,
+    "dp_range": [0.005, 0.015],
+    "checks": ["tank_1m_square", "motion_type=mvrotsinu", "timemax>=30"]
+  },
+  "S05": {
+    "tier": "Medium",
+    "description": "Liu Amplitude Parametric",
+    "tank": {"x": 1.0, "y": 0.5, "z": 1.0},
+    "fluid": {"density": 1000, "fill_ratio": 0.7, "fill_height": 0.7, "type": "water"},
+    "viscosity": {"value": null, "unit": null, "treatment": "default"},
+    "motion": {"type": "pitch_rotation", "xml_tag": "mvrotsinu", "freq_hz": 0.87, "amplitude_deg": [1, 2, 3], "axis": "y"},
+    "timemax": 20,
+    "dp_range": [0.005, 0.015],
+    "checks": ["parametric_3_cases", "amplitudes_1_2_3_deg", "freq=0.87"],
+    "parametric": true
+  },
+  "S06": {
+    "tier": "Medium",
+    "description": "ISOPE LNG Roof Impact",
+    "tank": {"x": 0.946, "y": 0.118, "z": 0.67},
+    "fluid": {"density": 1000, "fill_ratio": 0.9, "fill_height": 0.603, "type": "water"},
+    "viscosity": {"value": null, "unit": null, "treatment": "default"},
+    "motion": {"type": "horizontal_sway", "xml_tag": "mvrectsinu", "freq_hz": 0.6, "amplitude_m": 0.02, "axis": "x"},
+    "timemax": 15,
+    "dp_range": [0.003, 0.01],
+    "checks": ["fill_ratio_90pct", "roof_pressure_monitoring", "freq=0.6"]
+  },
+  "S07": {
+    "tier": "Hard",
+    "description": "NASA Cylinder Baffle",
+    "tank": {"shape": "cylinder", "diameter": 2.84, "height": 3.0},
+    "fluid": {"density": 1000, "fill_ratio": 0.5, "fill_height": 1.5, "type": "water"},
+    "viscosity": {"value": null, "unit": null, "treatment": "default"},
+    "motion": {"type": "horizontal_sway", "xml_tag": "mvrectsinu", "freq_hz": 0.5, "amplitude_m": 0.01, "axis": "x"},
+    "timemax": 15,
+    "dp_range": [0.01, 0.03],
+    "checks": ["cylindrical_geometry", "diameter=2.84"]
+  },
+  "S08": {
+    "tier": "Easy",
+    "description": "English mDBC vs DBC",
+    "tank": {"x": 0.9, "y": 0.062, "z": 0.508},
+    "fluid": {"density": 1000, "fill_ratio": 0.18, "fill_height": 0.09144, "type": "water"},
+    "viscosity": {"value": null, "unit": null, "treatment": "default"},
+    "motion": {"type": "pitch_rotation", "xml_tag": "mvrotsinu", "freq_hz": 0.6515, "amplitude_deg": 4, "axis": "y"},
+    "timemax": 7.68,
+    "dp_range": [0.001, 0.003],
+    "checks": ["dp=0.002", "boundary_condition=DBC", "pressure_gauge_at_sensor1"]
+  },
+  "S09": {
+    "tier": "Hard",
+    "description": "Horizontal Cylinder Pitch",
+    "tank": {"shape": "horizontal_cylinder", "diameter": 1.0, "length": 3.0},
+    "fluid": {"density": 1000, "fill_ratio": 0.25, "fill_height": null, "type": "water"},
+    "viscosity": {"value": null, "unit": null, "treatment": "default"},
+    "motion": {"type": "pitch_rotation", "xml_tag": "mvrotsinu", "freq_hz": 0.55, "amplitude_deg": 3, "axis": "y"},
+    "timemax": 15,
+    "dp_range": [0.008, 0.02],
+    "checks": ["horizontal_cylinder_geometry", "pitch_rotation"]
+  },
+  "S10": {
+    "tier": "Hard",
+    "description": "STL Fuel Tank",
+    "tank": {"shape": "stl", "stl_file": "cases/fuel_tank.stl"},
+    "fluid": {"density": 1000, "fill_ratio": 0.5, "fill_height": null, "type": "water"},
+    "viscosity": {"value": null, "unit": null, "treatment": "default"},
+    "motion": {"type": "horizontal_sway", "xml_tag": "mvrectsinu", "freq_hz": 0.5, "amplitude_m": 0.05, "axis": "x"},
+    "timemax": 15,
+    "dp_range": [0.008, 0.02],
+    "checks": ["stl_import_used", "stl_file_referenced"]
+  }
+}

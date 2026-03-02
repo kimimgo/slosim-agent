@@ -382,3 +382,120 @@ Phase 4: 논문 작성                    ← 모든 산출물 완성 후
 - 주요 메트릭: First-attempt Success Rate (82.6%), Solution Accuracy (88.7%)
 - 모델: fine-tuned Qwen2.5-7B vs Qwen2.5-72B/DeepSeek-R1-671B/Llama-70B
 - 핵심 차이: NL2FOAM은 fine-tuning, 본 연구는 zero-shot tool-calling
+
+---
+
+## 알려진 제한점 및 대응
+
+> 이 섹션은 실험 설계의 논리적 약점을 사전에 식별하고, 논문 Discussion에서 정직하게 보고하기 위한 것이다.
+
+### L1. NL 프롬프트 기술 수준의 비균질성
+
+**문제**: 논문은 "비전문가 접근성"을 핵심 주장으로 내세우지만, 10개 프롬프트의 기술 수준이 균일하지 않다.
+
+| 수준 | 프롬프트 | 근거 |
+|------|---------|------|
+| **Novice** (비전문가) | S07, S09 | 기본 치수+운동만 기술. 전문 용어 없음 |
+| **Intermediate** (준전문가) | S02, S04, S10 | "공진주파수", "STL 파일" 등 일부 전문 용어 사용 |
+| **Expert** (전문가) | S01, S03, S05, S06, S08 | "SPHERIC 벤치마크", "critical depth", "DBC", "dp", "ISOPE", "파라메트릭 해석" |
+
+특히 문제가 되는 프롬프트:
+- **S08**: "경계조건을 DBC로", "dp=0.002m" — SPH 전문가만 아는 용어
+- **S03**: "critical depth 근처라서 비선형 효과가 클 거야" — 유체역학 이론 지식 전제
+- **S06**: "ISOPE 벤치마크 LNG 탱크" — 학회 벤치마크 인용은 연구자 수준
+
+**대응**:
+1. 논문 Table 3에 각 프롬프트의 **기술 수준 라벨** (Novice/Intermediate/Expert) 열 추가
+2. Discussion에서 명시: "본 연구의 프롬프트는 비전문가~전문가 스펙트럼을 포함하며, 순수 비전문가(Novice) 프롬프트는 S07, S09 2개에 해당한다. 타겟 사용자인 탱크 검사원/구조 엔지니어는 Intermediate 수준으로 가정한다."
+3. 향후 연구로 "프롬프트 기술 수준별 성공률 분석" 제안 (Novice-only 벤치마크)
+
+### L2. 기존 에이전트 직접 실험 비교 부재
+
+**문제**: 7종 LLM-CFD 에이전트(OpenFOAMGPT, ChatCFD, Foam-Agent 등)와 동일 태스크에서 직접 실험 비교가 없다. Table 1은 기능 비교(feature comparison)에 불과하다.
+
+**직접 비교가 불가능한 구조적 이유**:
+1. **솔버 불일치**: 7종 전부 OpenFOAM(격자 FVM) 전용. DualSPHysics(SPH)와 동일 태스크를 공평하게 비교할 기준이 없음
+2. **접근 불가**: OpenFOAMGPT, CFD-GPT 등 대부분 오픈소스가 아니거나 재현 불가
+3. **도메인 불일치**: 기존 에이전트는 범용 CFD를 목표. 슬로싱 특화 태스크 자체가 테스트 범위 밖
+
+**NL2FOAM과의 간접 비교는 유효**:
+- NL2FOAM은 유일하게 벤치마크+메트릭을 공개한 연구
+- 동일 메트릭(first-attempt success rate)으로 **방법론적 비교** 가능:
+  - NL2FOAM: fine-tuned 7B → 82.6% (21 cases)
+  - SlosimAgent: zero-shot 32B → N/10 (10 cases)
+- 솔버가 다르므로 "동급 성능" 주장은 삼가되, "tool-calling도 competitive"임을 보임
+
+**대응**:
+1. Discussion에 "Direct Comparison Limitations" 서브섹션 추가
+2. Table 1에 비교 불가 사유 각주 추가: "Direct experimental comparison is infeasible due to solver incompatibility (FVM vs SPH) and limited source availability"
+3. NL2FOAM과의 메트릭 정렬(M-A5 ≈ first-attempt success rate)을 명시하여 간접 비교 근거 강화
+
+### L3. EXP-B B3(−PostProcess) 해석의 뉘앙스
+
+**문제**: B3에서 후처리 도구(partvtk, measuretool, analysis, report) 제거 시 "솔버까지 성공"으로 예상. 이를 단순히 "PASS"로 기록하면 ablation의 의미가 희석된다.
+
+**핵심 구분**:
+
+| 관점 | B3 결과 | 해석 |
+|------|---------|------|
+| **계산적 필수성** (Computational Necessity) | PASS* — 솔버 완주 가능 | 후처리는 시뮬레이션 자체에 불필요 |
+| **실용적 필수성** (Practical Necessity) | FAIL — 비전문가가 결과 해석 불가 | 후처리 없이는 에이전트의 존재 의의 상실 |
+
+**대응**:
+1. B3 결과를 "PASS*" 표기하고, 각주: "Solver completes but results are inaccessible without post-processing tools"
+2. M-A5 (Pipeline Success) 정의를 확장: **"사용자가 결과를 해석 가능한 형태로 받는 것"** 까지 포함
+3. Table 4에 **M-B2 (User Interpretability)** 메트릭 추가 고려:
+   - "사용자에게 유의미한 출력(VTK, 시계열 plot, 요약 리포트) 제공 여부"
+   - B3는 M-B2 = FAIL → "후처리는 계산적으로 선택이나, 사용자 경험 관점에서 필수"
+
+### L4. S03 프롬프트의 문맥 의존성
+
+**문제**: S03 "같은 탱크(600x300x650mm)인데 이번엔..." — "같은 탱크"는 S02를 전제로 하는 대화 문맥이다. 그러나 EXP-A는 비대화식 모드(단일 프롬프트)로 실행하므로, 에이전트는 S02 문맥이 없다.
+
+**영향**: 괄호 안 치수(600x300x650mm)가 있어 기능적으로는 문제 없을 수 있으나, "같은 탱크"라는 표현이 LLM의 혼란을 유발할 가능성 존재.
+
+**대응**:
+1. S03 프롬프트를 자립적(self-contained)으로 수정 권장:
+   - 변경 전: "같은 탱크(600x300x650mm)인데 이번엔..."
+   - 변경 후: "600x300x650mm 직사각형 탱크에 물 185mm로 채워줘..."
+2. 수정하지 않는 경우, 논문에서 "프롬프트는 독립적으로 실행되며, 대화 문맥 없는 단일 입력"임을 명시
+
+### L5. EXP-A 반복 횟수(3회)의 통계적 한계
+
+**문제**: 3회 반복은 통계적 유의성을 주장하기에 불충분하다. 표준편차, 신뢰구간 등의 통계 지표를 제시하기 어렵다.
+
+**비교**: NL2FOAM은 single-attempt(1회)으로 first-attempt success rate를 보고. 본 연구의 3회는 NL2FOAM보다 robust하지만 여전히 적다.
+
+**대응**:
+1. 3회 반복의 목적을 "통계적 유의성"이 아닌 **"LLM non-determinism에 의한 변동 관찰"** 로 명시
+2. 보고 형식: "3/3 PASS", "2/3 PASS", "0/3 PASS" — 비율이 아닌 raw count로 투명 보고
+3. Discussion에서 "소규모 반복의 한계"를 인정하고, 향후 연구로 "대규모 반복(N≥30) + bootstrap 분석" 제안
+
+### L6. EXP-B 반복 없음 (1회)
+
+**문제**: EXP-B는 조건당 1회만 실행. LLM의 비결정성을 감안하면 1회 결과는 재현성이 보장되지 않는다.
+
+**정당화**: Ablation의 목적이 "정확한 성공률 측정"이 아니라 "컴포넌트 제거 시 질적 실패 모드 관찰"이므로, 1회로도 "LLM이 유효한 XML을 생성하지 못한다"는 질적 결론은 도출 가능.
+
+**대응**:
+1. EXP-B를 **정성적 ablation** (qualitative ablation)으로 위치 설정
+2. 핵심 조건(B2, B4)은 실패가 결정적(XML 문법 자체가 불가)이므로 1회로 충분
+3. B1(−DomainPrompt)은 확률적 결과이므로, 가능하면 3회 반복 추가 권장
+
+### L7. 논문뼈대와 EXPERIMENT_PLAN 간 Figure/Table 번호 불일치
+
+**문제**: EXPERIMENT_PLAN은 Table 2-6, Fig 1-7을 정의하지만, 논문뼈대.tex는 Table 1-4, Fig 1-4만 있다. 특히 **EXP-B ablation 결과(Table 4, Fig 4)가 논문뼈대에 반영되지 않았다**.
+
+**대응**:
+1. 논문뼈대.tex Section 4에 ablation 서브섹션 추가 (또는 별도 Section으로 분리)
+2. Figure/Table 번호를 EXPERIMENT_PLAN 기준으로 통일
+3. 논문 작성 단계(Phase 4)에서 번호 최종 확정
+
+### L8. "8/10 PASS" 사전 결론 리스크
+
+**문제**: 논문뼈대와 Contribution Statement에 이미 "8/10 GPU PASS"가 기재되어 있으나, EXP-A는 아직 미실행이다. 실제 결과가 다를 경우 전체 서사가 붕괴한다.
+
+**대응**:
+1. 논문뼈대의 "8/10"은 **v2 수동 테스트 기반 예측**임을 명시
+2. EXP-A 실행 후 실제 결과로 교체 — 결과가 6/10이든 10/10이든 정직 보고
+3. 서사 유연성 확보: "N/10 scenarios achieved full pipeline success" 형식으로 N을 변수로 유지
