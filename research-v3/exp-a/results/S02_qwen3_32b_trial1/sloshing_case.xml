@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<case app="GenCase v5.4.354.01 (07-04-2025)" date="02-03-2026 12:13:44">
+    <casedef>
+        <constantsdef>
+            <gravity x="0" y="0" z="-9.81" />
+            <rhop0 value="1000" />
+            <rhopgradient value="2" />
+            <hswl value="0" auto="true" />
+            <gamma value="7" />
+            <speedsystem value="0" auto="true" />
+            <coefsound value="20" />
+            <speedsound value="0" auto="true" />
+            <coefh value="1.2" />
+            <cflnumber value="0.2" />
+        </constantsdef>
+        <mkconfig boundcount="240" fluidcount="9" />
+        <geometry>
+            <definition dp="0.006" units_comment="metres (m)">
+                <pointmin x="-0.0300" y="-0.0300" z="-0.0300" />
+                <pointmax x="0.6300" y="0.3300" z="0.6800" />
+            </definition>
+            <commands>
+                <mainlist>
+                    <setshapemode>dp | bound</setshapemode>
+                    <setdrawmode mode="full" />
+                    <setmkfluid mk="0" />
+                    <drawbox>
+                        <boxfill>solid</boxfill>
+                        <point x="0" y="0" z="0" />
+                        <size x="0.6" y="0.3" z="0.083" />
+                    </drawbox>
+                    <setmkbound mk="0" />
+                    <drawbox>
+                        <boxfill>bottom | left | right | front | back</boxfill>
+                        <point x="0" y="0" z="0" />
+                        <size x="0.6" y="0.3" z="0.65" />
+                    </drawbox>
+                    <shapeout file="Tank" />
+                </mainlist>
+            </commands>
+        </geometry>
+        <motion>
+            <objreal ref="0">
+                <begin mov="1" start="0" />
+                <mvrectsinu id="1" duration="10" anglesunits="degrees">
+                    <freq x="0.756" y="0" z="0" units_comment="Hz" />
+                    <ampl x="0.007" y="0" z="0" units_comment="metres (m)" />
+                    <phase x="0" y="0" z="0" units_comment="degrees" />
+                </mvrectsinu>
+            </objreal>
+        </motion>
+    </casedef>
+    <execution>
+        <special>
+            <gauges>
+                <swl name="SWL_Left">
+                    <point0 x="0.0300" y="0.1500" z="0.0" />
+                    <point2 x="0.0300" y="0.1500" z="0.65" />
+                    <pointdp value="0.5" />
+                    <masslimit value="0.2" />
+                    <savevtk value="false" />
+                </swl>
+                <swl name="SWL_Center">
+                    <point0 x="0.3000" y="0.1500" z="0.0" />
+                    <point2 x="0.3000" y="0.1500" z="0.65" />
+                    <pointdp value="0.5" />
+                    <masslimit value="0.2" />
+                    <savevtk value="false" />
+                </swl>
+                <swl name="SWL_Right">
+                    <point0 x="0.5700" y="0.1500" z="0.0" />
+                    <point2 x="0.5700" y="0.1500" z="0.65" />
+                    <pointdp value="0.5" />
+                    <masslimit value="0.2" />
+                    <savevtk value="false" />
+                </swl>
+            </gauges>
+        </special>
+        <parameters>
+            <parameter key="SavePosDouble" value="0" />
+            <parameter key="StepAlgorithm" value="2" comment="2:Symplectic" />
+            <parameter key="Kernel" value="2" comment="2:Wendland" />
+            <parameter key="ViscoTreatment" value="1" comment="1:Artificial" />
+            <parameter key="Visco" value="0.01" />
+            <parameter key="ViscoBoundFactor" value="1" />
+            <parameter key="DensityDT" value="2" comment="2:Fourtakas" />
+            <parameter key="DensityDTvalue" value="0.1" />
+            <parameter key="Shifting" value="0" />
+            <parameter key="RigidAlgorithm" value="1" />
+            <parameter key="CoefDtMin" value="0.05" />
+            <parameter key="DtIni" value="0.0001" />
+            <parameter key="DtMin" value="0.0001" />
+            <parameter key="TimeMax" value="10" units_comment="seconds" />
+            <parameter key="TimeOut" value="0.2" units_comment="seconds" />
+            <parameter key="PartsOutMax" value="1" comment="**DEPRECATED** " />
+            <parameter key="RhopOutMin" value="700" />
+            <parameter key="RhopOutMax" value="1300" />
+            <parameter key="BoundaryMethod" value="1" comment="1:DBC" />
+            <simulationdomain comment="Defines domain of simulation (default=Uses minimum and maximum position of the generated particles)">
+                <posmin x="default - 11%" y="default" z="default" comment="e.g.: x=0.5, y=default-1, z=default-10%" />
+                <posmax x="default + 11%" y="default" z="default + 50%" />
+            </simulationdomain>
+        </parameters>
+        <particles np="105465" nb="37551" nbf="0" mkboundfirst="10" mkfluidfirst="1">
+            <_summary>
+                <positions units_comment="metres (m)">
+                    <posmin x="0" y="0" z="0" />
+                    <posmax x="0.6" y="0.3" z="0.648" />
+                </positions>
+                <moving count="37551" id="0-37550" mkcount="1" mkvalues="10" />
+                <fluid count="67914" id="37551-105464" mkcount="1" mkvalues="1" />
+            </_summary>
+            <moving mkbound="0" mk="10" begin="0" count="37551" refmotion="0" />
+            <fluid mkfluid="0" mk="1" begin="37551" count="67914" />
+        </particles>
+        <constants>
+            <data2d value="false" />
+            <gravity x="0" y="0" z="-9.81" units_comment="m/s^2" />
+            <cflnumber value="0.2" />
+            <gamma value="7" />
+            <rhop0 value="1000" units_comment="kg/m^3" />
+            <dp value="0.006" units_comment="metres (m)" />
+            <h value="0.012470765814" units_comment="metres (m)" />
+            <b value="43724.571429" units_comment="Pascal (Pa)" />
+            <massbound value="0.000216" units_comment="kg" />
+            <massfluid value="0.000216" units_comment="kg" />
+        </constants>
+        <uservars>
+            <varnum name="VResId" value="0" />
+        </uservars>
+        <motion>
+            <objreal ref="0">
+                <begin mov="1" start="0" />
+                <mvrectsinu id="1" duration="10" anglesunits="degrees">
+                    <freq x="0.756" y="0" z="0" units_comment="1/s" />
+                    <ampl x="0.007" y="0" z="0" units_comment="metres (m)" />
+                    <phase x="0" y="0" z="0" units_comment="degrees" />
+                </mvrectsinu>
+            </objreal>
+        </motion>
+        <vtkout mkboundfirst="10" mkfluidfirst="1">
+            <vtkfile name="sloshing_case_Tank_Dp.vtk" mk="10" mkbound="0" />
+        </vtkout>
+    </execution>
+</case>
