@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<case app="GenCase v5.4.354.01 (07-04-2025)" date="02-03-2026 12:53:16">
+<case app="GenCase v5.4.354.01 (07-04-2025)" date="02-03-2026 12:28:56">
     <casedef>
         <constantsdef>
             <gravity x="0" y="0" z="-9.81" />
@@ -15,9 +15,9 @@
         </constantsdef>
         <mkconfig boundcount="240" fluidcount="9" />
         <geometry>
-            <definition dp="0.005" units_comment="metres (m)">
-                <pointmin x="-0.0250" y="-0.0250" z="-0.0250" />
-                <pointmax x="0.9250" y="0.0870" z="0.5330" />
+            <definition dp="0.05" units_comment="metres (m)">
+                <pointmin x="-0.2500" y="-0.2500" z="-0.2500" />
+                <pointmax x="3.0900" y="3.0900" z="3.2500" />
             </definition>
             <commands>
                 <mainlist>
@@ -27,13 +27,13 @@
                     <drawbox>
                         <boxfill>solid</boxfill>
                         <point x="0" y="0" z="0" />
-                        <size x="0.9" y="0.062" z="0.09144" />
+                        <size x="2.84" y="2.84" z="1.5" />
                     </drawbox>
                     <setmkbound mk="0" />
                     <drawbox>
                         <boxfill>bottom | left | right | front | back</boxfill>
                         <point x="0" y="0" z="0" />
-                        <size x="0.9" y="0.062" z="0.508" />
+                        <size x="2.84" y="2.84" z="3" />
                     </drawbox>
                     <shapeout file="Tank" />
                 </mainlist>
@@ -42,9 +42,9 @@
         <motion>
             <objreal ref="0">
                 <begin mov="1" start="0" />
-                <mvrectsinu id="1" duration="7.675" anglesunits="degrees">
-                    <freq x="0.6515" y="0" z="0" units_comment="Hz" />
-                    <ampl x="0.045" y="0" z="0" units_comment="metres (m)" />
+                <mvrectsinu id="1" duration="10" anglesunits="degrees">
+                    <freq x="0.5" y="0" z="0" units_comment="Hz" />
+                    <ampl x="0.01" y="0" z="0" units_comment="metres (m)" />
                     <phase x="0" y="0" z="0" units_comment="degrees" />
                 </mvrectsinu>
             </objreal>
@@ -54,22 +54,22 @@
         <special>
             <gauges>
                 <swl name="SWL_Left">
-                    <point0 x="0.0450" y="0.0310" z="0.0" />
-                    <point2 x="0.0450" y="0.0310" z="0.508" />
+                    <point0 x="0.1420" y="1.4200" z="0.0" />
+                    <point2 x="0.1420" y="1.4200" z="3" />
                     <pointdp value="0.5" />
                     <masslimit value="0.2" />
                     <savevtk value="false" />
                 </swl>
                 <swl name="SWL_Center">
-                    <point0 x="0.4500" y="0.0310" z="0.0" />
-                    <point2 x="0.4500" y="0.0310" z="0.508" />
+                    <point0 x="1.4200" y="1.4200" z="0.0" />
+                    <point2 x="1.4200" y="1.4200" z="3" />
                     <pointdp value="0.5" />
                     <masslimit value="0.2" />
                     <savevtk value="false" />
                 </swl>
                 <swl name="SWL_Right">
-                    <point0 x="0.8550" y="0.0310" z="0.0" />
-                    <point2 x="0.8550" y="0.0310" z="0.508" />
+                    <point0 x="2.6980" y="1.4200" z="0.0" />
+                    <point2 x="2.6980" y="1.4200" z="3" />
                     <pointdp value="0.5" />
                     <masslimit value="0.2" />
                     <savevtk value="false" />
@@ -90,27 +90,27 @@
             <parameter key="CoefDtMin" value="0.05" />
             <parameter key="DtIni" value="0.0001" />
             <parameter key="DtMin" value="0.0001" />
-            <parameter key="TimeMax" value="7.675" units_comment="seconds" />
-            <parameter key="TimeOut" value="0.1535" units_comment="seconds" />
+            <parameter key="TimeMax" value="10" units_comment="seconds" />
+            <parameter key="TimeOut" value="0.2" units_comment="seconds" />
             <parameter key="PartsOutMax" value="1" comment="**DEPRECATED** " />
             <parameter key="RhopOutMin" value="700" />
             <parameter key="RhopOutMax" value="1300" />
             <simulationdomain comment="Defines domain of simulation (default=Uses minimum and maximum position of the generated particles)">
-                <posmin x="default - 15%" y="default" z="default" comment="e.g.: x=0.5, y=default-1, z=default-10%" />
-                <posmax x="default + 15%" y="default" z="default + 50%" />
+                <posmin x="default - 10%" y="default" z="default" comment="e.g.: x=0.5, y=default-1, z=default-10%" />
+                <posmax x="default + 10%" y="default" z="default + 50%" />
             </simulationdomain>
         </parameters>
-        <particles np="76963" nb="41521" nbf="0" mkboundfirst="10" mkfluidfirst="1">
+        <particles np="111124" nb="17044" nbf="0" mkboundfirst="10" mkfluidfirst="1">
             <_summary>
                 <positions units_comment="metres (m)">
                     <posmin x="0" y="0" z="0" />
-                    <posmax x="0.9" y="0.06" z="0.51" />
+                    <posmax x="2.85" y="2.85" z="3" />
                 </positions>
-                <moving count="41521" id="0-41520" mkcount="1" mkvalues="10" />
-                <fluid count="35442" id="41521-76962" mkcount="1" mkvalues="1" />
+                <moving count="17044" id="0-17043" mkcount="1" mkvalues="10" />
+                <fluid count="94080" id="17044-111123" mkcount="1" mkvalues="1" />
             </_summary>
-            <moving mkbound="0" mk="10" begin="0" count="41521" refmotion="0" />
-            <fluid mkfluid="0" mk="1" begin="41521" count="35442" />
+            <moving mkbound="0" mk="10" begin="0" count="17044" refmotion="0" />
+            <fluid mkfluid="0" mk="1" begin="17044" count="94080" />
         </particles>
         <constants>
             <data2d value="false" />
@@ -118,11 +118,11 @@
             <cflnumber value="0.2" />
             <gamma value="7" />
             <rhop0 value="1000" units_comment="kg/m^3" />
-            <dp value="0.005" units_comment="metres (m)" />
-            <h value="0.010392304845" units_comment="metres (m)" />
-            <b value="47648.571429" units_comment="Pascal (Pa)" />
-            <massbound value="0.000125" units_comment="kg" />
-            <massfluid value="0.000125" units_comment="kg" />
+            <dp value="0.05" units_comment="metres (m)" />
+            <h value="0.10392304845" units_comment="metres (m)" />
+            <b value="812828.57143" units_comment="Pascal (Pa)" />
+            <massbound value="0.125" units_comment="kg" />
+            <massfluid value="0.125" units_comment="kg" />
         </constants>
         <uservars>
             <varnum name="VResId" value="0" />
@@ -130,9 +130,9 @@
         <motion>
             <objreal ref="0">
                 <begin mov="1" start="0" />
-                <mvrectsinu id="1" duration="7.675" anglesunits="degrees">
-                    <freq x="0.6515" y="0" z="0" units_comment="1/s" />
-                    <ampl x="0.045" y="0" z="0" units_comment="metres (m)" />
+                <mvrectsinu id="1" duration="10" anglesunits="degrees">
+                    <freq x="0.5" y="0" z="0" units_comment="1/s" />
+                    <ampl x="0.01" y="0" z="0" units_comment="metres (m)" />
                     <phase x="0" y="0" z="0" units_comment="degrees" />
                 </mvrectsinu>
             </objreal>

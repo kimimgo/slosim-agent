@@ -17,25 +17,53 @@
 
 ## 2. EXP-A 결과 요약
 
-**M-A3 Parameter Fidelity**: 70% (32B) ≡ 70% (8B)
-**Determinism (M-A3 parameters)**: stddev=0.0 across all 3 trials (temperature=0)
-**Determinism (full XML)**: 32B 9/10 identical, 8B 4/10 identical
-  - 8B 차이는 비채점 영역 (comments, GenCase 후처리, simulationdomain 설정)
-  - M-A3 채점 대상 파라미터는 3 trials 모두 동일
+**채점 기준**: score_expb.py 8-parameter M-A3 (tank×3, fill_height, motion_type, frequency, amplitude, timemax)
 
-| 난이도 | 32B M-A3 | 8B M-A3 | 비고 |
-|--------|:---:|:---:|------|
-| Easy (S01-S03) | 72% | 71% | S03 fluid material 무시 |
-| Medium (S04-S07) | 69% | 69% | S07 원통형 미지원 |
-| Hard (S08-S10) | 69% | 69% | S08/S10 STL 미지원 |
+### 2.1 전체 M-A3
 
-**체계적 오류 패턴 (P1-P6)**:
-- P1: Pitch/Roll 혼동 (mvrectsinu → mvrotsinu) — 5/10 시나리오
-- P2: TimeMax 과소추정 — 4/10 시나리오
-- P3: 원통형 형상 미지원 — 2/10 시나리오
-- P4: 비수 유체(오일) 무시 — 2/10 시나리오
-- P5: SPHERIC 도메인 지식 부족 — 1/10 시나리오
-- P6: 8B tool calling 불안정 — S10에서 관찰
+**Overall M-A3**: 61.2% (32B) ≈ 58.7% (8B) — Δ=2.5%pp
+
+| 난이도 | 시나리오 | 32B M-A3 | 8B M-A3 | 비고 |
+|--------|----------|:---:|:---:|------|
+| Easy (S01-S03) | S01,S02,S03 | 87.5% | 87.5% | 완전 동일 |
+| Medium (S04-S07) | S04,S05,S06,S07 | 69.8% | 69.8% | 완전 동일 |
+| Hard (S08-S10) | S08,S09,S10 | 23.3% | 15.0% | S10 비결정성 |
+
+### 2.2 시나리오별 상세
+
+```
+Scenario  32B   8B   Δ      Key Issue
+────────────────────────────────────────────────
+S01       75%   75%  =      P1: mvrectsinu (pitch→sway 혼동)
+S02      100%  100%  =      완벽
+S03       88%   88%  =      timemax 과소추정
+S04       75%   75%  =      P1: mvrectsinu
+S05       50%   50%  =      tank_z/fill_height 혼동
+S06       88%   88%  =      timemax 과소추정
+S07       67%   67%  =      원통형 → 박스 변환
+S08       50%    0%  +50%   8B: XML 미생성 (tool calling 실패)
+S09       20%   20%  =      원통형 + P1 + timemax
+S10        0%   25%  -25%   STL 미지원, 8B T2/T3만 부분 성공
+```
+
+### 2.3 Determinism (temperature=0)
+
+**M-A3 점수 재현성**: 32B 10/10, 8B 9/10 deterministic (σ=0.0)
+- 유일한 비결정적 케이스: S10_8B (trial1=0%, trial2/3=75%, σ=35.4)
+**Full XML 재현성**: 32B 9/10 identical, 8B 4/10 identical
+- 8B 차이는 비채점 영역 (comments, GenCase 후처리, simulationdomain 설정)
+- M-A3 채점 대상 파라미터는 S10_8B 제외 전부 동일
+
+### 2.4 체계적 오류 패턴
+
+| 패턴 | 파라미터 | 영향 시나리오 | 빈도(20 runs) |
+|------|----------|--------------|:---:|
+| P1 | motion_type (pitch→mvrectsinu) | S01,S04,S05,S08,S09 | 9 |
+| P2 | amplitude (deg→rad 변환) | S01,S04,S05,S08,S09 | 9 |
+| P3 | timemax 과소추정 | S03,S06,S07,S08,S09 | 9 |
+| P4 | geometry_type (원통형 미지원) | S07,S09 | 4 |
+| P5 | tank_z/fill_height 혼동 | S05 | 2 |
+| P6 | 8B tool calling 불안정 | S08,S10 | — |
 
 ---
 
@@ -95,7 +123,7 @@
 
 ### C1: "NL→SPH 파이프라인이 작동한다" → EXP-A ✅
 
-**적절성**: 완전히 뒷받침. 70% M-A3는 "작동하지만 개선 여지 있음"을 보여줌.
+**적절성**: 완전히 뒷받침. 61% M-A3는 "작동하지만 개선 여지 있음"을 보여줌.
 
 **잠재적 약점**:
 - Qwen3 계열만 테스트 (LLaMA, Gemma 비교 없음) → Future work
@@ -130,9 +158,9 @@ Section 4.2 (EXP-B): "도메인 프롬프트가 핵심 드라이버"
 ## 5. 논문 논리 흐름
 
 ```
-Section 4.1 (EXP-A): "파이프라인이 70% M-A3로 작동"
-    → 모델 크기 무관 (32B ≡ 8B)
-    → 도구 설계가 병목 (P1-P6 패턴)
+Section 4.1 (EXP-A): "파이프라인이 61% M-A3로 작동"
+    → 모델 크기 무관 (32B 61.2% ≈ 8B 58.7%, Δ=2.5%pp)
+    → 도구 설계가 병목 (P1-P6 패턴, motion_type/amplitude가 최다 실패)
 
 Section 4.2 (EXP-B): "도메인 프롬프트가 핵심, 도구가 보조"
     → Domain Prompt main effect: +65.3%
@@ -153,14 +181,17 @@ Section 4.3 (EXP-C): "물리적으로 정확"
 ## 6. 완료 체크리스트
 
 1. [x] EXP-A 3 trials 완료 (60/60 runs)
-2. [x] EXP-A stddev=0.0 확인 (32B + 8B)
+2. [x] EXP-A determinism 확인 (32B 10/10, 8B 9/10)
 3. [x] EXP-B B4 완료 (6/6 runs)
 4. [x] EXP-B B2 완료 (6/6 runs, 재실행 포함)
 5. [x] EXP-B B1 완료 (6/6 runs)
 6. [x] EXP-B 결과 채점 및 2×2 factorial 분석
 7. [x] EXP-C v2 데이터 확인 (이관 가능)
 8. [x] 최종 결과 문서 (이 파일)
-9. [x] Git commit (64078e9, a93a3fd, e423813)
+9. [x] Git commit (64078e9, a93a3fd, e423813, 12103a5)
+10. [x] 채점 기준 통일 (score_expb 8-param → EXP-A 전체 적용)
+11. [x] EXP-A 60개 결과 로컬 동기화 완료
+12. [x] analyze_all.py — EXP-A 논문용 종합 분석 스크립트
 
 ---
 

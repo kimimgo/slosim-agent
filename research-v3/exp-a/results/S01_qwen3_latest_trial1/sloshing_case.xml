@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<case app="GenCase v5.4.354.01 (07-04-2025)" date="02-03-2026 12:53:16">
+<case app="GenCase v5.4.354.01 (07-04-2025)" date="02-03-2026 12:57:26">
     <casedef>
         <constantsdef>
             <gravity x="0" y="0" z="-9.81" />
@@ -27,7 +27,7 @@
                     <drawbox>
                         <boxfill>solid</boxfill>
                         <point x="0" y="0" z="0" />
-                        <size x="0.9" y="0.062" z="0.09144" />
+                        <size x="0.9" y="0.062" z="0.0923" />
                     </drawbox>
                     <setmkbound mk="0" />
                     <drawbox>
@@ -42,9 +42,9 @@
         <motion>
             <objreal ref="0">
                 <begin mov="1" start="0" />
-                <mvrectsinu id="1" duration="7.675" anglesunits="degrees">
-                    <freq x="0.6515" y="0" z="0" units_comment="Hz" />
-                    <ampl x="0.045" y="0" z="0" units_comment="metres (m)" />
+                <mvrectsinu id="1" duration="7.68" anglesunits="degrees">
+                    <freq x="0.651" y="0" z="0" units_comment="Hz" />
+                    <ampl x="0.0314" y="0" z="0" units_comment="metres (m)" />
                     <phase x="0" y="0" z="0" units_comment="degrees" />
                 </mvrectsinu>
             </objreal>
@@ -90,14 +90,15 @@
             <parameter key="CoefDtMin" value="0.05" />
             <parameter key="DtIni" value="0.0001" />
             <parameter key="DtMin" value="0.0001" />
-            <parameter key="TimeMax" value="7.675" units_comment="seconds" />
-            <parameter key="TimeOut" value="0.1535" units_comment="seconds" />
+            <parameter key="TimeMax" value="7.68" units_comment="seconds" />
+            <parameter key="TimeOut" value="0.1536" units_comment="seconds" />
             <parameter key="PartsOutMax" value="1" comment="**DEPRECATED** " />
             <parameter key="RhopOutMin" value="700" />
             <parameter key="RhopOutMax" value="1300" />
+            <parameter key="BoundaryMethod" value="2" comment="2:mDBC" />
             <simulationdomain comment="Defines domain of simulation (default=Uses minimum and maximum position of the generated particles)">
-                <posmin x="default - 15%" y="default" z="default" comment="e.g.: x=0.5, y=default-1, z=default-10%" />
-                <posmax x="default + 15%" y="default" z="default + 50%" />
+                <posmin x="default - 13%" y="default" z="default" comment="e.g.: x=0.5, y=default-1, z=default-10%" />
+                <posmax x="default + 13%" y="default" z="default + 50%" />
             </simulationdomain>
         </parameters>
         <particles np="76963" nb="41521" nbf="0" mkboundfirst="10" mkfluidfirst="1">
@@ -130,9 +131,9 @@
         <motion>
             <objreal ref="0">
                 <begin mov="1" start="0" />
-                <mvrectsinu id="1" duration="7.675" anglesunits="degrees">
-                    <freq x="0.6515" y="0" z="0" units_comment="1/s" />
-                    <ampl x="0.045" y="0" z="0" units_comment="metres (m)" />
+                <mvrectsinu id="1" duration="7.68" anglesunits="degrees">
+                    <freq x="0.651" y="0" z="0" units_comment="1/s" />
+                    <ampl x="0.0314" y="0" z="0" units_comment="metres (m)" />
                     <phase x="0" y="0" z="0" units_comment="degrees" />
                 </mvrectsinu>
             </objreal>
