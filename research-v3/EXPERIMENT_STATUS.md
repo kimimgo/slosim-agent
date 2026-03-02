@@ -157,7 +157,7 @@ Section 4.3 (EXP-C): "물리적으로 정확"
 6. [x] EXP-B 결과 채점 및 2×2 factorial 분석
 7. [x] EXP-C v2 데이터 확인 (이관 가능)
 8. [x] 최종 결과 문서 (이 파일)
-9. [ ] Git commit
+9. [x] Git commit (64078e9, a93a3fd, e423813)
 
 ---
 
