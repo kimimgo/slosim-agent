@@ -120,13 +120,46 @@ Gap 4개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 61\
 \item 기존 문헌 비교: English 2022는 동일 벤치마크에서 정량 메트릭 0개
 \end{itemize}
 
-\subsection{6. Discussion ({\small\color{gray}$\sim$2.5p})}
+\subsection{6. Discussion ({\small\color{gray}$\sim$3p})}
+
+\textbf{6.1 접근성 vs 자동화}
 \begin{itemize}[nosep,leftmargin=1.5em]
-\item 접근성 vs 자동화: 기존은 ``전문가 자동화'', 우리는 ``비전문가 접근''
-\item \textbf{Prompt vs Tool 트레이드오프}: Prompt는 의미 이해(무엇을), Tool은 구조 정확성(어떻게) 담당 --- B2가 motion\_type은 맞추나 geometry를 뒤바꿈
-\item \textbf{모델 크기 무관성의 함의}: 32B$\approx$8B($\Delta$=2.5\%pp) $\rightarrow$ 8B로도 동등 성능 $\rightarrow$ 엣지 디바이스/현장 배포 가능성
-\item \textbf{병목은 도구 설계}: P1(motion\_type)은 xml\_generator 버그, P2(amplitude)는 단위 변환 미구현 --- 모델 스케일링보다 도구 품질이 상한선
-\item 한계: M-A3 61\%, DBC only, S10 8B 비결정성, 원통형/STL 미지원
+\item 기존 7종 에이전트: CFD 전문가의 ``자동화'' (workflow acceleration)
+\item SlosimAgent: 비전문가의 ``접근'' (capability enabling, 0\% $\rightarrow$ 61\%)
+\item 비전문가 baseline = 0\% (DualSPHysics XML 수동 작성 불가) $\rightarrow$ 61\% 도약이 핵심 기여
+\end{itemize}
+
+\textbf{6.2 Tool-Induced Error: 도구의 이중적 역할}
+\begin{itemize}[nosep,leftmargin=1.5em]
+\item B0(Full) vs B2($-$Tool) 파라미터별 비교: 3 시나리오 $\times$ 22 checks
+\item \textbf{Tool HELPS} (2 params): fill\_height (3/3$\rightarrow$0/3), tank\_z (2/2$\rightarrow$0/2) --- B2는 두 값을 뒤바꿈
+\item \textbf{Tool HURTS} (1 param): motion\_type (1/3$\rightarrow$3/3) --- xml\_generator가 pitch를 sway로 강제 변환
+\item \textbf{Net effect: +13.6\%pp} --- 도구는 전체적으로 도움이나, 의미 영역 침범 시 오류 도입
+\item 해석: Prompt = 의미(무엇을), Tool = 구조(어떻게). Tool이 ``의미'' 영역(motion\_type)까지 결정할 때 오류 발생
+\end{itemize}
+
+\textbf{6.3 Performance Ceiling: 도구 품질이 상한선}
+\begin{itemize}[nosep,leftmargin=1.5em]
+\item P1(motion\_type 버그) + P2(amplitude 단위 변환) 수정 시: M-A3 61\% $\rightarrow$ \textbf{75\%} (+14\%pp)
+\item P3(timemax) + P4(geometry) 추가 수정 시: M-A3 $\rightarrow$ $\sim$88\%
+\item 모델 스케일링(32B$\rightarrow$8B)의 영향 2.5\%pp $\ll$ 도구 버그 수정의 영향 14\%pp
+\item 결론: ``더 큰 모델''이 아니라 ``더 나은 도구''가 성능 개선의 핵심 경로
+\end{itemize}
+
+\textbf{6.4 모델 크기 무관성의 함의}
+\begin{itemize}[nosep,leftmargin=1.5em]
+\item 32B$\approx$8B ($\Delta$=2.5\%pp), 모든 ablation 조건에서 동일
+\item 8B 로컬 배포 $\rightarrow$ 엣지 디바이스/산업 현장 가능 (클라우드 의존 제거)
+\item 도구가 출력 형식을 강제하므로, 모델의 ``자유도''가 제한됨 $\rightarrow$ 크기 무관
+\end{itemize}
+
+\textbf{6.5 한계 및 향후 연구}
+\begin{itemize}[nosep,leftmargin=1.5em]
+\item M-A3 61\% (도구 수정 시 75\%), DBC only (mDBC diverged)
+\item 원통형/STL geometry 미지원 (S07, S09, S10 실패 원인)
+\item Qwen3 단일 모델 패밀리 --- LLaMA/Gemma 교차 검증 필요
+\item 비전문가 사용자 연구 미실시 --- NL 프롬프트 작성 능력 미검증
+\item S10 8B 비결정성 ($\sigma$=35.4) --- temperature=0에서도 발생, tool calling 불안정
 \end{itemize}
 
 \subsection{7. Conclusion}
@@ -146,14 +179,14 @@ Gap 4개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 61\
 \textbf{번호} & \textbf{내용} & \textbf{상태} \\
 \midrule
 Table 1 & 경쟁 에이전트 비교 (7종 vs Ours) & 완료 \\
-Table 2 & M-A3 정의 (8-parameter) & 데이터 확보 \\
-Table 3 & EXP-A: 10 시나리오 $\times$ 2 모델 M-A3 & 데이터 확보 \\
-Table 4 & EXP-B: 2$\times$2 Factorial M-A3 & 데이터 확보 \\
+Table 2 & M-A3 정의 (8-parameter) & 완료 (generate\_tables.py) \\
+Table 3 & EXP-A: 10 시나리오 $\times$ 2 모델 M-A3 & 완료 (generate\_tables.py) \\
+Table 4 & EXP-B: 2$\times$2 Factorial M-A3 & 완료 (generate\_tables.py) \\
 Table 5 & M1--M8 메트릭 정의 & 완료 \\
 Table 6 & SPHERIC T10 결과 요약 & 완료 \\
-Fig 1 & 시스템 아키텍처 다이어그램 & 미작성 \\
-Fig 2 & EXP-A: 시나리오별 M-A3 bar chart (32B vs 8B) & 미작성 \\
-Fig 3 & EXP-B: 2$\times$2 interaction plot & 미작성 \\
+Fig 1 & 시스템 아키텍처 다이어그램 & 미작성 (수동) \\
+Fig 2 & EXP-A: 시나리오별 M-A3 bar chart (32B vs 8B) & 완료 (fig\_expa\_ma3.py) \\
+Fig 3 & EXP-B: 2$\times$2 interaction plot & 완료 (fig\_expb\_factorial.py) \\
 Fig 4 & Water Lateral 시계열 (3-resolution) & 완료 \\
 Fig 5 & Oil Lateral 시계열 vs 실험 & 완료 \\
 Fig 6 & 수렴 분석 (r vs dp) & 완료 \\
