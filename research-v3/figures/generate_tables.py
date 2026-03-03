@@ -140,6 +140,41 @@ def table4_expb():
     print()
 
 
+def table2_ma3_definition():
+    """Table 2: M-A3 8-Parameter Definition"""
+    print("% ══════════════════════════════════════")
+    print("% Table 2: M-A3 Parameter Fidelity Definition")
+    print("% ══════════════════════════════════════")
+    print(r"\begin{table}[htbp]")
+    print(r"\centering")
+    print(r"\caption{M-A3 parameter fidelity metric: 8 checked parameters with tolerances.}")
+    print(r"\label{tab:ma3-definition}")
+    print(r"\begin{tabular}{clll}")
+    print(r"\toprule")
+    print(r"\textbf{\#} & \textbf{Parameter} & \textbf{Source (XML)} & \textbf{Tolerance} \\")
+    print(r"\midrule")
+    rows = [
+        ("1", r"tank\_x",       r"\texttt{drawbox} size x (2nd box)", r"$\pm$10\%"),
+        ("2", r"tank\_y",       r"\texttt{drawbox} size y (2nd box)", r"$\pm$10\%"),
+        ("3", r"tank\_z or geometry\_type", r"\texttt{drawbox} size z / \texttt{drawcylinder}", r"$\pm$10\% / exact"),
+        ("4", r"fill\_height",  r"\texttt{drawbox} size z (1st box)", r"$\pm$15\%"),
+        ("5", r"motion\_type",  r"\texttt{mvrectsinu} / \texttt{mvrotsinu}", "exact match"),
+        ("6", r"frequency",     r"\texttt{freq} x or y attribute",    r"$\pm$10\%"),
+        ("7", r"amplitude",     r"\texttt{ampl} x, y, or z attribute", r"$\pm$15\%"),
+        ("8", r"timemax",       r"\texttt{parameter key=TimeMax}",    r"$\pm$10\%"),
+    ]
+    for num, param, source, tol in rows:
+        print(f"{num} & {param} & {source} & {tol} \\\\")
+    print(r"\midrule")
+    print(r"\multicolumn{4}{l}{\textit{Score} = (passed checks / total checks) $\times$ 100\%} \\")
+    print(r"\multicolumn{4}{l}{\textit{Cylindrical tanks}: geometry\_type replaces tank\_x/y/z (1 check instead of 3)} \\")
+    print(r"\bottomrule")
+    print(r"\end{tabular}")
+    print(r"\end{table}")
+    print()
+
+
 if __name__ == "__main__":
+    table2_ma3_definition()
     table3_expa()
     table4_expb()
