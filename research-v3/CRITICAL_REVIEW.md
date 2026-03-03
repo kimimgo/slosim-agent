@@ -137,10 +137,10 @@ B2 (no tool) mvrotsinu     ✓ (rotation 정확)
 
 | 개선 | 예상 효과 | 필요 시간 |
 |------|----------|----------|
-| ground_truth.json tier 재정의 + 기준 문서화 | 리뷰어 신뢰도 ↑ | 30분 |
+| ~~ground_truth.json tier 재정의 + 기준 문서화~~ | ~~리뷰어 신뢰도 ↑~~ | ✅ 완료 |
 | EXP-B를 10개 전체 시나리오로 확장 (B0 재사용) | 통계 검정력 ↑ | 2시간 |
-| Discussion에 tool-induced error 분석 추가 | 논문 깊이 ↑ | 1시간 |
-| P1+P2 수정 시 M-A3 75% 추정을 본문에 포함 | ceiling analysis 제공 | 포함됨 |
+| ~~Discussion에 tool-induced error 분석 추가~~ | ~~논문 깊이 ↑~~ | ✅ 완료 (analyze_tool_effect.py) |
+| ~~P1+P2 수정 시 M-A3 75% 추정을 본문에 포함~~ | ~~ceiling analysis~~ | ✅ 완료 (§6.3) |
 
 ### 4.2 시간 투자 필요 (Future Work)
 
