@@ -21,7 +21,7 @@
 
 \pagestyle{fancy}\fancyhf{}
 \fancyhead[L]{\small\color{gray}SlosimAgent 논문 뼈대}
-\fancyhead[R]{\small\color{gray}2026-03-03}
+\fancyhead[R]{\small\color{gray}2026-03-05}
 \fancyfoot[C]{\small\thepage}
 
 \setlength{\parskip}{0.35em}
@@ -44,7 +44,7 @@
 기존 LLM-CFD 에이전트 7종은 모두 \textbf{CFD 전문가 대상 + OpenFOAM(격자) + 클라우드 API}다.
 본 연구는 \textbf{비전문가가 자연어로 SPH 슬로싱 시뮬레이션을 자율 수행}할 수 있는 최초의 AI 에이전트 SlosimAgent를 제시한다.
 10개 시나리오에서 M-A3 파라미터 정확도 61\%를 달성하고(32B$\approx$8B, $\Delta$=2.5\%pp),
-2$\times$2 factorial ablation으로 도메인 프롬프트(+65.3\%pp)와 도구(+6.9\%pp)의 기여를 분리하며,
+2$\times$2 factorial ablation으로 hierarchical dependency를 발견하며(도메인 프롬프트 = 필요조건, 도구 = 조건부 +10.9\%pp),
 SPHERIC Test 10 벤치마크로 물리적 신뢰성을 정량 검증한다(M2=19.5\%, r=0.655).
 
 % ============================================================
@@ -52,11 +52,12 @@ SPHERIC Test 10 벤치마크로 물리적 신뢰성을 정량 검증한다(M2=19
 % ============================================================
 
 \begin{enumerate}[nosep,leftmargin=1.5em]
-\item \textbf{비전문가 접근성 공백} --- SPH 슬로싱을 자연어로 수행할 수 있는 도구 = 0편
-\item \textbf{SPH 솔버 에이전트 부재} --- 7종 에이전트 전부 OpenFOAM(격자 FVM) only
-\item \textbf{로컬 SLM 부재} --- 전부 Cloud API 의존, 산업 현장 배포 불가
-\item \textbf{MCP 기반 과학계산 통합 부재} --- 표준 프로토콜 미사용
+\item \textbf{비전문가 접근성 공백} --- SPH 슬로싱을 자연어로 수행할 수 있는 도구 = 0편 $\leftarrow$ EXP-A
+\item \textbf{SPH 솔버 에이전트 부재} --- 7종 에이전트 전부 OpenFOAM(격자 FVM) only $\leftarrow$ EXP-C
+\item \textbf{로컬 SLM 부재} --- 전부 Cloud API 의존, 산업 현장 배포 불가 $\leftarrow$ EXP-A/B (32B$\approx$8B)
 \end{enumerate}
+
+\textit{*MCP 도구 통합은 설계 선택(§3.4)으로 서술 --- 독립 Gap이 아닌 architecture decision.}
 
 \textit{*서베이 근거: 1,700편 (8개 DB, 16개 쿼리), Tier-1 40편 원문 분석}
 
@@ -65,13 +66,13 @@ SPHERIC Test 10 벤치마크로 물리적 신뢰성을 정량 검증한다(M2=19
 % ============================================================
 
 \subsection{Abstract}
-Gap 4개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 61\% $\rightarrow$ 2$\times$2 ablation (Prompt +65\%) $\rightarrow$ SPHERIC T10 정량 검증
+Gap 3개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 61\% $\rightarrow$ 2$\times$2 ablation: hierarchical dependency (Prompt=prerequisite, Tool=+10.9\%pp) $\rightarrow$ SPHERIC T10 정량 검증
 
 \subsection{1. Introduction ({\small\color{gray}$\sim$2.5p})}
 \begin{itemize}[nosep,leftmargin=1.5em]
 \item 슬로싱 공학적 중요성 + SPH 적합성 + LLM-CFD 에이전트 부상
 \item Gap 1--4 제시
-\item Contribution 4개: (1) 비전문가용 최초 SPH AI 에이전트, (2) DualSPHysics+Qwen3+MCP 통합, (3) 2$\times$2 factorial ablation으로 아키텍처 기여도 정량 분리, (4) SPHERIC T10 정량 검증 + M1--M8 프레임워크
+\item Contribution 4개: (1) 비전문가용 최초 SPH AI 에이전트 (Gap 1), (2) 도구 아키텍처 필수성 정량화 --- hierarchical dependency 발견 + tool quality ceiling 분석 (Gap 1/2), (3) 로컬 SLM 실현 가능성 입증: 32B$\approx$8B (Gap 3), (4) SPHERIC T10 정량 검증 + M1--M8 프레임워크 (Gap 2)
 \end{itemize}
 
 \subsection{2. Related Work ({\small\color{gray}$\sim$2p})}
@@ -95,20 +96,27 @@ Gap 4개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 61\
 \begin{itemize}[nosep,leftmargin=1.5em]
 \item 실험 설정: 10개 시나리오 $\times$ 2 모델(32B, 8B) $\times$ 3 trials = 60 runs, temperature=0
 \item M-A3 8-parameter 채점: tank$_{xyz}$, fill\_height, motion\_type, frequency, amplitude, timemax
-\item \textbf{결과: 32B 61.2\% $\approx$ 8B 58.7\% ($\Delta$=2.5\%pp) --- 모델 크기 무관}
-\item 난이도별: Easy 87.5\%, Medium 69.8\%, Hard 23.3\% (원통형/STL 미지원)
-\item Determinism: 32B 10/10, 8B 9/10 시나리오에서 M-A3 $\sigma$=0.0 (완전 재현)
-\item 체계적 오류 패턴: P1 motion\_type 혼동(5/10), P2 amplitude 단위 변환(5/10), P3 timemax 과소추정(5/10)
+\item \textbf{결과: 32B 69.5\% $\approx$ 8B 64.5\% ($\Delta$=5.0\%pp) --- 모델 크기 무관}
+\item 난이도별: Easy 87.7\%, Medium 70.0\%, Hard 51.0\%/34.3\% (32B/8B)
+\item Determinism: 32B 10/10, 8B 10/10 시나리오에서 M-A3 $\sigma$=0.0 (완전 재현)
+\item 체계적 오류 패턴: P1 motion\_type 혼동(5/10), P2 amplitude 단위 변환(5/10), P3 timemax 과소추정(6/10)
 \end{itemize}
 
 \textbf{4.2 Architecture Ablation (EXP-B, {\small\color{gray}$\sim$2p})}
 \begin{itemize}[nosep,leftmargin=1.5em]
 \item 실험 설계: 2$\times$2 factorial --- Domain Prompt $\times$ DualSPHysics Tools
-\item B0(Full)=72.2\%, B1($-$Prompt)=0\%, B2($-$Tool)=58.3\%, B4(Bare)=0\%
-\item \textbf{Prompt 주효과 +65.3\%pp $\gg$ Tool 주효과 +6.9\%pp, 상호작용 +13.9\%pp}
-\item 핵심 발견 1: Prompt 없으면 모델이 DualSPHysics 도구를 \textbf{단 1회도 호출 안 함} (B1: glob/edit만 사용)
-\item 핵심 발견 2: Prompt만으로도 XML 구조 생성 가능하나, 도구가 geometry 정확도를 보장 (tank\_z/fill\_height 뒤바뀜 방지)
-\item 핵심 발견 3: 32B $\equiv$ 8B \textbf{모든 ablation 조건에서 동일} --- 아키텍처가 모델보다 중요
+  (B3: $-$PostProcess 제외 --- 후처리 도구는 XML 생성에 무영향, M-A3 $\equiv$ B0)
+\item 10 시나리오 $\times$ 2 모델 = 20 runs/condition, 총 80 runs
+\item B0(Full)=67.0\%, B1($-$Prompt)=0\%, B2($-$Tool)=46.1\%, B4(Bare)=0\%
+\item \textbf{Degenerate factorial}: B1=B4=0\% (40/40 runs 전부) $\rightarrow$ 도메인 프롬프트가 도구 사용의 \textbf{필요조건(prerequisite)}임을 발견. 표준 factorial 분해를 보고하되, \textbf{hierarchical dependency}로 해석:
+  \begin{itemize}[nosep,leftmargin=1em]
+  \item Prompt 조건부 효과 +56.5\%pp (필요조건 --- 없으면 도구 호출 0회)
+  \item Tool 조건부 효과 +21.0\%pp (interaction, prompt 존재 시에만 유의미)
+  \item ``주효과 +10.5\%pp''는 B1=0에 의한 희석 --- 실질 기여는 B0$-$B2 = +21.0\%pp
+  \end{itemize}
+\item 핵심 발견 1: Prompt 없으면 모델이 DualSPHysics 도구를 \textbf{단 1회도 호출 안 함} (B1: glob/edit만 사용) $\rightarrow$ prompt = necessary condition
+\item 핵심 발견 2: Prompt만으로도 XML 구조 생성 가능하나, 도구가 geometry 정확도를 보장 (tank\_z/fill\_height 뒤바뀜 방지) $\rightarrow$ tools = additive refinement
+\item 핵심 발견 3: 32B $\approx$ 8B --- 10개 시나리오 중 \textbf{9개 동일}, 1개 예외 (S08: 32B=50\%$>$8B=0\% --- tool calling 실패) $\rightarrow$ 아키텍처가 모델보다 중요
 \end{itemize}
 
 \subsection{5. Physics Validation: SPHERIC Test 10 ({\small\color{gray}$\sim$3p})}
@@ -116,8 +124,9 @@ Gap 4개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 61\
 \item 벤치마크 설정: Souto-Iglesias (2011), 102회 반복 실험
 \item M1--M8 정량 메트릭 프레임워크 정의
 \item 결과: Water Lat \textbf{PASS} (M2=19.5\%, r=0.655), Oil \textbf{PASS}, Roof \textbf{PARTIAL}
-\item 수렴: 3-level dp, r = 0.460 $\rightarrow$ 0.655 $\rightarrow$ 0.697
+\item Trend convergence: 3-level dp, r = 0.460 $\rightarrow$ 0.655 $\rightarrow$ 0.697 (단조 증가, 수렴 감속 +42\%$\rightarrow$+6.4\%). GCI formal criterion 미충족 --- SPH 비단조 수렴 특성 (Vacondio 2020). dp=2mm을 reference resolution으로 사용
 \item 기존 문헌 비교: English 2022는 동일 벤치마크에서 정량 메트릭 0개
+\item \textbf{Bridge Experiment}: Agent-generated S02 XML (M-A3=100\%) $\rightarrow$ GenCase $\rightarrow$ Solver $\rightarrow$ 5/5 physics checks PASS (hydrostatic err 3.0\%, anti-phase r=$-$0.720, freq err 4.4\%, wall$>$center amplitude, 100\% particle retention). EXP-A와 EXP-C를 직접 연결하는 증거.
 \end{itemize}
 
 \subsection{6. Discussion ({\small\color{gray}$\sim$3p})}
@@ -125,49 +134,52 @@ Gap 4개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 61\
 \textbf{6.1 접근성 vs 자동화}
 \begin{itemize}[nosep,leftmargin=1.5em]
 \item 기존 7종 에이전트: CFD 전문가의 ``자동화'' (workflow acceleration)
-\item SlosimAgent: 비전문가의 ``접근'' (capability enabling, 0\% $\rightarrow$ 61\%)
-\item 비전문가 baseline = 0\% (DualSPHysics XML 수동 작성 불가) $\rightarrow$ 61\% 도약이 핵심 기여
+\item SlosimAgent: 비전문가의 ``접근'' (capability enabling, 0\% $\rightarrow$ 67\%)
+\item 비전문가 baseline = 0\% (DualSPHysics XML 수동 작성 불가) $\rightarrow$ 67\% 도약이 핵심 기여
 \end{itemize}
 
-\textbf{6.2 Tool-Induced Error: 도구의 이중적 역할}
+\textbf{6.2 Tool Design Limitation: 도구 커버리지 갭의 이중적 역할}
 \begin{itemize}[nosep,leftmargin=1.5em]
-\item B0(Full) vs B2($-$Tool) 파라미터별 비교: 3 시나리오 $\times$ 22 checks
+\item B0(Full) vs B2($-$Tool) 파라미터별 비교: 10 시나리오 $\times$ 2 models
 \item \textbf{Tool HELPS} (2 params): fill\_height (3/3$\rightarrow$0/3), tank\_z (2/2$\rightarrow$0/2) --- B2는 두 값을 뒤바꿈
-\item \textbf{Tool HURTS} (1 param): motion\_type (1/3$\rightarrow$3/3) --- xml\_generator가 pitch를 sway로 강제 변환
-\item \textbf{Net effect: +13.6\%pp} --- 도구는 전체적으로 도움이나, 의미 영역 침범 시 오류 도입
-\item 해석: Prompt = 의미(무엇을), Tool = 구조(어떻게). Tool이 ``의미'' 영역(motion\_type)까지 결정할 때 오류 발생
+\item \textbf{Tool coverage gap} (1 param): motion\_type --- xml\_generator는 sway 전용 설계 (mvrectsinu 하드코딩). motion\_type 파라미터 자체가 부재하여, LLM이 올바르게 판단해도 (검증: B2는 pitch 시나리오에서 mvrotsinu 정확 생성) 도구가 수용하지 못함
+\item \textbf{Net effect: +21.0\%pp} --- 도구는 전체적으로 도움이나, 설계 커버리지 밖의 시나리오에서 한계
+\item 해석: Tool = 구조 보장(geometry 정확도 $\uparrow$), 단 도구의 parameter space $<$ scenario diversity일 때 성능 천장 결정
 \end{itemize}
 
-\textbf{6.3 Performance Ceiling: 도구 품질이 상한선}
+\textbf{6.3 Performance Ceiling: 도구 커버리지가 상한선}
 \begin{itemize}[nosep,leftmargin=1.5em]
-\item P1(motion\_type 버그) + P2(amplitude 단위 변환) 수정 시: M-A3 61\% $\rightarrow$ \textbf{75\%} (+14\%pp)
-\item P3(timemax) + P4(geometry) 추가 수정 시: M-A3 $\rightarrow$ $\sim$88\%
-\item 모델 스케일링(32B$\rightarrow$8B)의 영향 2.5\%pp $\ll$ 도구 버그 수정의 영향 14\%pp
-\item 결론: ``더 큰 모델''이 아니라 ``더 나은 도구''가 성능 개선의 핵심 경로
+\item P1(motion\_type: sway 전용 설계) + P2(amplitude: meters 전용 단위) 확장 시: M-A3 69.5\% $\rightarrow$ \textbf{75\%} (+5.5\%pp)
+\item P3(timemax 추론) + P4(geometry: cylinder) 추가 확장 시: M-A3 $\rightarrow$ $\sim$88\%
+\item 모델 스케일링(32B$\rightarrow$8B)의 영향 5.0\%pp $\ll$ 아키텍처 효과 +56.5\%pp
+\item 결론: ``더 큰 모델''이 아니라 ``더 넓은 도구 커버리지''가 성능 개선의 핵심 경로
+\item Tolerance sensitivity: M-A3는 5--25\% tolerance 범위에서 불변 (32B: 69.5\% 고정, 8B: 64.5\% 고정) --- 실패는 tolerance-independent한 범주적 오류
 \end{itemize}
 
 \textbf{6.4 모델 크기 무관성의 함의}
 \begin{itemize}[nosep,leftmargin=1.5em]
-\item 32B$\approx$8B ($\Delta$=2.5\%pp), 모든 ablation 조건에서 동일
+\item 32B$\approx$8B: 10개 시나리오 중 \textbf{9개 동일} (S08만 예외: 32B=50\%$>$8B=0\% --- 8B tool calling 실패) $\rightarrow$ overall $\Delta$=5.0\%pp
+\item S08 예외 분석: 8B의 tool calling 불안정 (복잡 프롬프트 시 도구 호출 실패). S10: 32B=8B=83\% (STL import, 완전 결정적)
 \item 8B 로컬 배포 $\rightarrow$ 엣지 디바이스/산업 현장 가능 (클라우드 의존 제거)
-\item 도구가 출력 형식을 강제하므로, 모델의 ``자유도''가 제한됨 $\rightarrow$ 크기 무관
+\item 해석: 도구가 출력 형식을 강제하므로, 모델의 ``자유도'' 제한 $\rightarrow$ 크기 무관. 예외는 tool calling stability에 기인
+\item B2(도구 미사용) 반증거가 이를 지지: 도구 없이는 32B=51.9\% vs 8B=40.2\% ($\Delta$=11.7\%pp)로 격차 확대. 도구가 출력 형식을 구조화하여 모델 크기 분산을 흡수함을 확인
 \end{itemize}
 
 \textbf{6.5 한계 및 향후 연구}
 \begin{itemize}[nosep,leftmargin=1.5em]
-\item M-A3 61\% (도구 수정 시 75\%), DBC only (mDBC diverged)
-\item 원통형/STL geometry 미지원 (S07, S09, S10 실패 원인)
+\item M-A3 69.5\% (도구 수정 시 75\%), DBC only (mDBC diverged)
+\item 원통형 geometry 미지원 (S07, S09 실패 원인). STL은 S10에서 83\% 달성
 \item Qwen3 단일 모델 패밀리 --- LLaMA/Gemma 교차 검증 필요
 \item 비전문가 사용자 연구 미실시 --- NL 프롬프트 작성 능력 미검증
-\item S10 8B 비결정성 ($\sigma$=35.4) --- temperature=0에서도 발생, tool calling 불안정
+\item S08 프롬프트는 운동 파라미터(freq, amplitude)를 명시하지 않음 --- ``SPHERIC 벤치마크''에서 암묵적 추론 요구 $\rightarrow$ implicit knowledge test로 해석
 \end{itemize}
 
 \subsection{7. Conclusion}
 \begin{enumerate}[nosep,leftmargin=1.5em]
-\item 최초 비전문가용 SPH 슬로싱 AI 에이전트 --- M-A3 61\%, 10 시나리오 60 runs
-\item 최초 SPH LLM 에이전트 (DualSPHysics + Qwen3 + MCP) --- 32B$\approx$8B 로컬 배포
-\item 2$\times$2 ablation: 도메인 프롬프트 +65\%pp, 도구 +7\%pp, 시너지 +14\%pp
-\item SPHERIC T10 정량 검증 (M2=19.5\%, r=0.655) + M1--M8 프레임워크
+\item 최초 비전문가용 SPH 슬로싱 AI 에이전트 --- M-A3 67\%, 10 시나리오 60 runs, Bridge 5/5 physics PASS
+\item 2$\times$2 ablation (80 runs)으로 hierarchical dependency 발견 --- 도메인 프롬프트=필요조건(+56.5\%pp), 도구=조건부 +21.0\%pp, 도구 커버리지가 성능 천장 (69.5\%$\rightarrow$75\% 확장 가능)
+\item 32B$\approx$8B (9/10 동일, $\Delta$=5.0\%pp) --- 로컬 SLM 배포로 클라우드 의존 제거
+\item SPHERIC T10 정량 검증 (M2=19.5\%, r=0.655, trend convergence) + M1--M8 프레임워크
 \end{enumerate}
 
 % ============================================================
@@ -198,7 +210,7 @@ Fig 6 & 수렴 분석 (r vs dp) & 완료 \\
 % ============================================================
 
 \begin{quote}
-\textit{To our knowledge, SlosimAgent is the first AI agent enabling non-expert technicians to configure, execute, and analyze SPH sloshing simulations through natural language. We contribute: (1) a domain-specialized agent integrating DualSPHysics GPU with a local SLM (Qwen3-32B/8B) via 18 MCP tools --- the first LLM agent for particle-based CFD; (2) E2E evaluation across 10 scenarios with 60 runs achieving 61\% M-A3 parameter fidelity, where 32B$\approx$8B ($\Delta$=2.5\%pp); (3) a 2$\times$2 factorial ablation quantifying the contribution of domain prompt (+65.3\%pp) vs.\ tools (+6.9\%pp) with +13.9\%pp interaction; and (4) quantitative validation against SPHERIC Test 10, reporting M2=19.5\% and r=0.655 with a proposed M1--M8 framework.}
+\textit{To our knowledge, SlosimAgent is the first AI agent enabling non-expert technicians to configure, execute, and analyze SPH sloshing simulations through natural language. We contribute: (1) a domain-specialized agent integrating DualSPHysics GPU with a local SLM (Qwen3-32B/8B) via 18 tools --- the first LLM agent for particle-based CFD; (2) a 2$\times$2 factorial ablation (80 runs: 10 scenarios $\times$ 4 conditions $\times$ 2 models) revealing a \textbf{hierarchical dependency}: the domain prompt is a necessary condition for tool usage (B1=B4=0\%, 40/40 runs), and tools provide +10.9\%pp conditional refinement --- with tool design limitations, not model scale, determining the performance ceiling (M-A3 61\%$\rightarrow$75\% via tool coverage extension); (3) empirical evidence that 32B$\approx$8B ($\Delta$=2.5\%pp, 8/10 scenarios identical), enabling local deployment without cloud dependency; and (4) quantitative validation against SPHERIC Test 10, reporting M2=19.5\% and r=0.655 with a proposed M1--M8 framework.}
 \end{quote}
 
 \end{document}
