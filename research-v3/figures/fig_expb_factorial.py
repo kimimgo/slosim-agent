@@ -5,9 +5,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Data from score_expb.py (identical for 32B and 8B)
+# Data from score_expb.py (10 scenarios × 2 models combined)
 conditions = ['B0\nFull', 'B1\n−Prompt', 'B2\n−Tool', 'B4\nBare']
-ma3 = [72.2, 0.0, 58.3, 0.0]
+ma3 = [67.0, 0.0, 46.1, 0.0]
 has_prompt = [True, False, True, False]
 has_tools = [True, True, False, False]
 
@@ -39,10 +39,10 @@ ax1.axhline(y=0, color='black', linewidth=0.5)
 # Prompt present vs absent, lines for Tools present/absent
 prompt_labels = ['Absent', 'Present']
 
-# Tools present: B1(0%) → B0(72.2%)
-tools_present = [0.0, 72.2]
-# Tools absent: B4(0%) → B2(58.3%)
-tools_absent = [0.0, 58.3]
+# Tools present: B1(0%) → B0(67.0%)
+tools_present = [0.0, 67.0]
+# Tools absent: B4(0%) → B2(46.1%)
+tools_absent = [0.0, 46.1]
 
 ax2.plot(prompt_labels, tools_present, 'o-', color='#1976D2', linewidth=2.5,
          markersize=10, label='Tools ✓', zorder=5)
@@ -50,23 +50,23 @@ ax2.plot(prompt_labels, tools_absent, 's--', color='#FF9800', linewidth=2.5,
          markersize=10, label='Tools ✗', zorder=5)
 
 # Annotations
-ax2.annotate('B0: 72.2%', xy=(1, 72.2), xytext=(0.7, 78),
+ax2.annotate('B0: 67.0%', xy=(1, 67.0), xytext=(0.7, 73),
              fontsize=9, fontweight='bold', color='#1976D2')
-ax2.annotate('B2: 58.3%', xy=(1, 58.3), xytext=(0.7, 52),
+ax2.annotate('B2: 46.1%', xy=(1, 46.1), xytext=(0.7, 39),
              fontsize=9, fontweight='bold', color='#FF9800')
-ax2.annotate('B1=B4=0%', xy=(0, 0), xytext=(0.05, 8),
+ax2.annotate('B1=B4=0%\n(40/40 runs)', xy=(0, 0), xytext=(0.05, 8),
              fontsize=9, color='gray')
 
 # Effect annotations
-ax2.annotate('', xy=(1.08, 58.3), xycoords='data',
-             xytext=(1.08, 72.2), textcoords='data',
+ax2.annotate('', xy=(1.08, 46.1), xycoords='data',
+             xytext=(1.08, 67.0), textcoords='data',
              arrowprops=dict(arrowstyle='<->', color='#388E3C', lw=1.5))
-ax2.text(1.15, 65, 'Tool\n+13.9%', fontsize=8, color='#388E3C', fontweight='bold')
+ax2.text(1.15, 56, 'Tool\n+21.0%', fontsize=8, color='#388E3C', fontweight='bold')
 
 ax2.annotate('', xy=(0.5, 2), xycoords='data',
-             xytext=(0.5, 63), textcoords='data',
+             xytext=(0.5, 55), textcoords='data',
              arrowprops=dict(arrowstyle='<->', color='#C62828', lw=1.5))
-ax2.text(0.3, 30, 'Prompt\n+65.3%', fontsize=8, color='#C62828', fontweight='bold',
+ax2.text(0.3, 27, 'Prompt\n+56.5%', fontsize=8, color='#C62828', fontweight='bold',
          ha='center')
 
 ax2.set_xlabel('Domain Prompt', fontsize=11)
