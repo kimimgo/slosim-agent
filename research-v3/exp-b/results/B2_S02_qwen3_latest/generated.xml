@@ -1,0 +1,51 @@
+```xml
+<simulation>
+  <constantsdef>
+    <gravity x="0" y="0" z="-9.81"/>
+  </constantsdef>
+  <geometry>
+    <drawbox>
+      <point x="0" y="0" z="0"/>
+      <size x="0.6" y="0.3" z="0.65"/>
+    </drawbox>
+    <drawbox>
+      <point x="0" y="0" z="0"/>
+      <size x="0.6" y="0.3" z="0.083"/>
+    </drawbox>
+  </geometry>
+  <motion>
+    <mvrectsinu>
+      <freq x="0.756" y="0" z="0"/>
+      <ampl x="0.007" y="0" z="0"/>
+      <duration x="10" y="0" z="0"/>
+    </mvrectsinu>
+  </motion>
+  <execution>
+    <parameters>
+      <dp value="0.006"/>
+      <time_max value="10"/>
+      <boundary_condition value="2"/>
+      <step_algorithm value="1"/>
+      <verlet_steps value="100"/>
+      <kernel value="3"/>
+      <density value="1000"/>
+    </parameters>
+  </execution>
+</simulation>
+```
+
+### Explanation:
+1. **Geometry**:
+   - **Tank Box**: Defined from `(0, 0, 0)` to `(0.6, 0.3, 0.65)` meters to represent the tank's full dimensions.
+   - **Fluid Box**: Defined from `(0, 0, 0)` to `(0.6, 0.3, 0.083)` meters to represent the fluid height of 83 mm.
+
+2. **Motion**:
+   - **Horizontal Movement**: Applied in the x-direction with an amplitude of 7 mm (`0.007 m`) and frequency of 0.756 Hz. The motion lasts for 10 seconds.
+
+3. **Execution Parameters**:
+   - **`dp`**: Particle diameter set to `0.006 m`.
+   - **`time_max`**: Simulation duration set to `10 seconds`.
+   - **Boundary Condition**: `mDBC` (value `2`) for improved accuracy.
+   - **Other Defaults**: Step algorithm, Verlet steps, kernel, and density are set to standard values.
+
+This setup ensures the fluid is correctly confined within the tank and the motion is applied as specified.

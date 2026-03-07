@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DualSPHysics version="5.4">
+  <General>
+    <TimeStep>1e-4</TimeStep>
+    <TotalTime>10</TotalTime>
+    <NumParticles>1e6</NumParticles>
+    <OutputFrequency>100</OutputFrequency>
+    <OutputDirectory>outputs</OutputDirectory>
+  </General>
+  <Fluid>
+    <Density>1000</Density>
+    <Viscosity>0.001</Viscosity>
+    <SurfaceTension>0.072</SurfaceTension>
+    <Gravity>-9.81</Gravity>
+  </Fluid>
+  <Boundaries>
+    <Solid>
+      <File>cases/fuel_tank.stl</File>
+      <Material>1</Material>
+    </Solid>
+    <FreeSurface>
+      <Plane>z=0.5</Plane>
+    </FreeSurface>
+  </Boundaries>
+  <InitialConditions>
+    <Particles>
+      <File>cases/fuel_tank.stl</File>
+      <Material>1</Material>
+      <FreeSurface>z=0.5</FreeSurface>
+    </Particles>
+  </InitialConditions>
+  <ExternalForce>
+    <BodyForce>
+      <Function>x = -1000 * 0.05 * (2*3.1416)^2 * cos(2*3.1416*t)</Function>
+    </BodyForce>
+  </ExternalForce>
+  <Mesh>
+    <File>cases/fuel_tank.stl</File>
+    <Material>1</Material>
+  </Mesh>
+</DualSPHysics>

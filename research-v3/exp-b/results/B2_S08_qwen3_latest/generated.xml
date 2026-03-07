@@ -1,0 +1,22 @@
+<case app="GenCase" date="2023-10-15">
+  <casedef>
+    <constantsdef>
+      <lattice bound="1" fluid="1" />
+      <gravity x="0" y="0" z="-9.81" />
+    </constantsdef>
+    <geometry>
+      <definition dp="0.002" units_comment="metres">
+        <pointmin x="0" y="0" z="0" />
+        <pointmax x="0.9" y="0.062" z="0.508" />
+      </definition>
+      <drawbox x1="0" y1="0" z1="0" x2="0.9" y2="0.062" z2="0.508" />
+      <fluid x1="0" y1="0" z1="0" x2="0.9" y2="0.062" z2="0.09144" />
+    </geometry>
+    <time>
+      <tmax>9.67</tmax>
+    </time>
+    <boundary>
+      <dbc x1="0" y1="0" z1="0" x2="0.9" y2="0.062" z2="0.508" />
+    </boundary>
+  </casedef>
+</case>

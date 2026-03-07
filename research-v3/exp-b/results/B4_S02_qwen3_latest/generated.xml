@@ -1,0 +1,65 @@
+Here's a well-structured XML configuration for your simulation, incorporating all the specified parameters and ensuring consistency in units and logical setup:
+
+```xml
+<Simulation>
+  <General>
+    <TimeStep>0.001</TimeStep> <!-- Time step in seconds -->
+    <TimeEnd>10</TimeEnd>      <!-- Simulation duration in seconds -->
+  </General>
+
+  <Fluid>
+    <Density>1000</Density>    <!-- Fluid density in kg/m³ -->
+    <Viscosity>0.001</Viscosity> <!-- Fluid viscosity in Pa·s -->
+    <Region>
+      <X>0</X>
+      <Y>0</Y>
+      <Z>0</Z>
+      <X>0.6</X>
+      <Y>0.3</Y>
+      <Z>0.083</Z>
+    </Region>
+  </Fluid>
+
+  <Boundaries>
+    <SolidWall>
+      <X>0</X>
+      <Y>0</Y>
+      <Z>0</Z>
+      <X>0.6</X>
+      <Y>0.3</Y>
+      <Z>0.65</Z>
+    </SolidWall>
+    <MovingWall>
+      <Amplitude>0.007</Amplitude> <!-- Amplitude in meters -->
+      <Frequency>0.756</Frequency>  <!-- Frequency in Hz -->
+      <Direction>x</Direction>
+      <X>0</X>
+      <Y>0</Y>
+      <Z>0</Z>
+      <X>0</X>
+      <Y>0.3</Y>
+      <Z>0.083</Z>
+    </MovingWall>
+    <MovingWall>
+      <Amplitude>0.007</Amplitude>
+      <Frequency>0.756</Frequency>
+      <Direction>x</Direction>
+      <X>0.6</X>
+      <Y>0</Y>
+      <Z>0</Z>
+      <X>0.6</X>
+      <Y>0.3</Y>
+      <Z>0.083</Z>
+    </MovingWall>
+  </Boundaries>
+</Simulation>
+```
+
+### Key Details:
+1. **Units**: All dimensions are in **meters** (e.g., 600 mm = 0.6 m, 83 mm = 0.083 m), and time is in **seconds**.
+2. **Fluid Region**: The fluid occupies the region from (0, 0, 0) to (0.6, 0.3, 0.083) meters.
+3. **Solid Walls**: The tank's walls extend from (0, 0, 0) to (0.6, 0.3, 0.65) meters, including the empty space above the fluid.
+4. **Moving Walls**: The left (x=0) and right (x=0.6) walls of the fluid region move in the **x-direction** with an amplitude of 0.007 meters and a frequency of 0.756 Hz.
+5. **Time Parameters**: The simulation runs for **10 seconds** with a **time step of 0.001 seconds** for numerical stability.
+
+This setup ensures accurate modeling of the fluid dynamics and tank structure while adhering to standard SI units.

@@ -2,11 +2,11 @@
     "scenario": "S10",
     "model": "qwen3:32b",
     "trial": 1,
-    "gpu_id": 0,
+    "gpu_id": 2,
     "exit_code": 0,
-    "duration_seconds": 213,
-    "start_time": "2026-03-02T21:35:50",
-    "end_time": "2026-03-02T21:39:23",
+    "duration_seconds": 1225,
+    "start_time": "2026-03-05T20:50:58",
+    "end_time": "2026-03-05T21:11:23",
     "hostname": "user",
     "prompt_file": "/home/icap/slosim-agent/research-v3/exp-a/prompts/S10.txt"
 }

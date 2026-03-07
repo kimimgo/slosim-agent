@@ -80,6 +80,13 @@ def parse_xml_params(xml_path):
     for cyl in root.iter('drawcylinder'):
         params['has_cylinder'] = True
 
+    # STL import detection
+    for stl_tag in ['drawfilestl', 'drawstl']:
+        for el in root.iter(stl_tag):
+            params['has_stl'] = True
+            params['stl_file'] = el.get('file', '')
+            break
+
     return params, None
 
 
@@ -107,6 +114,21 @@ def score_scenario(scenario_id, params):
                     'actual': actual,
                     'pass': passed
                 })
+    elif gt.get('tank', {}).get('shape') == 'stl':
+        has_stl = params.get('has_stl', False)
+        checks.append({
+            'name': 'stl_import_used',
+            'expected': True,
+            'actual': has_stl,
+            'pass': has_stl
+        })
+        stl_file = params.get('stl_file', '')
+        checks.append({
+            'name': 'stl_file_referenced',
+            'expected': 'stl file present',
+            'actual': stl_file if stl_file else 'none',
+            'pass': bool(stl_file)
+        })
     elif gt.get('tank', {}).get('shape') in ('cylinder', 'horizontal_cylinder'):
         has_cyl = params.get('has_cylinder', False)
         checks.append({
@@ -229,7 +251,7 @@ def check_xml_validity(xml_path):
 
 def main():
     conditions = ['B0', 'B1', 'B2', 'B4']
-    scenarios = ['S01', 'S04', 'S07']
+    scenarios = ['S01', 'S02', 'S03', 'S04', 'S05', 'S06', 'S07', 'S08', 'S09', 'S10']
     models = ['qwen3_32b', 'qwen3_latest']
 
     print("=" * 70)
@@ -258,10 +280,20 @@ def main():
                     result_dir = Path(__file__).parent.parent / "exp-a" / "results"
                     xml_path = result_dir / f"{scenario}_{model}_trial1" / "simulations" / "sloshing_case.xml"
                     if not xml_path.exists():
-                        # Try alternative names
-                        alt_names = ['parametric_case.xml', 'ISOPE_LNG_Benchmark.xml', 'spheric_benchmark.xml']
+                        # Try alternative names in simulations/
+                        alt_names = ['parametric_case.xml', 'ISOPE_LNG_Benchmark.xml', 'spheric_benchmark.xml',
+                                     'fuel_tank.xml', 'fuel_tank_analysis.xml', 'case.xml', 'base.xml']
                         for alt in alt_names:
                             alt_path = result_dir / f"{scenario}_{model}_trial1" / "simulations" / alt
+                            if alt_path.exists():
+                                xml_path = alt_path
+                                break
+                    if not xml_path.exists():
+                        # Fallback: check root level (e.g. S05_8B puts XML outside simulations/)
+                        root_dir = result_dir / f"{scenario}_{model}_trial1"
+                        for alt in ['generated.xml', 'sloshing_case.xml', 'case.xml', 'base.xml',
+                                    'fuel_tank.xml', 'parametric_case.xml']:
+                            alt_path = root_dir / alt
                             if alt_path.exists():
                                 xml_path = alt_path
                                 break
@@ -323,27 +355,36 @@ def main():
     print("  SUMMARY TABLE — M-A3 Parameter Fidelity (%)")
     print(f"{'=' * 70}")
 
+    # Tier labels for scenarios
+    tier_labels = {s: GROUND_TRUTH.get(s, {}).get('tier', '?') for s in scenarios}
+    tier_abbr = {'Easy': 'E', 'Medium': 'M', 'Hard': 'H'}
+
     for model in models:
         print(f"\n  {model}:")
-        print(f"  {'Condition':<12} {'S01(Easy)':>10} {'S04(Med)':>10} {'S07(Hard)':>10} {'Mean':>10}")
-        print(f"  {'─' * 52}")
+        header = f"  {'Cond':<6}"
+        for s in scenarios:
+            t = tier_abbr.get(tier_labels[s], '?')
+            header += f" {s}({t})"
+        header += f" {'Mean':>7}"
+        print(header)
+        print(f"  {'─' * (6 + 7 * len(scenarios) + 8)}")
 
         for cond in conditions:
             scores = []
-            row = f"  {cond:<12}"
+            row = f"  {cond:<6}"
             for s in scenarios:
                 key = f"{cond}_{s}_{model}"
                 r = all_results.get(key, {})
                 if r.get('status') in ('OK', 'NO_XML'):
-                    row += f" {r['ma3']:>9.0f}%"
+                    row += f" {r['ma3']:>5.0f}%"
                     scores.append(r['ma3'])
                 else:
-                    row += f" {'N/A':>10}"
+                    row += f" {'N/A':>6}"
             if scores:
                 mean = sum(scores) / len(scores)
-                row += f" {mean:>9.1f}%"
+                row += f" {mean:>6.1f}%"
             else:
-                row += f" {'—':>10}"
+                row += f" {'—':>7}"
             print(row)
 
     # 2×2 Factorial Analysis

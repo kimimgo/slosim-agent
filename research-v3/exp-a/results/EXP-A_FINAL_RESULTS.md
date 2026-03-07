@@ -1,5 +1,7 @@
 # EXP-A Final Results — NL→DualSPHysics XML Parameter Fidelity
 
+> **⚠️ DEPRECATED**: 이 문서의 M-A3 수치는 9-parameter 기준 (density, viscosity 포함). Canonical scorer는 `score_expb.py` (8-parameter, tolerance 기반). 논문에는 EXPERIMENT_STATUS.md의 수치 (32B=61.2%, 8B=58.7%)를 사용할 것. 차이 원인: 채점 파라미터 수 + tolerance 기준 상이. — Ralph Loop Iteration 4 (2026-03-04)
+
 **Date**: 2026-03-02
 **Infrastructure**: pajulab (4× RTX 4090, Ollama)
 **Models**: Qwen3-32B (20GB), Qwen3-8B/latest (5.2GB)

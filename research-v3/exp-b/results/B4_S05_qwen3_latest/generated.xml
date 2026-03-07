@@ -1,0 +1,87 @@
+<Simulation>
+  <General>
+    <TimeStep>0.001</TimeStep>
+    <EndTime>20</EndTime>
+    <OutputFrequency>1</OutputFrequency>
+  </General>
+  <Domain>
+    <Size>1 1 1</Size>
+  </Domain>
+  <Fluid>
+    <Density>1000</Density>
+    <Viscosity>0.001</Viscosity>
+  </Fluid>
+  <Boundaries>
+    <Solid>
+      <Wall>0 0 0 1 1 1</Wall>
+    </Solid>
+  </Boundaries>
+  <InitialConditions>
+    <WaterLevel>0.7</WaterLevel>
+  </InitialConditions>
+  <Excitations>
+    <Rotation>
+      <Axis>Y</Axis>
+      <Frequency>0.87</Frequency>
+      <Amplitude>1</Amplitude>
+    </Rotation>
+  </Excitations>
+</Simulation>
+<Simulation>
+  <General>
+    <TimeStep>0.001</TimeStep>
+    <EndTime>20</EndTime>
+    <OutputFrequency>1</OutputFrequency>
+  </General>
+  <Domain>
+    <Size>1 1 1</Size>
+  </Domain>
+  <Fluid>
+    <Density>1000</Density>
+    <Viscosity>0.001</Viscosity>
+  </Fluid>
+  <Boundaries>
+    <Solid>
+      <Wall>0 0 0 1 1 1</Wall>
+    </Solid>
+  </Boundaries>
+  <InitialConditions>
+    <WaterLevel>0.7</WaterLevel>
+  </InitialConditions>
+  <Excitations>
+    <Rotation>
+      <Axis>Y</Axis>
+      <Frequency>0.87</Frequency>
+      <Amplitude>2</Amplitude>
+    </Rotation>
+  </Excitations>
+</Simulation>
+<Simulation>
+  <General>
+    <TimeStep>0.001</TimeStep>
+    <EndTime>20</EndTime>
+    <OutputFrequency>1</OutputFrequency>
+  </General>
+  <Domain>
+    <Size>1 1 1</Size>
+  </Domain>
+  <Fluid>
+    <Density>1000</Density>
+    <Viscosity>0.001</Viscosity>
+  </Fluid>
+  <Boundaries>
+    <Solid>
+      <Wall>0 0 0 1 1 1</Wall>
+    </Solid>
+  </Boundaries>
+  <InitialConditions>
+    <WaterLevel>0.7</WaterLevel>
+  </InitialConditions>
+  <Excitations>
+    <Rotation>
+      <Axis>Y</Axis>
+      <Frequency>0.87</Frequency>
+      <Amplitude>3</Amplitude>
+    </Rotation>
+  </Excitations>
+</Simulation>

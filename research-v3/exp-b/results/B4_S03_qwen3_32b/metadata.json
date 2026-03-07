@@ -1,0 +1,9 @@
+{
+  "scenario": "S03",
+  "model": "qwen3:32b",
+  "condition": "B4_bare_llm",
+  "duration_seconds": 206,
+  "ollama_direct": true,
+  "has_domain_prompt": false,
+  "has_tools": false
+}

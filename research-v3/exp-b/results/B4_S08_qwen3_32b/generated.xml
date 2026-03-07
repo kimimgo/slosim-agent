@@ -1,0 +1,25 @@
+```xml
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<DualSPHConfig version="5.4">
+  <Case name="SPHERIC_Tank_18pct" description="SPHERIC benchmark tank simulation with 18% water and DBC boundaries">
+    <Geometry>
+      <Box name="Tank" type="Boundary" material="DBC" x="0.0" y="0.0" z="0.0" size="0.9 0.062 0.508"/>
+      <Box name="Water" type="Fluid" material="Water" x="0.0" y="0.0" z="0.0" size="0.9 0.062 0.09144"/>
+    </Geometry>
+    <Fluid>
+      <Material name="Water" type="Water" dp="0.002" rho0="1000.0" c0="20.0" mu="0.001"/>
+    </Fluid>
+    <Boundary>
+      <Material name="DBC" type="DBC" dp="0.002" rho0="1000.0" c0="20.0"/>
+    </Boundary>
+    <Sensors>
+      <Sensor name="Sensor1" x="0.45" y="0.031" z="0.04572" type="Pressure"/>
+    </Sensors>
+    <Simulation>
+      <Time tmax="10.0" dt="0.0001" gravity="0 0 -9.81"/>
+      <Output dir="output" interval="100" format="vtk"/>
+      <DBC enabled="true" smoothing="1.2" viscosity="0.0"/>
+    </Simulation>
+  </Case>
+</DualSPHConfig>
+```

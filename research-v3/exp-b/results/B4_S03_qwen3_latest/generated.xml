@@ -1,0 +1,28 @@
+<Simulation>
+  <TimeStep>0.001</TimeStep>
+  <Duration>10</Duration>
+  <Fluid>
+    <Density>1000</Density>
+    <Viscosity>0.001</Viscosity>
+  </Fluid>
+  <Mesh>
+    <Dimensions>0.6 0.3 0.65</Dimensions>
+    <MeshSize>0.001</MeshSize>
+  </Mesh>
+  <Boundary>
+    <SolidWall>left</SolidWall>
+    <SolidWall>right</SolidWall>
+    <SolidWall>front</SolidWall>
+    <SolidWall>back</SolidWall>
+    <MovingBoundary>
+      <Displacement>0.007*sin(2*pi*1.008*t)</Displacement>
+    </MovingBoundary>
+  </Boundary>
+  <InitialConditions>
+    <FluidHeight>0.185</FluidHeight>
+    <Velocity>0 0 0</Velocity>
+  </InitialConditions>
+  <Forces>
+    <Acceleration>0 0 0</Acceleration>
+  </Forces>
+</Simulation>

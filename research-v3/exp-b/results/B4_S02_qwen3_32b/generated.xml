@@ -1,0 +1,36 @@
+```xml
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<DualSPHConfig version="5.4">
+  <Fluids>
+    <Fluid id="1" name="Water" density="1000.0" viscosity="0.001" color="0,0,255"/>
+  </Fluids>
+  <Boundaries>
+    <Box id="1" name="Tank" type="Rigid" color="255,0,0">
+      <Position x="0.0" y="0.0" z="0.0"/>
+      <Size x="0.6" y="0.3" z="0.65"/>
+      <Motion type="Oscillating" amplitude="0.007" frequency="0.756" direction="1"/>
+    </Box>
+  </Boundaries>
+  <NumericalWaveTank>
+    <FluidBox id="1" fluid="Water" name="WaterBox">
+      <Position x="0.0" y="0.0" z="0.0"/>
+      <Size x="0.6" y="0.3" z="0.083"/>
+    </FluidBox>
+  </NumericalWaveTank>
+  <Time>
+    <tmax>10.0</tmax>
+    <timestep>0.1</timestep>
+    <dt>0.0001</dt>
+  </Time>
+  <Output>
+    <timestep>0.1</timestep>
+    <OutputFormat>binary</OutputFormat>
+    <OutputDir>output</OutputDir>
+  </Output>
+  <NumericalParams>
+    <dp>0.001</dp>
+    <kernel>Wendland</kernel>
+    <gravity>0.0,0.0,-9.81</gravity>
+  </NumericalParams>
+</DualSPHConfig>
+```

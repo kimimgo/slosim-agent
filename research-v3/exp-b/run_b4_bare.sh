@@ -10,7 +10,7 @@ PROMPTS_DIR="$(dirname "$SCRIPT_DIR")/exp-a/prompts"
 RESULTS_DIR="${SCRIPT_DIR}/results"
 OLLAMA_URL="${LOCAL_ENDPOINT:-http://localhost:11434}"
 
-SCENARIOS=(S01 S04 S07)
+SCENARIOS=(S01 S02 S03 S04 S05 S06 S07 S08 S09 S10)
 MODELS=("qwen3:32b" "qwen3:latest")
 
 SYSTEM_PROMPT="You are a helpful assistant. The user wants a fluid dynamics simulation. Generate an XML configuration file for DualSPHysics based on their request. Output ONLY the raw XML content, no explanations."

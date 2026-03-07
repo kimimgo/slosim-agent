@@ -1,0 +1,20 @@
+```xml
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<DualSPHConfig version="5.4">
+  <Case name="TankVibrationCriticalDepth">
+    <Fluid name="Water" density="1000.0" viscosity="0.001" spacing="0.001" kernel="Cubic"/>
+    <Body name="Tank" type="Box" position="0.0 0.0 0.0" size="0.6 0.3 0.65" color="0 0 1"/>
+    <Body name="Fluid" type="Box" position="0.0 0.0 0.185" size="0.6 0.3 0.185" color="0 1 1"/>
+    <Motion name="TankMotion" type="Sinusoidal" axis="X" amplitude="0.007" frequency="1.008" phase="0.0" body="Tank"/>
+    <Simulation gravity="0.0 0.0 -9.81" timestep="0.0005" tmax="10.0" timestepout="0.01"/>
+    <Output folder="Output" savevtk="1" saveforces="1" savemoments="1"/>
+    <NumericalSettings resolution="1.0" smoothinglength="1.2" timestepcontrol="1" timestepsafety="0.25"/>
+    <InitialConditions>
+      <Fluid name="Water" position="0.0 0.0 0.0925" size="0.6 0.3 0.185"/>
+    </InitialConditions>
+    <BoundaryConditions>
+      <Wall name="TankWalls" body="Tank" type="Solid"/>
+    </BoundaryConditions>
+  </Case>
+</DualSPHConfig>
+```

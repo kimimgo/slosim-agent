@@ -6,7 +6,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SCENARIOS=(S01 S04 S07)
+SCENARIOS=(S01 S02 S03 S04 S05 S06 S07 S08 S09 S10)
 MODELS=("qwen3:32b" "qwen3:latest")
 
 echo "========================================"

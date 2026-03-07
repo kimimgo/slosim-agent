@@ -1,0 +1,9 @@
+{
+  "scenario": "S10",
+  "model": "qwen3:latest",
+  "condition": "B4_bare_llm",
+  "duration_seconds": 16,
+  "ollama_direct": true,
+  "has_domain_prompt": false,
+  "has_tools": false
+}

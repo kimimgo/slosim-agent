@@ -1,0 +1,23 @@
+```xml
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<DualSPH>
+  <Case name="Tank_Oscillation_1deg" simtime="20.0" dt="0.0001" gravity="0 -9.81 0">
+    <Fluid name="Water" density="1000.0" viscosity="0.001" particles="100 70 100" dp="0.01" />
+    <Solid name="Tank" type="box" size="1.0 1.0 1.0" pos="0.5 0.5 0.5" />
+    <Motion name="PitchMotion" type="rotation" axis="1 0 0" center="0.5 0.5 0.5" function="0.01745*sin(2*pi*0.87*t)" />
+    <Output dir="Output_1deg" interval="0.1" />
+  </Case>
+  <Case name="Tank_Oscillation_2deg" simtime="20.0" dt="0.0001" gravity="0 -9.81 0">
+    <Fluid name="Water" density="1000.0" viscosity="0.001" particles="100 70 100" dp="0.01" />
+    <Solid name="Tank" type="box" size="1.0 1.0 1.0" pos="0.5 0.5 0.5" />
+    <Motion name="PitchMotion" type="rotation" axis="1 0 0" center="0.5 0.5 0.5" function="0.0349*sin(2*pi*0.87*t)" />
+    <Output dir="Output_2deg" interval="0.1" />
+  </Case>
+  <Case name="Tank_Oscillation_3deg" simtime="20.0" dt="0.0001" gravity="0 -9.81 0">
+    <Fluid name="Water" density="1000.0" viscosity="0.001" particles="100 70 100" dp="0.01" />
+    <Solid name="Tank" type="box" size="1.0 1.0 1.0" pos="0.5 0.5 0.5" />
+    <Motion name="PitchMotion" type="rotation" axis="1 0 0" center="0.5 0.5 0.5" function="0.0523*sin(2*pi*0.87*t)" />
+    <Output dir="Output_3deg" interval="0.1" />
+  </Case>
+</DualSPH>
+```

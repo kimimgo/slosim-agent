@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<case name="LNG_Tank_Sloshing" version="5.4">
+  <fluid name="Water" density="1000.0" viscosity="0.001" />
+  <tank name="LNG_Tank" length="0.946" width="0.118" height="0.670" />
+  <boundaries>
+    <wall name="Tank_Walls" type="box" x1="0.0" x2="0.946" y1="0.0" y2="0.118" z1="0.0" z2="0.670" />
+    <wall name="Ceiling" type="plane" normal="0 0 1" distance="0.670" />
+  </boundaries>
+  <initial>
+    <fill name="Water_Fill" fluid="Water" x1="0.0" x2="0.946" y1="0.0" y2="0.118" z1="0.0" z2="0.603" />
+  </initial>
+  <time>
+    <timestep value="1.0e-4" />
+    <totaltime value="10.0" />
+  </time>
+  <motion>
+    <moving name="Tank_Motion" type="translation" axis="x" function="0.02*sin(2*pi*0.6*t)" />
+  </motion>
+  <output>
+    <probe name="Ceiling_Pressure" type="pressure" x="0.473" y="0.059" z="0.670" />
+    <particles name="Fluid_Output" type="all" interval="100" />
+  </output>
+  <solver>
+    <gravity x="0.0" y="0.0" z="-9.81" />
+    <turbulence model="none" />
+  </solver>
+</case>

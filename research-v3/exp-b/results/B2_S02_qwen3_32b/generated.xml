@@ -1,0 +1,62 @@
+<case app="GenCase" date="2023-10-05">
+  <casedef>
+    <constantsdef>
+      <lattice bound="1" fluid="1" />
+      <gravity x="0" y="0" z="-9.81" />
+    </constantsdef>
+    <geometry>
+      <definition dp="0.006" units_comment="metres">
+        <pointmin x="-0.3" y="-0.15" z="-0.325" />
+        <pointmax x="0.3" y="0.15" z="0.325" />
+      </definition>
+      <commands>
+        <mainlist>
+          <setshapemode>actual | dp | bound</setshapemode>
+          <setdrawmode mode="full" />
+          <setmkbound mk="0" />
+          <drawbox>
+            <boxfill>solid</boxfill>
+            <point x="0" y="0" z="0" />
+            <size x="0.6" y="0.3" z="0.65" />
+          </drawbox>
+          <setmkfluid mk="0" />
+          <drawbox>
+            <boxfill>solid</boxfill>
+            <point x="0" y="0" z="0" />
+            <size x="0.6" y="0.3" z="0.083" />
+          </drawbox>
+        </mainlist>
+      </commands>
+    </geometry>
+    <motion>
+      <objreal ref="0">
+        <begin mov="1" start="0" />
+        <mvrectsinu id="1" duration="10" next="0">
+          <freq x="0.756" y="0" z="0" />
+          <ampl x="0.007" y="0" z="0" />
+        </mvrectsinu>
+      </objreal>
+    </motion>
+  </casedef>
+  <execution>
+    <parameters>
+      <parameter key="SavePosDouble" value="0" />
+      <parameter key="Boundary" value="2" />
+      <parameter key="StepAlgorithm" value="2" />
+      <parameter key="VerletSteps" value="40" />
+      <parameter key="Kernel" value="2" />
+      <parameter key="ViscoTreatment" value="1" />
+      <parameter key="Visco" value="0.01" />
+      <parameter key="DensityDT" value="2" />
+      <parameter key="Shifting" value="0" />
+      <parameter key="RigidAlgorithm" value="1" />
+      <parameter key="FtPause" value="0" />
+      <parameter key="CoefDtMin" value="0.05" />
+      <parameter key="PartsOutMax" value="1" />
+      <parameter key="RhopOutMin" value="700" />
+      <parameter key="RhopOutMax" value="1300" />
+      <parameter key="TimeMax" value="10" />
+      <parameter key="TimeOut" value="0.02" />
+    </parameters>
+  </execution>
+</case>

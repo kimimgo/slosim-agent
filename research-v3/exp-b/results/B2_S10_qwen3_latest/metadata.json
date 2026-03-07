@@ -1,0 +1,9 @@
+{
+  "scenario": "S10",
+  "model": "qwen3:latest",
+  "condition": "B2_no_tool_domain_prompt",
+  "duration_seconds": 19,
+  "ollama_direct": true,
+  "has_domain_prompt": true,
+  "has_tools": false
+}
