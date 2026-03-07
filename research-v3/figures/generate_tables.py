@@ -31,7 +31,9 @@ PAPER_TIERS = {
 
 
 def find_xml(result_dir):
-    for name in ["simulations/sloshing_case.xml", "sloshing_case.xml",
+    for name in ["fuel_tank.xml", "fuel_tank_case.xml",
+                  "simulations/fuel_tank.xml",
+                  "simulations/sloshing_case.xml", "sloshing_case.xml",
                   "simulations/parametric_case.xml", "parametric_case.xml",
                   "simulations/ISOPE_LNG_Benchmark.xml", "ISOPE_LNG_Benchmark.xml",
                   "simulations/spheric_benchmark.xml", "spheric_benchmark.xml",
@@ -106,34 +108,91 @@ def table3_expa():
     print()
 
 
+def compute_expb_scores():
+    """Dynamically compute EXP-B scores for all 10 scenarios × 4 conditions × 2 models"""
+    conditions = ['B0', 'B1', 'B2', 'B4']
+    results_b = SCRIPT_DIR / "exp-b" / "results"
+    all_scores = {}
+
+    for model in MODELS:
+        for cond in conditions:
+            for s in SCENARIOS:
+                if cond == 'B0':
+                    d = RESULTS_DIR_A / f"{s}_{model}_trial1"
+                    xml_path = find_xml(d)
+                else:
+                    d = results_b / f"{cond}_{s}_{model}"
+                    xml_path = d / "generated.xml"
+                    if not xml_path or not xml_path.exists():
+                        xml_path = find_xml(d) if d.exists() else None
+
+                key = f"{cond}_{s}_{model}"
+                if xml_path and xml_path.exists():
+                    validity = check_xml_validity(str(xml_path))
+                    if validity['parseable']:
+                        params, _ = parse_xml_params(str(xml_path))
+                        if params:
+                            _, passed, total = score_scenario(s, params)
+                            all_scores[key] = (passed / total * 100) if total > 0 else 0
+                        else:
+                            all_scores[key] = 0
+                    else:
+                        all_scores[key] = 0
+                else:
+                    all_scores[key] = 0
+
+    return all_scores
+
+
 def table4_expb():
-    """Table 4: EXP-B 2×2 Factorial Results"""
+    """Table 4: EXP-B 2×2 Factorial Results (dynamic, 10 scenarios)"""
+    all_scores = compute_expb_scores()
+    conditions = ['B0', 'B1', 'B2', 'B4']
+    cond_labels = {
+        'B0': ("B0 Full", "\\checkmark", "\\checkmark"),
+        'B1': ("B1 $-$Prompt", "$\\times$", "\\checkmark"),
+        'B2': ("B2 $-$Tool", "\\checkmark", "$\\times$"),
+        'B4': ("B4 Bare", "$\\times$", "$\\times$"),
+    }
+
+    # Compute per-condition means (avg across scenarios and models)
+    cond_means = {}
+    for cond in conditions:
+        scores = []
+        for model in MODELS:
+            for s in SCENARIOS:
+                scores.append(all_scores.get(f"{cond}_{s}_{model}", 0))
+        cond_means[cond] = sum(scores) / len(scores) if scores else 0
+
     print("% ══════════════════════════════════════")
     print("% Table 4: EXP-B 2×2 Factorial Ablation")
     print("% ══════════════════════════════════════")
     print(r"\begin{table}[htbp]")
     print(r"\centering")
-    print(r"\caption{EXP-B: 2$\times$2 factorial ablation results (M-A3 \%).}")
+    print(r"\caption{EXP-B: 2$\times$2 factorial ablation results (M-A3 \%, 10 scenarios $\times$ 2 models).}")
     print(r"\label{tab:expb-ablation}")
-    print(r"\begin{tabular}{lcccccc}")
+    print(r"\begin{tabular}{lcccc}")
     print(r"\toprule")
-    print(r"\textbf{Condition} & \textbf{Prompt} & \textbf{Tools} & \textbf{S01} & \textbf{S04} & \textbf{S07} & \textbf{Mean} \\")
+    print(r"\textbf{Condition} & \textbf{Prompt} & \textbf{Tools} & \textbf{Mean M-A3} & \textbf{N} \\")
     print(r"\midrule")
 
-    rows = [
-        ("B0 Full",     "\\checkmark", "\\checkmark", 75, 75, 67, 72.2),
-        ("B1 $-$Prompt", "$\\times$",  "\\checkmark",  0,  0,  0,  0.0),
-        ("B2 $-$Tool",  "\\checkmark", "$\\times$",   62, 62, 50, 58.3),
-        ("B4 Bare",     "$\\times$",   "$\\times$",    0,  0,  0,  0.0),
-    ]
-    for name, p, t, s01, s04, s07, mean in rows:
-        print(f"{name} & {p} & {t} & {s01} & {s04} & {s07} & {mean:.1f} \\\\")
+    for cond in conditions:
+        name, p, t = cond_labels[cond]
+        n_runs = sum(1 for model in MODELS for s in SCENARIOS
+                     if all_scores.get(f"{cond}_{s}_{model}", -1) >= 0)
+        print(f"{name} & {p} & {t} & {cond_means[cond]:.1f} & {n_runs} \\\\")
+
+    # Factorial effects
+    b0, b1, b2, b4 = cond_means['B0'], cond_means['B1'], cond_means['B2'], cond_means['B4']
+    prompt_effect = (b0 + b2) / 2 - (b1 + b4) / 2
+    tool_effect = (b0 + b1) / 2 - (b2 + b4) / 2
+    interaction = b0 - b1 - b2 + b4
 
     print(r"\midrule")
-    print(r"\multicolumn{7}{l}{\textit{2$\times$2 Factorial Effects:}} \\")
-    print(r"\multicolumn{7}{l}{\quad Main effect of Prompt: $+65.3$\%pp} \\")
-    print(r"\multicolumn{7}{l}{\quad Main effect of Tools: $+6.9$\%pp} \\")
-    print(r"\multicolumn{7}{l}{\quad Interaction (Prompt $\times$ Tools): $+13.9$\%pp} \\")
+    print(f"\\multicolumn{{5}}{{l}}{{\\textit{{2$\\times$2 Factorial Effects:}}}} \\\\")
+    print(f"\\multicolumn{{5}}{{l}}{{\\quad Main effect of Prompt: $+{prompt_effect:.1f}$\\%pp}} \\\\")
+    print(f"\\multicolumn{{5}}{{l}}{{\\quad Main effect of Tools: $+{tool_effect:.1f}$\\%pp}} \\\\")
+    print(f"\\multicolumn{{5}}{{l}}{{\\quad Interaction (Prompt $\\times$ Tools): $+{interaction:.1f}$\\%pp}} \\\\")
     print(r"\bottomrule")
     print(r"\end{tabular}")
     print(r"\end{table}")
