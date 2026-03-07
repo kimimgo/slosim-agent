@@ -126,8 +126,15 @@ Gap 3개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 61\
 \item 결과: Water Lat \textbf{PASS} (M2=19.5\%, r=0.655), Oil \textbf{PASS}, Roof \textbf{PARTIAL}
 \item Trend convergence: 3-level dp, r = 0.460 $\rightarrow$ 0.655 $\rightarrow$ 0.697 (단조 증가, 수렴 감속 +42\%$\rightarrow$+6.4\%). GCI formal criterion 미충족 --- SPH 비단조 수렴 특성 (Vacondio 2020). dp=2mm을 reference resolution으로 사용
 \item 기존 문헌 비교: English 2022는 동일 벤치마크에서 정량 메트릭 0개
-\item \textbf{Bridge Experiment}: Agent-generated S02 XML (M-A3=100\%) $\rightarrow$ GenCase $\rightarrow$ Solver $\rightarrow$ 5/5 physics checks PASS (hydrostatic err 3.0\%, anti-phase r=$-$0.720, freq err 4.4\%, wall$>$center amplitude, 100\% particle retention). EXP-A와 EXP-C를 직접 연결하는 증거.
+\item \textbf{Bridge Experiment}: Agent-generated S02 XML (M-A3=100\%) $\rightarrow$ GenCase $\rightarrow$ Solver $\rightarrow$ 5/5 physics checks PASS (hydrostatic err 3.0\%, anti-phase r=$-$0.720, freq err 4.4\%, wall$>$center amplitude, 100\% particle retention). EXP-A와 EXP-C를 직접 연결하는 증거 (Fig.~\ref{fig:bridge-pressure}).
 \end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{../research-v3/figures/fig_bridge_pressure.pdf}
+\caption{Bridge experiment: pressure time series from agent-generated XML (S02, M-A3=100\%). Top: five pressure probes showing anti-phase sloshing ($r=-0.720$). Bottom: left--right pressure difference confirming oscillatory mode. Summary: 5/5 physics validation checks passed.}
+\label{fig:bridge-pressure}
+\end{figure}
 
 \subsection{6. Discussion ({\small\color{gray}$\sim$3p})}
 
