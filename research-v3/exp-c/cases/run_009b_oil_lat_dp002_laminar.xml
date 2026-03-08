@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- EXP-C Run 009b: Oil Lateral, dp=0.002, DBC, Laminar+SPS viscosity
+     Same as run_009 but TimeOut=0.01 for 10ms pressure resolution (700 PART files)
+     SPHERIC Test 10 — Souto-Iglesias & Botia-Vera (2011)
+     Tank: 900x62x508mm, Fill: h=93mm (18.3%), Sunflower Oil (rho=990)
+     Motion: Pitch f=0.651Hz (T=1.535s, T/T1=0.80), A=4deg
+     ViscoTreatment=2 (Laminar+SPS), Visco=4.55e-5 m2/s -->
+<case>
+    <casedef>
+        <constantsdef>
+            <gravity x="0" y="0" z="-9.81" />
+            <rhop0 value="990" />
+            <rhopgradient value="2" />
+            <hswl value="0" auto="true" />
+            <gamma value="7" />
+            <speedsystem value="0" auto="true" />
+            <coefsound value="20" />
+            <speedsound value="0" auto="true" />
+            <coefh value="1.2" />
+            <cflnumber value="0.2" />
+        </constantsdef>
+        <mkconfig boundcount="240" fluidcount="9" />
+        <geometry>
+            <definition dp="0.002" units_comment="metres (m)">
+                <pointmin x="-0.05" y="-0.01" z="-0.05" />
+                <pointmax x="0.95" y="0.08" z="0.6" />
+            </definition>
+            <commands>
+                <mainlist>
+                    <setshapemode>dp | bound</setshapemode>
+                    <setdrawmode mode="full" />
+                    <setmkfluid mk="0" />
+                    <drawbox>
+                        <boxfill>solid</boxfill>
+                        <point x="0" y="0" z="0" />
+                        <size x="0.900" y="0.062" z="0.093" />
+                    </drawbox>
+                    <setmkbound mk="0" />
+                    <drawbox>
+                        <boxfill>bottom | left | right | front | back</boxfill>
+                        <point x="0" y="0" z="0" />
+                        <size x="0.900" y="0.062" z="0.508" />
+                    </drawbox>
+                    <shapeout file="SPHERIC_Tank" />
+                </mainlist>
+            </commands>
+        </geometry>
+        <motion>
+            <objreal ref="0">
+                <begin mov="1" start="0" />
+                <mvrotsinu id="1" duration="7" anglesunits="degrees">
+                    <axisp1 x="0.45" y="0.031" z="0" />
+                    <axisp2 x="0.45" y="-0.031" z="0" />
+                    <freq v="0.651" units_comment="Hz" />
+                    <ampl v="4.0" units_comment="degrees" />
+                    <phase v="0" units_comment="degrees" />
+                </mvrotsinu>
+            </objreal>
+        </motion>
+    </casedef>
+    <execution>
+        <special>
+            <gauges>
+                <default>
+                    <savevtkpart value="false" />
+                    <computedt value="0.0001" units_comment="10kHz gauge output" />
+                    <computetime start="0" end="7" />
+                    <output value="true" />
+                    <outputdt value="0.0001" units_comment="10kHz CSV output" />
+                </default>
+                <swl name="SWL_Left">
+                    <point0 x="0.005" y="0.031" z="0.0" />
+                    <point2 x="0.005" y="0.031" z="0.508" />
+                    <pointdp coefdp="0.5" />
+                    <masslimit value="0.2" />
+                </swl>
+                <swl name="SWL_Center">
+                    <point0 x="0.450" y="0.031" z="0.0" />
+                    <point2 x="0.450" y="0.031" z="0.508" />
+                    <pointdp coefdp="0.5" />
+                    <masslimit value="0.2" />
+                </swl>
+                <swl name="SWL_Right">
+                    <point0 x="0.895" y="0.031" z="0.0" />
+                    <point2 x="0.895" y="0.031" z="0.508" />
+                    <pointdp coefdp="0.5" />
+                    <masslimit value="0.2" />
+                </swl>
+                <force name="Force_Wall">
+                    <target mkbound="0" />
+                </force>
+            </gauges>
+        </special>
+        <parameters>
+            <parameter key="SavePosDouble" value="0" />
+            <parameter key="StepAlgorithm" value="2" comment="2:Symplectic" />
+            <parameter key="Kernel" value="2" comment="2:Wendland" />
+            <parameter key="ViscoTreatment" value="2" comment="2:Laminar+SPS (was 1:Artificial)" />
+            <parameter key="Visco" value="4.55e-5" comment="Sunflower oil kinematic viscosity [m2/s] (mu=0.045/rho=990)" />
+            <parameter key="ViscoBoundFactor" value="1" />
+            <parameter key="DensityDT" value="2" comment="2:Fourtakas" />
+            <parameter key="DensityDTvalue" value="0.1" />
+            <parameter key="Shifting" value="0" />
+            <parameter key="RigidAlgorithm" value="1" />
+            <parameter key="DtIni" value="0.0001" />
+            <parameter key="DtMin" value="0.00001" />
+            <parameter key="CoefDtMin" value="0.05" />
+            <parameter key="TimeMax" value="7.0" units_comment="seconds" />
+            <parameter key="TimeOut" value="0.01" units_comment="seconds (700 PART files, 10ms resolution)" />
+            <parameter key="PartsOutMax" value="1" />
+            <parameter key="RhopOutMin" value="700" />
+            <parameter key="RhopOutMax" value="1300" />
+            <simulationdomain>
+                <posmin x="default - 15%" y="default" z="default - 10%" />
+                <posmax x="default + 15%" y="default" z="default + 80%" />
+            </simulationdomain>
+        </parameters>
+    </execution>
+</case>

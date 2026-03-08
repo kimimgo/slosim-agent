@@ -45,10 +45,12 @@
 슬로싱 실무자(탱크 검사원, 구조 엔지니어)는 CFD 전문 지식 없이는 시뮬레이션을 수행할 수 없다.
 기존 LLM-CFD 에이전트 7종은 모두 \textbf{CFD 전문가 대상 + OpenFOAM(격자) + 클라우드 API}다.
 본 연구는 \textbf{비전문가가 자연어로 SPH 슬로싱 시뮬레이션을 자율 수행}할 수 있는 최초의 AI 에이전트 SlosimAgent를 제시한다.
-10개 시나리오에서 M-A3 파라미터 정확도 69.5\%를 달성하고(32B$\approx$8B, $\Delta$=5.0\%pp),
+10개 시나리오에서 M-A3 파라미터 정확도 82.2\%(v4, 32B)를 달성하고(32B$\approx$8B, $\Delta$=3.8\%pp, 9/10 동일),
+도구 설계 수정(P1: pitch 운동, P2: 진폭 단위)으로 v3 69.5\%$\rightarrow$v4 82.2\% (+12.8\%pp)를 확인하여 도구 커버리지가 성능 병목임을 실증한다.
 2$\times$2 factorial ablation(80 runs)으로 hierarchical dependency를 발견하며(도메인 프롬프트 = 필요조건, 도구 = 조건부 +20.9\%pp),
 SPHERIC Test 10 벤치마크로 물리적 신뢰성을 정량 검증하고(M2=19.5\%, r=0.655),
 Bridge experiment로 agent-generated XML의 물리적 유효성을 직접 입증한다(5/5 checks PASS).
+자율 배플 최적화 실험(EXP-D)으로 28.5\% SWL 진폭 감소를 달성하여 에이전트의 설계 지원 능력을 검증한다.
 
 % ============================================================
 \section{연구 Gap (3개 + 1 Design Decision)}
@@ -56,7 +58,7 @@ Bridge experiment로 agent-generated XML의 물리적 유효성을 직접 입증
 
 \begin{enumerate}[nosep,leftmargin=1.5em]
 \item \textbf{비전문가 접근성 공백} --- SPH 슬로싱을 자연어로 수행할 수 있는 도구 = 0편 $\leftarrow$ EXP-A + Bridge
-\item \textbf{SPH 솔버 에이전트 부재} --- 7종 에이전트 전부 OpenFOAM(격자 FVM) only $\leftarrow$ EXP-C + Bridge
+\item \textbf{SPH 솔버 에이전트 부재} --- 7종 에이전트 전부 OpenFOAM(격자 FVM) only $\leftarrow$ EXP-C + Bridge + EXP-D
 \item \textbf{로컬 SLM 부재} --- 전부 Cloud API 의존, 산업 현장 배포 불가 $\leftarrow$ EXP-A/B (32B$\approx$8B, 9/10 동일)
 \end{enumerate}
 
@@ -69,7 +71,7 @@ Bridge experiment로 agent-generated XML의 물리적 유효성을 직접 입증
 % ============================================================
 
 \subsection{Abstract}
-Gap 3개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 69.5\% (proof-of-concept) $\rightarrow$ 2$\times$2 ablation (80 runs): hierarchical dependency (Prompt=prerequisite, Tool=+20.9\%pp interaction) $\rightarrow$ 32B$\approx$8B (9/10 identical, $\Delta$=5.0\%pp) $\rightarrow$ SPHERIC T10 정량 검증 + Bridge 5/5 PASS
+Gap 3개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 82.2\% (v4, 32B) $\rightarrow$ 도구 수정만으로 +12.8\%pp 개선 $\rightarrow$ 2$\times$2 ablation (80 runs): hierarchical dependency (Prompt=prerequisite, Tool=+20.9\%pp interaction) $\rightarrow$ 32B$\approx$8B (9/10 identical, $\Delta$=3.8\%pp) $\rightarrow$ SPHERIC T10 정량 검증 + Bridge 5/5 PASS
 
 \subsection{1. Introduction ({\small\color{gray}$\sim$2.5p})}
 \begin{itemize}[nosep,leftmargin=1.5em]
@@ -106,7 +108,8 @@ Gap 3개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 69.
 \item 실험 설정: 10개 시나리오 $\times$ 2 모델(32B, 8B) $\times$ 3 trials = 60 runs, temperature=0
 \item M-A3 8-parameter 채점: tank$_{xyz}$, fill\_height, motion\_type, frequency, amplitude, timemax
   (Table~2: 정의, Table~3: 결과)
-\item \textbf{결과: 32B 69.5\% $\approx$ 8B 64.5\% ($\Delta$=5.0\%pp) --- 모델 크기 무관}
+\item \textbf{결과 (v3): 32B 69.5\% $\approx$ 8B 64.5\% ($\Delta$=5.0\%pp) --- 모델 크기 무관}
+\item \textbf{결과 (v4, P1+P2 fix): 32B 82.2\% $\approx$ 8B 78.5\% ($\Delta$=3.8\%pp) --- +12.8/+14.0\%pp 개선} (Table~5)
 \item 난이도별: Easy 87.7\%, Medium 70.0\%, Hard 51.0\%/34.3\% (32B/8B)
 \item Determinism: 32B 10/10, 8B 10/10 시나리오에서 M-A3 $\sigma$=0.0 (완전 재현)
 \item 체계적 오류 패턴 (P1--P5):
@@ -149,6 +152,7 @@ Gap 3개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 69.
 \item 벤치마크 설정: Botia-Vera et al. (2010), Souto-Iglesias (2011), 102회 반복 실험
 \item M1--M8 정량 메트릭 프레임워크 정의 (Table~5)
 \item 결과: Water Lat \textbf{PASS} (M2=19.5\%, r=0.655), Oil \textbf{PASS} (r=0.570, M7=4/4), Roof \textbf{PARTIAL} (Table~6)
+\item Oil Lateral 고해상도 분석 (10ms): Artificial 86.2\% $\rightarrow$ Laminar+SPS 37.7\% $\rightarrow$ Laminar+SPS hi-res \textbf{26.4\%} mean peak error (Peaks 2--4: 6.5\%, 14.4\%, 16.5\%)
 \item Trend convergence: 3-level dp, r = 0.460 $\rightarrow$ 0.655 $\rightarrow$ 0.697 (단조 증가, 수렴 감속 +42\%$\rightarrow$+6.4\%). GCI formal criterion 미충족 --- SPH 비단조 수렴 특성 (Vacondio et al. 2020). dp=2mm을 reference resolution으로 사용 (Fig.~6)
 \item 기존 문헌 비교: English 2022는 동일 벤치마크에서 정량 메트릭 0개
 \end{itemize}
@@ -166,6 +170,17 @@ Gap 3개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 69.
   \item Stability: 105,465/105,465 particles retained (100\%)
   \end{itemize}
 \item \textbf{한계}: M-A3=100\% 케이스만 검증 --- M-A3$<$100\% XML의 물리적 영향은 §6.5에서 논의
+\end{itemize}
+
+\textbf{5.2 EXP-D: Autonomous Baffle Optimization ({\small\color{gray}$\sim$0.5p})}
+\begin{itemize}[nosep,leftmargin=1.5em]
+\item \textbf{목적}: 에이전트가 배플(내부 벽)을 자동 설계하고 SWL(수면 높이) 감소 효과를 정량 검증
+\item 설정: 0.6m$\times$0.3m$\times$0.4m 탱크, 50\% 수위, sway f=0.95Hz, dp=0.008m, TimeMax=8s
+\item Baseline(68,450 fluid particles) vs Center Baffle(66,452 fluid + 2,223 fixed baffle particles, h=0.14m, t=0.016m)
+\item MeasureTool 압력 프로브(x=0.03m/0.57m, 20 heights) $\rightarrow$ 수면 높이 재구성
+\item \textbf{결과}: 진폭 감소 \textbf{28.5\%} (Left=28.6\%, Right=28.4\% --- 좌우 대칭)
+\item 문헌 기대값 30--50\% 범위 근처 $\rightarrow$ 물리적으로 타당한 수준
+\item \textbf{Gap 2 증거}: 에이전트가 배플을 포함한 복합 형상을 자율 구성하고, 정량적으로 유의미한 SWL 감소를 달성
 \end{itemize}
 
 \begin{figure}[htbp]
@@ -198,7 +213,7 @@ Gap 3개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 69.
 
 \textbf{6.3 Performance Ceiling: 도구 커버리지가 상한선}
 \begin{itemize}[nosep,leftmargin=1.5em]
-\item P1(motion\_type: sway 전용) + P2(amplitude: meters 전용) 확장 시: M-A3 69.5\% $\rightarrow$ \textbf{$\sim$75--80\%}
+\item P1(motion\_type: pitch 지원) + P2(amplitude: degrees 단위) 수정 완료: M-A3 69.5\% $\rightarrow$ \textbf{82.2\%} (실측, +12.8\%pp)
 \item P3(timemax 추론) + P4(geometry: cylinder) 추가 확장 시: M-A3 $\rightarrow$ $\sim$88\%
 \item 모델 스케일링(32B$\rightarrow$8B)의 영향 5.0\%pp $\ll$ 아키텍처 효과 +56.5\%pp
 \item \textbf{결론: ``더 큰 모델''이 아니라 ``더 넓은 도구 커버리지''가 성능 개선의 핵심 경로}
@@ -207,8 +222,8 @@ Gap 3개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 69.
 
 \textbf{6.4 모델 크기 무관성의 함의}
 \begin{itemize}[nosep,leftmargin=1.5em]
-\item 32B$\approx$8B: 10개 시나리오 중 \textbf{9개 동일} (S08만 예외: 32B=50\%$>$8B=0\% --- 8B tool calling 실패)
-\item 전체 $\Delta$=5.0\%pp --- 아키텍처 효과(+56.5\%pp)의 1/11 수준
+\item v4 기준 32B$\approx$8B: 10개 시나리오 중 \textbf{9개 동일} (S05만 예외: 32B=88\%$>$8B=50\% --- parametric pitch 추론 실패)
+\item 전체 $\Delta$=3.8\%pp (v4) --- 아키텍처 효과(+56.5\%pp)의 1/15 수준. v3의 S08 divergence는 v4에서 해소(두 모델 모두 50\%)
 \item 8B 로컬 배포 $\rightarrow$ 소비자 GPU(RTX 4090 1장)/엣지 디바이스 가능, 클라우드 의존 제거
 \item 해석: 도구가 출력 형식을 강제하므로, 모델의 ``자유도'' 제한 $\rightarrow$ 크기 무관. 예외는 tool calling stability에 기인
 \item B2(도구 미사용) 반증거: 도구 없이는 32B=51.9\% vs 8B=40.2\% ($\Delta$=11.7\%pp)로 격차 확대 $\rightarrow$ \textbf{도구가 모델 크기 분산을 흡수}
@@ -231,26 +246,28 @@ Gap 3개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 시나리오 M-A3 69.
 
 \textbf{6.6 한계 및 향후 연구}
 \begin{itemize}[nosep,leftmargin=1.5em]
-\item \textbf{성능}: M-A3 69.5\% (proof-of-concept). 도구 커버리지 확장 시 $\sim$80\%
+\item \textbf{성능}: M-A3 82.2\% (v4). 잔여 도구 한계(cylinder, mDBC) 확장 시 $\sim$92\%
 \item \textbf{물리 경계}: DBC only (mDBC diverged in EXP-C Roof sub-case)
 \item \textbf{형상}: 원통형 geometry 미지원 (S07, S09 실패 원인). STL은 S10에서 83\% 달성
 \item \textbf{모델}: Qwen3 단일 패밀리 --- LLaMA/Gemma 교차 검증 및 Cloud LLM 비교 필요
 \item \textbf{사용자 연구}: 비전문가 피험자 대상 NL 프롬프트 작성 능력 미검증
-\item \textbf{Self-verification 부재}: {\color{red}\textbf{[Gemini 반영]}} 에이전트가 자신의 출력 오류를 감지하는 메커니즘 없음. Iterative refinement (EXP-D: 에러 $\rightarrow$ 수정 루프) 구현이 다음 단계
+\item \textbf{Self-verification 부재}: {\color{red}\textbf{[Gemini 반영]}} 에이전트가 자신의 출력 오류를 감지하는 메커니즘 없음. EXP-D에서 배플 최적화(28.5\% 감소)를 시연했으나, 에러$\rightarrow$수정의 closed-loop refinement는 향후 과제
 \item S08: 운동 파라미터를 명시하지 않은 implicit knowledge test $\rightarrow$ 8B 실패는 암묵적 추론 한계
 \end{itemize}
 
 \subsection{7. Conclusion}
 \begin{enumerate}[nosep,leftmargin=1.5em]
-\item 최초 비전문가용 SPH 슬로싱 AI 에이전트 --- M-A3 69.5\% (proof-of-concept), 10 시나리오 60 runs, Bridge 5/5 physics PASS
+\item 최초 비전문가용 SPH 슬로싱 AI 에이전트 --- M-A3 82.2\% (v4, 32B), 10 시나리오 60+ runs, Bridge 5/5 physics PASS
+\item 도구 설계 수정(P1+P2)만으로 +12.8\%pp 개선: 도구 커버리지가 성능 병목임을 실증
 \item 2$\times$2 ablation (80 runs)으로 hierarchical dependency 발견:
   \begin{itemize}[nosep,leftmargin=1em]
   \item 도메인 프롬프트 = 필요조건 (+56.5\%pp)
   \item 도구 = 조건부 refinement (+20.9\%pp interaction)
-  \item 도구 커버리지가 성능 천장 (69.5\%$\rightarrow$$\sim$80\% 확장 가능)
+  \item 잔여 도구 한계 해결 시 $\sim$92\% 달성 가능
   \end{itemize}
-\item 32B$\approx$8B (9/10 동일, $\Delta$=5.0\%pp) --- 로컬 SLM 배포로 클라우드 의존 제거
+\item 32B$\approx$8B (v4: 9/10 동일, $\Delta$=3.8\%pp) --- 로컬 SLM 배포로 클라우드 의존 제거
 \item SPHERIC T10 정량 검증 (M2=19.5\%, r=0.655, trend convergence) + M1--M8 프레임워크
+\item EXP-D: 에이전트 자율 배플 최적화 --- 28.5\% SWL 진폭 감소, 좌우 대칭 (28.6\%$\approx$28.4\%)
 \end{enumerate}
 
 % ============================================================
@@ -265,9 +282,10 @@ Table 1 & 경쟁 에이전트 비교 (7종 vs Ours) & 완료 \\
 Table 2 & M-A3 정의 (8-parameter + tolerance) & 완료 (generate\_tables.py) \\
 Table 3 & EXP-A: 10 시나리오 $\times$ 2 모델 M-A3 (3-trial mean) & 완료 (generate\_tables.py) \\
 Table 4 & EXP-B: 2$\times$2 Factorial M-A3 + effects & 완료 (generate\_tables.py) \\
-Table 5 & M1--M8 메트릭 정의 & 완료 \\
-Table 6 & SPHERIC T10 결과 요약 & 완료 \\
-Table 7 & 체계적 오류 패턴 P1--P5 (빈도, 영향 시나리오) & \textbf{신규} \\
+Table 5 & v3$\rightarrow$v4 Tool Fix Impact (P1+P2, per scenario) & 완료 (generate\_tables.py) \\
+Table 6 & M1--M8 메트릭 정의 & 완료 \\
+Table 7 & SPHERIC T10 결과 요약 & 완료 \\
+Table 8 & 체계적 오류 패턴 P1--P5 (빈도, 영향 시나리오) & \textbf{신규} \\
 \midrule
 Fig 1 & 시스템 아키텍처 다이어그램 & 미작성 (수동) \\
 Fig 2 & EXP-A: 시나리오별 M-A3 bar chart (32B vs 8B) & 완료 \\
@@ -276,6 +294,9 @@ Fig 4 & Bridge: 압력 시계열 + anti-phase & 완료 (fig\_bridge\_pressure.py
 Fig 5 & Water Lateral 시계열 (3-resolution) & 완료 \\
 Fig 6 & Oil Lateral 시계열 vs 실험 & 완료 \\
 Fig 7 & 수렴 분석 (r vs dp) & 완료 \\
+Fig 8 & v3$\rightarrow$v4 Tool Fix Impact (scenario bar chart) & 완료 (fig\_v4\_improvement.py) \\
+Fig 9 & Oil Lateral hi-res (3-way: Artificial vs Lam+SPS 0.1s vs 10ms) & 완료 (compare\_hires.py) \\
+Fig 10 & EXP-D: Baffle SWL reduction (baseline vs baffle) & 완료 (analyze\_expd\_v2.py) \\
 \bottomrule
 \end{tabular}
 
@@ -284,7 +305,7 @@ Fig 7 & 수렴 분석 (r vs dp) & 완료 \\
 % ============================================================
 
 \begin{quote}
-\textit{To our knowledge, SlosimAgent is the first AI agent enabling non-expert users to configure, execute, and analyze SPH sloshing simulations through natural language. We contribute: (1) a domain-specialized agent integrating DualSPHysics GPU with a local SLM (Qwen3-32B/8B) via 18 tools --- the first LLM agent for particle-based CFD, achieving M-A3 69.5\% across 10 sloshing scenarios as a proof-of-concept; (2) a 2$\times$2 factorial ablation (80 runs: 10 scenarios $\times$ 4 conditions $\times$ 2 models) revealing a \textbf{hierarchical dependency}: the domain prompt is a necessary condition for tool usage (B1=B4=0\%, 40/40 runs), and tools provide +20.9\%pp conditional refinement --- with tool design coverage, not model scale, determining the performance ceiling (M-A3 69.5\%$\rightarrow$$\sim$80\% via tool extension); (3) empirical evidence that 32B$\approx$8B ($\Delta$=5.0\%pp, 9/10 scenarios identical), enabling local deployment without cloud dependency; and (4) quantitative validation against SPHERIC Test 10 (M2=19.5\%, r=0.655) with a proposed M1--M8 framework, plus a Bridge experiment confirming agent-generated XML produces physically valid simulations (5/5 checks PASS).}
+\textit{To our knowledge, SlosimAgent is the first AI agent enabling non-expert users to configure, execute, and analyze SPH sloshing simulations through natural language. We contribute: (1) a domain-specialized agent integrating DualSPHysics GPU with a local SLM (Qwen3-32B/8B) via 18 tools --- the first LLM agent for particle-based CFD, achieving M-A3 82.2\% (v4) across 10 sloshing scenarios; (2) a 2$\times$2 factorial ablation (80 runs: 10 scenarios $\times$ 4 conditions $\times$ 2 models) revealing a \textbf{hierarchical dependency}: the domain prompt is a necessary condition for tool usage (B1=B4=0\%, 40/40 runs), and tools provide +20.9\%pp conditional refinement --- empirically confirmed by tool design fix (P1+P2) yielding +12.8\%pp improvement (69.5\%$\rightarrow$82.2\%), proving tool coverage as the performance bottleneck; (3) empirical evidence that 32B$\approx$8B ($\Delta$=3.8\%pp v4, 9/10 scenarios identical), enabling local deployment without cloud dependency; and (4) quantitative validation against SPHERIC Test 10 (M2=19.5\%, r=0.655) with a proposed M1--M8 framework, plus a Bridge experiment confirming agent-generated XML produces physically valid simulations (5/5 checks PASS).}
 \end{quote}
 
 % ============================================================
