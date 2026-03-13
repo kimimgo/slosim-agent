@@ -1,0 +1,8 @@
+{
+    "scenario": "S09",
+    "model": "llama3.1:8b-instruct-q8_0",
+    "exit_code": 0,
+    "duration_seconds": 38,
+    "xml_found": false,
+    "timestamp": "2026-03-14T01:12:07+09:00"
+}

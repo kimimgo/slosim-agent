@@ -1,0 +1,3 @@
+{
+  "response": "에러 원인: 권한이 없습니다. 해결 방법: 해당 디렉토리에 쓰기 권한을 부여하십시오.\n\n해석 준비를 위해 기존 XML 파일이 없으므로 gencase tool을 호출합니다.\n{\"name\": \"gencase\", \"parameters\": {\"case_path\": \"/ISOPE_LNG_Tank\", \"fluid_height\": \"0.9\", \"freq\": \"0.6\"}}"
+}

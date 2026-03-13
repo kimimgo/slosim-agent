@@ -1,0 +1,3 @@
+{
+  "response": "{\"type\": \"function\", \"name\": \"error_recovery\", \"parameters\": {\"case_path\": \"output\"}}"
+}

@@ -1,0 +1,3 @@
+{
+  "response": "해석 결과는 다음과 같습니다:\n\n* 진폭 1도, 시간 20초:\n\t+ 공진 주파수: 0.87Hz\n\t+ 시뮬레이션 결과 폴더: simulations/my_case_1\n\t+ VTK 파일: simulations/my_case_1/vtk/PartFluid\n\t+ 측정 CSV: simulations/my_case_1/measure/pressure\n* 진폭 2도, 시간 20초:\n\t+ 공진 주파수: 0.87Hz\n\t+ 시뮬레이션 결과 폴더: simulations/my_case_2\n\t+ VTK 파일: simulations/my_case_2/vtk/PartFluid\n\t+ 측정 CSV: simulations/my_case_2/measure/pressure\n* 진폭 3도, 시간 20초:\n\t+ 공진 주파수: 0.87Hz\n\t+ 시뮬레이션 결과 폴더: simulations/my_case_3\n\t+ VTK 파일: simulations/my_case_3/vtk/PartFluid\n\t+ 측정 CSV: simulations/my_case_3/measure/pressure\n\n리포트는 simulations/{case_name}/report.md에 저장됩니다."
+}

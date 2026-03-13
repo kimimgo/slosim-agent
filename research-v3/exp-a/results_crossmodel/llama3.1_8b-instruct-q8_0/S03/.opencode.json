@@ -1,0 +1,9 @@
+{
+  "providers": { "local": { "apiKey": "dummy", "disabled": false } },
+  "agents": {
+    "coder": { "model": "local.llama3.1:8b-instruct-q8_0", "maxTokens": 0 },
+    "summarizer": { "model": "local.llama3.1:8b-instruct-q8_0", "maxTokens": 0 },
+    "task": { "model": "local.llama3.1:8b-instruct-q8_0", "maxTokens": 0 },
+    "title": { "model": "local.llama3.1:8b-instruct-q8_0", "maxTokens": 0 }
+  }
+}
