@@ -26,6 +26,11 @@ var (
 	ErrSessionBusy      = errors.New("session is currently processing another request")
 )
 
+// maxAgentLoops limits the number of tool-call iterations in a single generation.
+// This prevents runaway loops when a model repeatedly calls tools without reaching EndTurn.
+// Normal sloshing pipeline: xml_generator → gencase → solver → partvtk → measuretool → report = 6 iterations.
+const maxAgentLoops = 25
+
 type AgentEventType string
 
 const (
@@ -237,7 +242,13 @@ func (a *agent) processGeneration(ctx context.Context, sessionID, content string
 	if err != nil {
 		return a.err(fmt.Errorf("failed to list messages: %w", err))
 	}
-	if len(msgs) == 0 {
+	session, err := a.sessions.Get(ctx, sessionID)
+	if err != nil {
+		return a.err(fmt.Errorf("failed to get session: %w", err))
+	}
+	// Skip title generation if session already has a title (e.g., non-interactive mode)
+	// to avoid blocking the main LLM call on Ollama's serial request queue.
+	if len(msgs) == 0 && !strings.HasPrefix(session.Title, "Non-interactive:") {
 		go func() {
 			defer logging.RecoverPanic("agent.Run", func() {
 				logging.ErrorPersist("panic while generating title")
@@ -247,10 +258,6 @@ func (a *agent) processGeneration(ctx context.Context, sessionID, content string
 				logging.ErrorPersist(fmt.Sprintf("failed to generate title: %v", titleErr))
 			}
 		}()
-	}
-	session, err := a.sessions.Get(ctx, sessionID)
-	if err != nil {
-		return a.err(fmt.Errorf("failed to get session: %w", err))
 	}
 	if session.SummaryMessageID != "" {
 		summaryMsgInex := -1
@@ -273,7 +280,20 @@ func (a *agent) processGeneration(ctx context.Context, sessionID, content string
 	// Append the new user message to the conversation history.
 	msgHistory := append(msgs, userMsg)
 
+	loopCount := 0
 	for {
+		loopCount++
+
+		// Guard against runaway tool-call loops
+		if loopCount > maxAgentLoops {
+			logging.Warn(fmt.Sprintf("Agent loop hit max iterations (%d), forcing termination. Messages: %d", maxAgentLoops, len(msgHistory)))
+			return AgentEvent{
+				Type:    AgentEventTypeResponse,
+				Message: msgHistory[len(msgHistory)-1],
+				Done:    true,
+			}
+		}
+
 		// Check for cancellation before each iteration
 		select {
 		case <-ctx.Done():
@@ -290,6 +310,20 @@ func (a *agent) processGeneration(ctx context.Context, sessionID, content string
 			}
 			return a.err(fmt.Errorf("failed to process events: %w", err))
 		}
+
+		// Diagnostic logging for tool call tracking
+		if toolCalls := agentMessage.ToolCalls(); len(toolCalls) > 0 {
+			toolNames := make([]string, len(toolCalls))
+			for i, tc := range toolCalls {
+				toolNames[i] = tc.Name
+			}
+			logging.Info(fmt.Sprintf("Loop %d/%d: tools=[%s] finish=%s msgs=%d",
+				loopCount, maxAgentLoops, strings.Join(toolNames, ","), agentMessage.FinishReason(), len(msgHistory)))
+		} else {
+			logging.Info(fmt.Sprintf("Loop %d/%d: text-only finish=%s msgs=%d content_len=%d",
+				loopCount, maxAgentLoops, agentMessage.FinishReason(), len(msgHistory), len(agentMessage.Content().String())))
+		}
+
 		if cfg.Debug {
 			seqId := (len(msgHistory) + 1) / 2
 			toolResultFilepath := logging.WriteToolResultsJson(sessionID, seqId, toolResults)

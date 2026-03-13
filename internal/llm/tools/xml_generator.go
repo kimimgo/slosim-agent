@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -103,7 +102,7 @@ func (x *xmlGeneratorTool) Info() ToolInfo {
 
 func (x *xmlGeneratorTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error) {
 	var params XMLGeneratorParams
-	if err := json.Unmarshal([]byte(call.Input), &params); err != nil {
+	if err := UnmarshalToolInput(call.Input, &params); err != nil {
 		return NewTextErrorResponse(fmt.Sprintf("파라미터 파싱 오류: %s", err)), nil
 	}
 

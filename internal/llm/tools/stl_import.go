@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"math"
 	"os"
@@ -15,11 +14,22 @@ import (
 
 // STLImportParams defines parameters for STL file import (STL-01).
 type STLImportParams struct {
-	STLFile     string  `json:"stl_file"`
-	OutPath     string  `json:"out_path"`
-	DP          float64 `json:"dp"`
-	FluidHeight float64 `json:"fluid_height,omitempty"`
-	Scale       float64 `json:"scale,omitempty"`
+	STLFile       string  `json:"stl_file"`
+	OutPath       string  `json:"out_path"`
+	DP            float64 `json:"dp"`
+	FluidHeight   float64 `json:"fluid_height,omitempty"`
+	Scale         float64 `json:"scale,omitempty"`
+	FillPointX    float64 `json:"fillpoint_x,omitempty"`
+	FillPointY    float64 `json:"fillpoint_y,omitempty"`
+	FillPointZ    float64 `json:"fillpoint_z,omitempty"`
+	AutoFillPoint bool    `json:"auto_fillpoint,omitempty"`
+	// Motion parameters (optional — agent sets these for sloshing)
+	MotionType string  `json:"motion_type,omitempty"` // "mvrectsinu" | "mvrotsinu"
+	MotionFreq float64 `json:"motion_freq,omitempty"` // Hz
+	MotionAmpl float64 `json:"motion_ampl,omitempty"` // m (sway) or deg (rotation)
+	MotionAxis string  `json:"motion_axis,omitempty"` // "x" | "y" | "z"
+	TimeMax    float64 `json:"timemax,omitempty"`      // simulation time (s)
+	FillRatio  float64 `json:"fill_ratio,omitempty"`   // 0-1, fill level relative to BBox height
 }
 
 type stlImportTool struct{}
@@ -34,6 +44,11 @@ const (
 - dp: 파티클 간격 (m)
 - fluid_height: 유체 높이 (선택)
 - scale: 스케일 팩터 (기본: 1.0)
+- auto_fillpoint: true이면 BBox 중심을 fillpoint로 자동 계산
+- fillpoint_x/y/z: 수동 fillpoint 좌표 (STL 내부 캐비티 유체 채우기용)
+
+fillpoint는 STL 내부를 void로 처리하고, drawbox로 유체를 채우는 Frosina 패턴을 사용합니다.
+BBox 기반으로 유체 영역을 자동 계산하므로, 복잡한 CAD 형상(연료탱크 등)에 적합합니다.
 
 메시 품질 검증:
 - 수밀성 검사 (watertight mesh)
@@ -72,6 +87,46 @@ func (s *stlImportTool) Info() ToolInfo {
 				"type":        "number",
 				"description": "스케일 팩터",
 			},
+			"auto_fillpoint": map[string]any{
+				"type":        "boolean",
+				"description": "true이면 BBox 중심을 fillpoint로 자동 계산",
+			},
+			"fillpoint_x": map[string]any{
+				"type":        "number",
+				"description": "수동 fillpoint X 좌표 (m)",
+			},
+			"fillpoint_y": map[string]any{
+				"type":        "number",
+				"description": "수동 fillpoint Y 좌표 (m)",
+			},
+			"fillpoint_z": map[string]any{
+				"type":        "number",
+				"description": "수동 fillpoint Z 좌표 (m)",
+			},
+			"motion_type": map[string]any{
+				"type":        "string",
+				"description": "운동 타입: mvrectsinu (수평진동) 또는 mvrotsinu (회전)",
+			},
+			"motion_freq": map[string]any{
+				"type":        "number",
+				"description": "운동 주파수 (Hz)",
+			},
+			"motion_ampl": map[string]any{
+				"type":        "number",
+				"description": "운동 진폭 (m 또는 deg)",
+			},
+			"motion_axis": map[string]any{
+				"type":        "string",
+				"description": "운동 방향: x, y, 또는 z (기본: x)",
+			},
+			"timemax": map[string]any{
+				"type":        "number",
+				"description": "시뮬레이션 시간 (초, 기본: 10)",
+			},
+			"fill_ratio": map[string]any{
+				"type":        "number",
+				"description": "BBox 높이 대비 유체 충전율 (0-1, 예: 0.5 = 50%)",
+			},
 		},
 		Required: []string{"stl_file", "out_path", "dp"},
 	}
@@ -79,7 +134,7 @@ func (s *stlImportTool) Info() ToolInfo {
 
 func (s *stlImportTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error) {
 	var params STLImportParams
-	if err := json.Unmarshal([]byte(call.Input), &params); err != nil {
+	if err := UnmarshalToolInput(call.Input, &params); err != nil {
 		return NewTextErrorResponse(fmt.Sprintf("파라미터 파싱 오류: %s", err)), nil
 	}
 
@@ -107,8 +162,21 @@ func (s *stlImportTool) Run(ctx context.Context, call ToolCall) (ToolResponse, e
 		return NewTextErrorResponse("STL 메시가 수밀하지 않습니다 (watertight 메시 필요)"), nil
 	}
 
-	// Generate XML with STL import
-	xmlContent := generateSTLXML(params)
+	// Compute fillpoint
+	if params.AutoFillPoint {
+		params.FillPointX = (validation.BBoxMin[0] + validation.BBoxMax[0]) / 2 * params.Scale
+		params.FillPointY = (validation.BBoxMin[1] + validation.BBoxMax[1]) / 2 * params.Scale
+		params.FillPointZ = (validation.BBoxMin[2] + validation.BBoxMax[2]) / 2 * params.Scale
+	}
+
+	// Compute fluid height from fill_ratio if provided
+	if params.FillRatio > 0 && params.FluidHeight == 0 {
+		bboxH := (validation.BBoxMax[2] - validation.BBoxMin[2]) * params.Scale
+		params.FluidHeight = bboxH * params.FillRatio
+	}
+
+	// Generate XML with STL import (Frosina pattern: STL boundary + fillpoint + drawbox fluid)
+	xmlContent := generateSTLXML(params, validation)
 	xmlPath := params.OutPath + ".xml"
 	if err := os.WriteFile(xmlPath, []byte(xmlContent), 0644); err != nil {
 		return NewTextErrorResponse(fmt.Sprintf("XML 파일 생성 실패: %s", err)), nil
@@ -120,12 +188,19 @@ func (s *stlImportTool) Run(ctx context.Context, call ToolCall) (ToolResponse, e
   * 삼각형 수: %d
   * 수밀성: %v
   * 바운딩 박스: [%.3f, %.3f, %.3f] ~ [%.3f, %.3f, %.3f]
+  * 스케일 적용 BBox: [%.3f, %.3f, %.3f] ~ [%.3f, %.3f, %.3f]
+- Fillpoint: [%.4f, %.4f, %.4f]
+- 유체 높이: %.3f m
 `,
 		xmlPath,
 		validation.TriangleCount,
 		validation.IsWatertight,
 		validation.BBoxMin[0], validation.BBoxMin[1], validation.BBoxMin[2],
 		validation.BBoxMax[0], validation.BBoxMax[1], validation.BBoxMax[2],
+		validation.BBoxMin[0]*params.Scale, validation.BBoxMin[1]*params.Scale, validation.BBoxMin[2]*params.Scale,
+		validation.BBoxMax[0]*params.Scale, validation.BBoxMax[1]*params.Scale, validation.BBoxMax[2]*params.Scale,
+		params.FillPointX, params.FillPointY, params.FillPointZ,
+		params.FluidHeight,
 	)
 
 	return NewTextResponse(resultMsg), nil
@@ -358,11 +433,52 @@ func checkNormalConsistency(triangles []stlTriangle) bool {
 	return true
 }
 
-func generateSTLXML(params STLImportParams) string {
+func generateSTLXML(params STLImportParams, val *STLValidation) string {
+	s := params.Scale
 	margin := params.DP * 5
+
+	// Scaled BBox
+	bMin := [3]float64{val.BBoxMin[0] * s, val.BBoxMin[1] * s, val.BBoxMin[2] * s}
+	bMax := [3]float64{val.BBoxMax[0] * s, val.BBoxMax[1] * s, val.BBoxMax[2] * s}
+
+	// Domain bounds: BBox + margin
+	dMin := [3]float64{bMin[0] - margin, bMin[1] - margin, bMin[2] - margin}
+	dMax := [3]float64{bMax[0] + margin, bMax[1] + margin, bMax[2] + margin}
+
 	fluidHeight := params.FluidHeight
-	if fluidHeight == 0 {
-		fluidHeight = 1.0 // Default
+	if fluidHeight <= 0 {
+		fluidHeight = (bMax[2] - bMin[2]) * 0.5 // default 50% fill
+	}
+
+	timeMax := params.TimeMax
+	if timeMax <= 0 {
+		timeMax = 10.0
+	}
+
+	// Fillpoint section
+	fillpointXML := ""
+	if params.FillPointX != 0 || params.FillPointY != 0 || params.FillPointZ != 0 {
+		fillpointXML = fmt.Sprintf(`
+                    <fillpoint x="%.4f" y="%.4f" z="%.4f">
+                        <modefill>void</modefill>
+                    </fillpoint>`, params.FillPointX, params.FillPointY, params.FillPointZ)
+	}
+
+	// Motion section
+	motionXML := ""
+	if params.MotionType != "" && params.MotionFreq > 0 {
+		axis := params.MotionAxis
+		if axis == "" {
+			axis = "x"
+		}
+		motionXML = generateMotionXML(params.MotionType, params.MotionFreq, params.MotionAmpl, axis, timeMax)
+	}
+
+	// Scale 처리: scale != 1.0이면 drawscale 자식 요소 삽입
+	scaleXML := ""
+	if params.Scale != 1.0 {
+		scaleXML = fmt.Sprintf(`
+                        <drawscale x="%g" y="%g" z="%g" />`, params.Scale, params.Scale, params.Scale)
 	}
 
 	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8" ?>
@@ -390,24 +506,24 @@ func generateSTLXML(params STLImportParams) string {
                     <setshapemode>dp | bound</setshapemode>
                     <setdrawmode mode="full" />
 
-                    <!-- Import STL as boundary -->
+                    <!-- Import STL as boundary (Frosina pattern) -->
                     <setmkbound mk="0" />
-                    <drawfilestl file="%s" scale="%g">
+                    <drawfilestl file="%s" autofill="false">%s
                         <drawmove x="0" y="0" z="0" />
                     </drawfilestl>
-
-                    <!-- Fluid box (adjust based on STL bounds) -->
+%s
+                    <!-- Fluid: drawbox covers BBox interior, fillpoint constrains to STL cavity -->
                     <setmkfluid mk="0" />
                     <drawbox>
                         <boxfill>solid</boxfill>
-                        <point x="%.4f" y="%.4f" z="0" />
-                        <size x="%.4f" y="%.4f" z="%g" />
+                        <point x="%.4f" y="%.4f" z="%.4f" />
+                        <size x="%.4f" y="%.4f" z="%.4f" />
                     </drawbox>
 
                     <shapeout file="Tank" />
                 </mainlist>
             </commands>
-        </geometry>
+        </geometry>%s
     </casedef>
     <execution>
         <parameters>
@@ -418,18 +534,67 @@ func generateSTLXML(params STLImportParams) string {
             <parameter key="Visco" value="0.01" />
             <parameter key="DensityDT" value="2" comment="2:Fourtakas" />
             <parameter key="Shifting" value="0" />
-            <parameter key="TimeMax" value="10.0" units_comment="seconds" />
+            <parameter key="BoundaryMethod" value="1" comment="1:DBC" />
+            <parameter key="TimeMax" value="%.1f" units_comment="seconds" />
             <parameter key="TimeOut" value="0.1" units_comment="seconds" />
             <parameter key="RhopOutMin" value="700" />
             <parameter key="RhopOutMax" value="1300" />
+            <simulationdomain>
+                <posmin x="default - 20%%" y="default - 10%%" z="default - 10%%" />
+                <posmax x="default + 20%%" y="default + 10%%" z="default + 50%%" />
+            </simulationdomain>
         </parameters>
     </execution>
 </case>
 `,
 		params.DP,
-		-margin, -margin, -margin,
-		margin, margin, margin*2,
-		filepath.Base(params.STLFile), params.Scale,
-		-margin, -margin, margin*2, margin*2, fluidHeight,
+		dMin[0], dMin[1], dMin[2],
+		dMax[0], dMax[1], dMax[2],
+		filepath.Base(params.STLFile), scaleXML,
+		fillpointXML,
+		bMin[0]+params.DP, bMin[1]+params.DP, bMin[2]+params.DP,
+		(bMax[0]-bMin[0])-2*params.DP, (bMax[1]-bMin[1])-2*params.DP, fluidHeight,
+		motionXML,
+		timeMax,
+	)
+}
+
+// generateMotionXML creates the <motion> XML section for sloshing excitation.
+func generateMotionXML(motionType string, freq, ampl float64, axis string, duration float64) string {
+	// Determine frequency and amplitude axis components
+	var freqX, freqY, freqZ float64
+	var amplX, amplY, amplZ float64
+
+	switch axis {
+	case "x":
+		freqX, amplX = freq, ampl
+	case "y":
+		freqY, amplY = freq, ampl
+	case "z":
+		freqZ, amplZ = freq, ampl
+	default:
+		freqX, amplX = freq, ampl
+	}
+
+	anglesAttr := ""
+	if motionType == "mvrotsinu" {
+		anglesAttr = ` anglesunits="degrees"`
+	}
+
+	return fmt.Sprintf(`
+        <motion>
+            <objreal ref="0">
+                <begin mov="1" start="0" />
+                <%s id="1" duration="%g"%s>
+                    <freq x="%g" y="%g" z="%g" />
+                    <ampl x="%g" y="%g" z="%g" />
+                    <phase x="0" y="0" z="0" />
+                </%s>
+            </objreal>
+        </motion>`,
+		motionType, duration, anglesAttr,
+		freqX, freqY, freqZ,
+		amplX, amplY, amplZ,
+		motionType,
 	)
 }
