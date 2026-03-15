@@ -1,0 +1,3 @@
+{
+  "response": "탱크의 길이, 너비, 높이는 각각 600mm, 300mm, 650mm입니다. 물은 탱크에 185mm까지 채워집니다.\n\n시뮬레이션을 위해 xml_generator tool을 호출합니다:\n\n```\n{\"name\": \"xml_generator\", \"parameters\": {\"amplitude\":\"7\",\"dp\":\"0\",\"fluid_height\":\"185\",\"freq\":\"1.008\",\"motion_type\":\"sway\",\"out_path\":\"/path/to/output\",\"tank_length\":\"600\",\"time_max\":\"10\"}}\n```\n\n이러한 파라미터를 사용하여 xml 파일을 생성하고, gencase tool을 호출하여 해석 준비를 합니다.\n\n다음으로 solver tool을 호출하여 시뮬레이션을 실행합니다. measuretool tool을 호출하여 수위/압력 측정 결과를 얻습니다.\n\n마지막으로 pv_inspect_data tool을 호출하여 VTK 파일의 필드, 바운드, 타임스텝을 확인하고, pv_render tool을 호출하여 필드를 이미지로 렌더링합니다."
+}

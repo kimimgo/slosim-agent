@@ -1,0 +1,12 @@
+{
+    "scenario": "S05",
+    "model": "qwen3:latest",
+    "condition": "B1_no_domain_prompt",
+    "exit_code": 0,
+    "duration_seconds": 8,
+    "start_time": "2026-03-05T00:59:45",
+    "end_time": "2026-03-05T00:59:53",
+    "hostname": "oliveeelab",
+    "generic_prompt": true,
+    "has_tools": true
+}

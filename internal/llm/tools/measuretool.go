@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -71,7 +70,7 @@ func (m *measureToolTool) Info() ToolInfo {
 
 func (m *measureToolTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error) {
 	var params MeasureToolParams
-	if err := json.Unmarshal([]byte(call.Input), &params); err != nil {
+	if err := UnmarshalToolInput(call.Input, &params); err != nil {
 		return NewTextErrorResponse(fmt.Sprintf("파라미터 파싱 오류: %s", err)), nil
 	}
 

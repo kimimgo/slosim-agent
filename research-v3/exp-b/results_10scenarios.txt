@@ -1,0 +1,473 @@
+======================================================================
+  EXP-B Ablation Study — 2×2 Factorial Results
+======================================================================
+
+  | Condition | Domain Prompt | Tools |
+  |-----------|:---:|:---:|
+  | B0 Full   |  ✓  |  ✓  |
+  | B1 -Prompt|  ✗  |  ✓  |
+  | B2 -Tool  |  ✓  |  ✗  |
+  | B4 Bare   |  ✗  |  ✗  |
+
+
+────────────────────────────────────────────────────────────
+  Model: qwen3_32b
+────────────────────────────────────────────────────────────
+
+  B0 S01: △ M-A2=100% M-A3=75% (157s)
+    [PASS] tank_x: expected=0.9, actual=0.9
+    [PASS] tank_y: expected=0.062, actual=0.062
+    [PASS] tank_z: expected=0.508, actual=0.508
+    [PASS] fill_height: expected=0.09144, actual=0.09144
+    [FAIL] motion_type: expected=mvrotsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.6515, actual=0.6515
+    [FAIL] amplitude: expected=4, actual=0.045
+    [PASS] timemax: expected=7.68, actual=7.675
+
+  B0 S02: ✓ M-A2=100% M-A3=100% (99s)
+    [PASS] tank_x: expected=0.6, actual=0.6
+    [PASS] tank_y: expected=0.3, actual=0.3
+    [PASS] tank_z: expected=0.65, actual=0.65
+    [PASS] fill_height: expected=0.083, actual=0.083
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.756, actual=0.756
+    [PASS] amplitude: expected=0.007, actual=0.007
+    [PASS] timemax: expected=10, actual=10.0
+
+  B0 S03: ✓ M-A2=100% M-A3=88% (109s)
+    [PASS] tank_x: expected=0.6, actual=0.6
+    [PASS] tank_y: expected=0.3, actual=0.3
+    [PASS] tank_z: expected=0.65, actual=0.65
+    [PASS] fill_height: expected=0.185, actual=0.185
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=1.008, actual=1.008
+    [PASS] amplitude: expected=0.007, actual=0.007
+    [FAIL] timemax: expected=10, actual=4.96
+
+  B0 S04: △ M-A2=100% M-A3=75% (120s)
+    [PASS] tank_x: expected=1.0, actual=1.0
+    [PASS] tank_y: expected=0.5, actual=0.5
+    [PASS] tank_z: expected=1.0, actual=1.0
+    [PASS] fill_height: expected=0.2, actual=0.2
+    [FAIL] motion_type: expected=mvrotsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.66, actual=0.66
+    [FAIL] amplitude: expected=2, actual=0.0349
+    [PASS] timemax: expected=30, actual=30.0
+
+  B0 S05: △ M-A2=100% M-A3=50% (150s)
+    [PASS] tank_x: expected=1.0, actual=1.0
+    [PASS] tank_y: expected=0.5, actual=0.5
+    [FAIL] tank_z: expected=1.0, actual=0.6
+    [FAIL] fill_height: expected=0.7, actual=0.42
+    [FAIL] motion_type: expected=mvrotsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.87, actual=0.87
+    [FAIL] amplitude: expected=[1, 2, 3], actual=1.0
+    [PASS] timemax: expected=20, actual=20.0
+
+  B0 S06: ✓ M-A2=100% M-A3=88% (135s)
+    [PASS] tank_x: expected=0.946, actual=0.946
+    [PASS] tank_y: expected=0.118, actual=0.118
+    [PASS] tank_z: expected=0.67, actual=0.67
+    [PASS] fill_height: expected=0.603, actual=0.603
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.6, actual=0.6
+    [PASS] amplitude: expected=0.02, actual=0.02
+    [FAIL] timemax: expected=15, actual=8.333
+
+  B0 S07: △ M-A2=100% M-A3=67% (151s)
+    [FAIL] geometry_type: expected=cylinder, actual=box
+    [PASS] fill_height: expected=1.5, actual=1.5
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.5, actual=0.5
+    [PASS] amplitude: expected=0.01, actual=0.01
+    [FAIL] timemax: expected=15, actual=10.0
+
+  B0 S08: △ M-A2=100% M-A3=50% (180s)
+    [PASS] tank_x: expected=0.9, actual=0.9
+    [PASS] tank_y: expected=0.062, actual=0.062
+    [PASS] tank_z: expected=0.508, actual=0.508
+    [PASS] fill_height: expected=0.09144, actual=0.09144
+    [FAIL] motion_type: expected=mvrotsinu, actual=mvrectsinu
+    [FAIL] frequency: expected=0.6515, actual=0.519
+    [FAIL] amplitude: expected=4, actual=0.045
+    [FAIL] timemax: expected=7.68, actual=9.63
+
+  B0 S09: ✗ M-A2=100% M-A3=20% (153s)
+    [FAIL] geometry_type: expected=cylinder, actual=box
+    [FAIL] motion_type: expected=mvrotsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.55, actual=0.55
+    [FAIL] amplitude: expected=3, actual=0.0785
+    [FAIL] timemax: expected=15, actual=9.09
+
+  B0 S10: NO XML
+
+  B1 S01: NO XML
+
+  B1 S02: NO XML
+
+  B1 S03: NO XML
+
+  B1 S04: NO XML
+
+  B1 S05: NO XML
+
+  B1 S06: NO XML
+
+  B1 S07: NO XML
+
+  B1 S08: NO XML
+
+  B1 S09: NO XML
+
+  B1 S10: NO XML
+
+  B2 S01: △ M-A2=100% M-A3=62% (59s)
+    [PASS] tank_x: expected=0.9, actual=0.9
+    [PASS] tank_y: expected=0.062, actual=0.062
+    [FAIL] tank_z: expected=0.508, actual=0.09144
+    [FAIL] fill_height: expected=0.09144, actual=0.508
+    [PASS] motion_type: expected=mvrotsinu, actual=mvrotsinu
+    [PASS] frequency: expected=0.6515, actual=0.6515
+    [FAIL] amplitude: expected=4, actual=0.0698
+    [PASS] timemax: expected=7.68, actual=7.675
+
+  B2 S02: △ M-A2=100% M-A3=75% (454s)
+    [PASS] tank_x: expected=0.6, actual=0.6
+    [PASS] tank_y: expected=0.3, actual=0.3
+    [FAIL] tank_z: expected=0.65, actual=0.083
+    [FAIL] fill_height: expected=0.083, actual=0.65
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.756, actual=0.756
+    [PASS] amplitude: expected=0.007, actual=0.007
+    [PASS] timemax: expected=10, actual=10.0
+
+  B2 S03: △ M-A2=100% M-A3=62% (257s)
+    [PASS] tank_x: expected=0.6, actual=0.6
+    [PASS] tank_y: expected=0.3, actual=0.3
+    [FAIL] tank_z: expected=0.65, actual=0.37
+    [FAIL] fill_height: expected=0.185, actual=0.65
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=1.008, actual=1.008
+    [PASS] amplitude: expected=0.007, actual=0.007
+    [FAIL] timemax: expected=10, actual=5.0
+
+  B2 S04: △ M-A2=100% M-A3=62% (77s)
+    [PASS] tank_x: expected=1.0, actual=1.0
+    [PASS] tank_y: expected=0.5, actual=0.5
+    [FAIL] tank_z: expected=1.0, actual=0.2
+    [FAIL] fill_height: expected=0.2, actual=1.0
+    [PASS] motion_type: expected=mvrotsinu, actual=mvrotsinu
+    [PASS] frequency: expected=0.66, actual=0.66
+    [FAIL] amplitude: expected=2, actual=0.0349
+    [PASS] timemax: expected=30, actual=30.0
+
+  B2 S05: ✗ M-A2=0% M-A3=0% (600s)
+
+  B2 S06: △ M-A2=100% M-A3=75% (297s)
+    [PASS] tank_x: expected=0.946, actual=0.946
+    [PASS] tank_y: expected=0.118, actual=0.118
+    [FAIL] tank_z: expected=0.67, actual=0.603
+    [PASS] fill_height: expected=0.603, actual=0.67
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.6, actual=0.6
+    [PASS] amplitude: expected=0.02, actual=0.02
+    [FAIL] timemax: expected=15, actual=8.333
+
+  B2 S07: △ M-A2=100% M-A3=50% (39s)
+    [FAIL] geometry_type: expected=cylinder, actual=box
+    [FAIL] fill_height: expected=1.5, actual=3.0
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.5, actual=0.5
+    [PASS] amplitude: expected=0.01, actual=0.01
+    [FAIL] timemax: expected=15, actual=10.0
+
+  B2 S08: ✗ M-A2=100% M-A3=25% (329s)
+    [PASS] tank_x: expected=0.9, actual=0.9
+    [PASS] tank_y: expected=0.062, actual=0.062
+    [FAIL] tank_z: expected=0.508, actual=0.09144
+    [FAIL] fill_height: expected=0.09144, actual=0.508
+    [FAIL] motion_type: expected=mvrotsinu, actual=mvrectsinu
+    [FAIL] frequency: expected=0.6515, actual=0.49
+    [FAIL] amplitude: expected=4, actual=0.045
+    [FAIL] timemax: expected=7.68, actual=10.2
+
+  B2 S09: ✗ M-A2=100% M-A3=40% (246s)
+    [FAIL] geometry_type: expected=cylinder, actual=box
+    [PASS] motion_type: expected=mvrotsinu, actual=mvrotsinu
+    [PASS] frequency: expected=0.55, actual=0.55
+    [FAIL] amplitude: expected=3, actual=0.05236
+    [FAIL] timemax: expected=15, actual=9.09
+
+  B2 S10: △ M-A2=100% M-A3=75% (319s)
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.5, actual=0.5
+    [PASS] amplitude: expected=0.05, actual=0.05
+    [FAIL] timemax: expected=15, actual=10.0
+
+  B4 S01: ✗ M-A2=0% M-A3=0% (57s)
+
+  B4 S02: ✗ M-A2=0% M-A3=0% (433s)
+
+  B4 S03: ✗ M-A2=0% M-A3=0% (206s)
+
+  B4 S04: ✗ M-A2=0% M-A3=0% (212s)
+
+  B4 S05: ✗ M-A2=0% M-A3=0% (393s)
+
+  B4 S06: ✗ M-A2=33% M-A3=0% (207s)
+
+  B4 S07: ✗ M-A2=0% M-A3=0% (33s)
+
+  B4 S08: ✗ M-A2=0% M-A3=0% (260s)
+
+  B4 S09: ✗ M-A2=0% M-A3=0% (601s)
+
+  B4 S10: ✗ M-A2=33% M-A3=0% (334s)
+    [FAIL] motion_type: expected=mvrectsinu, actual=none
+    [FAIL] frequency: expected=0.5, actual=0
+    [FAIL] amplitude: expected=0.05, actual=0
+    [FAIL] timemax: expected=15, actual=0
+
+────────────────────────────────────────────────────────────
+  Model: qwen3_latest
+────────────────────────────────────────────────────────────
+
+  B0 S01: △ M-A2=100% M-A3=75% (121s)
+    [PASS] tank_x: expected=0.9, actual=0.9
+    [PASS] tank_y: expected=0.062, actual=0.062
+    [PASS] tank_z: expected=0.508, actual=0.508
+    [PASS] fill_height: expected=0.09144, actual=0.0923
+    [FAIL] motion_type: expected=mvrotsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.6515, actual=0.651
+    [FAIL] amplitude: expected=4, actual=0.0314
+    [PASS] timemax: expected=7.68, actual=7.68
+
+  B0 S02: ✓ M-A2=100% M-A3=100% (82s)
+    [PASS] tank_x: expected=0.6, actual=0.6
+    [PASS] tank_y: expected=0.3, actual=0.3
+    [PASS] tank_z: expected=0.65, actual=0.65
+    [PASS] fill_height: expected=0.083, actual=0.083
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.756, actual=0.756
+    [PASS] amplitude: expected=0.007, actual=0.007
+    [PASS] timemax: expected=10, actual=10.0
+
+  B0 S03: ✓ M-A2=100% M-A3=88% (373s)
+    [PASS] tank_x: expected=0.6, actual=0.6
+    [PASS] tank_y: expected=0.3, actual=0.3
+    [PASS] tank_z: expected=0.65, actual=0.65
+    [PASS] fill_height: expected=0.185, actual=0.185
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=1.008, actual=1.008
+    [PASS] amplitude: expected=0.007, actual=0.007
+    [FAIL] timemax: expected=10, actual=4.96
+
+  B0 S04: △ M-A2=100% M-A3=75% (69s)
+    [PASS] tank_x: expected=1.0, actual=1.0
+    [PASS] tank_y: expected=0.5, actual=0.5
+    [PASS] tank_z: expected=1.0, actual=1.0
+    [PASS] fill_height: expected=0.2, actual=0.2
+    [FAIL] motion_type: expected=mvrotsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.66, actual=0.66
+    [FAIL] amplitude: expected=2, actual=0.01745
+    [PASS] timemax: expected=30, actual=30.0
+
+  B0 S05: △ M-A2=100% M-A3=50% (66s)
+    [PASS] tank_x: expected=1.0, actual=1.0
+    [PASS] tank_y: expected=0.5, actual=0.5
+    [FAIL] tank_z: expected=1.0, actual=0.6
+    [FAIL] fill_height: expected=0.7, actual=0.42
+    [FAIL] motion_type: expected=mvrotsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.87, actual=0.87
+    [FAIL] amplitude: expected=[1, 2, 3], actual=0.0524
+    [PASS] timemax: expected=20, actual=20.0
+
+  B0 S06: ✓ M-A2=100% M-A3=88% (62s)
+    [PASS] tank_x: expected=0.946, actual=0.946
+    [PASS] tank_y: expected=0.118, actual=0.118
+    [PASS] tank_z: expected=0.67, actual=0.67
+    [PASS] fill_height: expected=0.603, actual=0.603
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.6, actual=0.6
+    [PASS] amplitude: expected=0.02, actual=0.02
+    [FAIL] timemax: expected=15, actual=8.333
+
+  B0 S07: △ M-A2=100% M-A3=67% (164s)
+    [FAIL] geometry_type: expected=cylinder, actual=box
+    [PASS] fill_height: expected=1.5, actual=1.5
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.5, actual=0.5
+    [PASS] amplitude: expected=0.01, actual=0.01
+    [FAIL] timemax: expected=15, actual=10.0
+
+  B0 S08: NO XML
+
+  B0 S09: ✗ M-A2=100% M-A3=20% (433s)
+    [FAIL] geometry_type: expected=cylinder, actual=box
+    [FAIL] motion_type: expected=mvrotsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.55, actual=0.55
+    [FAIL] amplitude: expected=3, actual=0.15
+    [FAIL] timemax: expected=15, actual=9.09
+
+  B0 S10: NO XML
+
+  B1 S01: NO XML
+
+  B1 S02: NO XML
+
+  B1 S03: NO XML
+
+  B1 S04: NO XML
+
+  B1 S05: NO XML
+
+  B1 S06: NO XML
+
+  B1 S07: NO XML
+
+  B1 S08: NO XML
+
+  B1 S09: NO XML
+
+  B1 S10: NO XML
+
+  B2 S01: △ M-A2=100% M-A3=62% (49s)
+    [PASS] tank_x: expected=0.9, actual=0.9
+    [PASS] tank_y: expected=0.062, actual=0.062
+    [FAIL] tank_z: expected=0.508, actual=0.09144
+    [FAIL] fill_height: expected=0.09144, actual=0.508
+    [PASS] motion_type: expected=mvrotsinu, actual=mvrotsinu
+    [PASS] frequency: expected=0.6515, actual=0.6515
+    [FAIL] amplitude: expected=4, actual=0.00217
+    [PASS] timemax: expected=7.68, actual=7.67
+
+  B2 S02: ✗ M-A2=0% M-A3=0% (53s)
+
+  B2 S03: △ M-A2=100% M-A3=62% (19s)
+    [PASS] tank_x: expected=0.6, actual=0.6
+    [PASS] tank_y: expected=0.3, actual=0.3
+    [FAIL] tank_z: expected=0.65, actual=0.185
+    [FAIL] fill_height: expected=0.185, actual=0.65
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=1.008, actual=1.008
+    [PASS] amplitude: expected=0.007, actual=0.007
+    [FAIL] timemax: expected=10, actual=4.96
+
+  B2 S04: △ M-A2=100% M-A3=62% (28s)
+    [PASS] tank_x: expected=1.0, actual=1.0
+    [PASS] tank_y: expected=0.5, actual=0.5
+    [FAIL] tank_z: expected=1.0, actual=0.2
+    [FAIL] fill_height: expected=0.2, actual=1.0
+    [PASS] motion_type: expected=mvrotsinu, actual=mvrotsinu
+    [PASS] frequency: expected=0.66, actual=0.66
+    [FAIL] amplitude: expected=2, actual=0.0349
+    [PASS] timemax: expected=30, actual=30.0
+
+  B2 S05: △ M-A2=100% M-A3=75% (16s)
+    [PASS] tank_x: expected=1.0, actual=1.0
+    [PASS] tank_y: expected=0.5, actual=0.5
+    [FAIL] tank_z: expected=1.0, actual=0.42
+    [PASS] fill_height: expected=0.7, actual=0.6
+    [PASS] motion_type: expected=mvrotsinu, actual=mvrotsinu
+    [PASS] frequency: expected=0.87, actual=0.87
+    [FAIL] amplitude: expected=[1, 2, 3], actual=0.01745
+    [PASS] timemax: expected=20, actual=20.0
+
+  B2 S06: ✗ M-A2=0% M-A3=0% (67s)
+
+  B2 S07: △ M-A2=100% M-A3=50% (26s)
+    [FAIL] geometry_type: expected=cylinder, actual=box
+    [FAIL] fill_height: expected=1.5, actual=3.0
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.5, actual=0.5
+    [PASS] amplitude: expected=0.01, actual=0.01
+    [FAIL] timemax: expected=15, actual=10.0
+
+  B2 S08: ✗ M-A2=67% M-A3=0% (24s)
+    [FAIL] tank_x: expected=0.9, actual=0
+    [FAIL] tank_y: expected=0.062, actual=0
+    [FAIL] tank_z: expected=0.508, actual=0
+    [FAIL] fill_height: expected=0.09144, actual=0
+    [FAIL] motion_type: expected=mvrotsinu, actual=none
+    [FAIL] frequency: expected=0.6515, actual=0
+    [FAIL] amplitude: expected=4, actual=0
+    [FAIL] timemax: expected=7.68, actual=0
+
+  B2 S09: ✗ M-A2=100% M-A3=40% (23s)
+    [FAIL] geometry_type: expected=cylinder, actual=box
+    [PASS] motion_type: expected=mvrotsinu, actual=mvrotsinu
+    [PASS] frequency: expected=0.55, actual=0.55
+    [FAIL] amplitude: expected=3, actual=0.05236
+    [FAIL] timemax: expected=15, actual=0
+
+  B2 S10: △ M-A2=100% M-A3=75% (19s)
+    [PASS] motion_type: expected=mvrectsinu, actual=mvrectsinu
+    [PASS] frequency: expected=0.5, actual=0.5
+    [PASS] amplitude: expected=0.05, actual=0.05
+    [FAIL] timemax: expected=15, actual=10.0
+
+  B4 S01: ✗ M-A2=0% M-A3=0% (39s)
+
+  B4 S02: ✗ M-A2=0% M-A3=0% (48s)
+
+  B4 S03: ✗ M-A2=0% M-A3=0% (33s)
+
+  B4 S04: ✗ M-A2=0% M-A3=0% (24s)
+
+  B4 S05: ✗ M-A2=0% M-A3=0% (24s)
+
+  B4 S06: ✗ M-A2=0% M-A3=0% (14s)
+
+  B4 S07: ✗ M-A2=0% M-A3=0% (28s)
+
+  B4 S08: ✗ M-A2=0% M-A3=0% (16s)
+
+  B4 S09: ✗ M-A2=0% M-A3=0% (31s)
+
+  B4 S10: ✗ M-A2=0% M-A3=0% (16s)
+
+
+======================================================================
+  SUMMARY TABLE — M-A3 Parameter Fidelity (%)
+======================================================================
+
+  qwen3_32b:
+  Cond   S01(E) S02(E) S03(E) S04(M) S05(M) S06(M) S07(M) S08(H) S09(H) S10(H)    Mean
+  ────────────────────────────────────────────────────────────────────────────────────
+  B0        75%   100%    88%    75%    50%    88%    67%    50%    20%     0%   61.2%
+  B1         0%     0%     0%     0%     0%     0%     0%     0%     0%     0%    0.0%
+  B2        62%    75%    62%    62%     0%    75%    50%    25%    40%    75%   52.8%
+  B4         0%     0%     0%     0%     0%     0%     0%     0%     0%     0%    0.0%
+
+  qwen3_latest:
+  Cond   S01(E) S02(E) S03(E) S04(M) S05(M) S06(M) S07(M) S08(H) S09(H) S10(H)    Mean
+  ────────────────────────────────────────────────────────────────────────────────────
+  B0        75%   100%    88%    75%    50%    88%    67%     0%    20%     0%   56.2%
+  B1         0%     0%     0%     0%     0%     0%     0%     0%     0%     0%    0.0%
+  B2        62%     0%    62%    62%    75%     0%    50%     0%    40%    75%   42.8%
+  B4         0%     0%     0%     0%     0%     0%     0%     0%     0%     0%    0.0%
+
+
+======================================================================
+  2×2 FACTORIAL ANALYSIS
+======================================================================
+
+  qwen3_32b:
+  B0 (Prompt+Tools) = 61.2%
+  B1 (Tools only)   = 0.0%
+  B2 (Prompt only)  = 52.8%
+  B4 (Neither)      = 0.0%
+
+  Main effect of Prompt: +57.0%
+  Main effect of Tools:  +4.2%
+  Interaction:           +8.4%
+
+  qwen3_latest:
+  B0 (Prompt+Tools) = 56.2%
+  B1 (Tools only)   = 0.0%
+  B2 (Prompt only)  = 42.8%
+  B4 (Neither)      = 0.0%
+
+  Main effect of Prompt: +49.5%
+  Main effect of Tools:  +6.7%
+  Interaction:           +13.4%

@@ -1,0 +1,8 @@
+{
+    "scenario": "S03",
+    "model": "llama3.3:70b-instruct-q4_K_M",
+    "exit_code": 0,
+    "duration_seconds": 20,
+    "xml_found": true,
+    "timestamp": "2026-03-14T00:55:50+09:00"
+}

@@ -1,0 +1,280 @@
+========================================
+EXP-B B1 Batch (−DomainPrompt): 2026. 03. 05. (목) 00:51:10 KST
+========================================
+[00:51:10] SKIP B1 S01 qwen3_32b (exists)
+
+[00:51:10] ====== B1 S02 qwen3:32b ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S02
+Model:     qwen3:32b
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    600x300x650mm 직사각형 탱크에 물 83mm 높이로 채워줘. 수평 방향(x축)으로 진폭 7mm, 주파수 0.756Hz로 좌우 흔들어. 10초 동안 해석.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S02_qwen3_32b
+========================================
+[00:51:10] Applied config: config_qwen3_32b.json
+[00:51:10] Checking Ollama model availability...
+Model qwen3:32b found.
+[00:51:11] Starting B1 scenario S02...
+[00:51:11] Moved previous simulations to simulations_backup_1772639471
+[00:56:46] Completed in 335s (exit: 0)
+[00:56:46] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S02_qwen3_32b/
+[00:56:46] Done B1 S02 qwen3:32b
+
+[00:56:56] ====== B1 S03 qwen3:32b ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S03
+Model:     qwen3:32b
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    같은 탱크(600x300x650mm)인데 이번엔 물 185mm로 채워줘. 수평 진동 7mm, 자연주파수(1.008Hz)로 가진. 이 수위가 critical depth 근처라서 비선형 효과가 클 거야.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S03_qwen3_32b
+========================================
+[00:56:56] Applied config: config_qwen3_32b.json
+[00:56:56] Checking Ollama model availability...
+Model qwen3:32b found.
+[00:56:56] Starting B1 scenario S03...
+[00:57:05] Completed in 9s (exit: 0)
+[00:57:05] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S03_qwen3_32b/
+[00:57:05] Done B1 S03 qwen3:32b
+[00:57:15] SKIP B1 S04 qwen3_32b (exists)
+
+[00:57:15] ====== B1 S05 qwen3:32b ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S05
+Model:     qwen3:32b
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    1미터 탱크에 물 70% 채우고 공진주파수(0.87Hz) 피치 회전인데, 진폭을 1도, 2도, 3도로 바꿔가며 파라메트릭 해석 해줘. 각각 20초씩.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S05_qwen3_32b
+========================================
+[00:57:15] Applied config: config_qwen3_32b.json
+[00:57:15] Checking Ollama model availability...
+Model qwen3:32b found.
+[00:57:15] Starting B1 scenario S05...
+[00:57:23] Completed in 8s (exit: 0)
+[00:57:23] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S05_qwen3_32b/
+[00:57:23] Done B1 S05 qwen3:32b
+
+[00:57:33] ====== B1 S06 qwen3:32b ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S06
+Model:     qwen3:32b
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    ISOPE 벤치마크 LNG 탱크 (946x118x670mm) 슬로싱 해석. 물 90% 채우고 수평 진동 f=0.6Hz 진폭 20mm. 천장 압력 충격을 보고 싶어.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S06_qwen3_32b
+========================================
+[00:57:33] Applied config: config_qwen3_32b.json
+[00:57:33] Checking Ollama model availability...
+Model qwen3:32b found.
+[00:57:33] Starting B1 scenario S06...
+[00:57:43] Completed in 10s (exit: 0)
+[00:57:43] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S06_qwen3_32b/
+[00:57:43] Done B1 S06 qwen3:32b
+[00:57:53] SKIP B1 S07 qwen3_32b (exists)
+
+[00:57:53] ====== B1 S08 qwen3:32b ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S08
+Model:     qwen3:32b
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    SPHERIC 벤치마크 탱크(900x62x508mm) 물 18% 해석인데, 경계조건을 DBC로 해줘. dp=0.002m로 고해상도로. 센서1 위치 압력 시계열 추출.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S08_qwen3_32b
+========================================
+[00:57:53] Applied config: config_qwen3_32b.json
+[00:57:53] Checking Ollama model availability...
+Model qwen3:32b found.
+[00:57:53] Starting B1 scenario S08...
+[00:58:03] Completed in 10s (exit: 0)
+[00:58:03] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S08_qwen3_32b/
+[00:58:03] Done B1 S08 qwen3:32b
+
+[00:58:13] ====== B1 S09 qwen3:32b ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S09
+Model:     qwen3:32b
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    수평 원통형 탱크 (직경 1m, 길이 3m)에 물 25% 채워서 피치 3도, 주파수 0.55Hz로 슬로싱 해석해줘.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S09_qwen3_32b
+========================================
+[00:58:13] Applied config: config_qwen3_32b.json
+[00:58:13] Checking Ollama model availability...
+Model qwen3:32b found.
+[00:58:14] Starting B1 scenario S09...
+[00:58:31] Completed in 17s (exit: 0)
+[00:58:31] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S09_qwen3_32b/
+[00:58:31] Done B1 S09 qwen3:32b
+
+[00:58:41] ====== B1 S10 qwen3:32b ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S10
+Model:     qwen3:32b
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    자동차 연료탱크 STL 파일(cases/fuel_tank.stl)로 슬로싱 해석해줘. 물 절반 채우고, 수평 방향으로 진폭 50mm, 0.5Hz로 흔들어.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S10_qwen3_32b
+========================================
+[00:58:41] Applied config: config_qwen3_32b.json
+[00:58:41] Checking Ollama model availability...
+Model qwen3:32b found.
+[00:58:41] Starting B1 scenario S10...
+[00:58:53] Completed in 12s (exit: 0)
+[00:58:53] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S10_qwen3_32b/
+[00:58:53] Done B1 S10 qwen3:32b
+[00:59:03] SKIP B1 S01 qwen3_latest (exists)
+
+[00:59:03] ====== B1 S02 qwen3:latest ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S02
+Model:     qwen3:latest
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    600x300x650mm 직사각형 탱크에 물 83mm 높이로 채워줘. 수평 방향(x축)으로 진폭 7mm, 주파수 0.756Hz로 좌우 흔들어. 10초 동안 해석.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S02_qwen3_latest
+========================================
+[00:59:03] Applied config: config_qwen3_8b.json
+[00:59:03] Checking Ollama model availability...
+Model qwen3:latest found.
+[00:59:03] Starting B1 scenario S02...
+[00:59:14] Completed in 11s (exit: 0)
+[00:59:14] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S02_qwen3_latest/
+[00:59:14] Done B1 S02 qwen3:latest
+
+[00:59:24] ====== B1 S03 qwen3:latest ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S03
+Model:     qwen3:latest
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    같은 탱크(600x300x650mm)인데 이번엔 물 185mm로 채워줘. 수평 진동 7mm, 자연주파수(1.008Hz)로 가진. 이 수위가 critical depth 근처라서 비선형 효과가 클 거야.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S03_qwen3_latest
+========================================
+[00:59:24] Applied config: config_qwen3_8b.json
+[00:59:24] Checking Ollama model availability...
+Model qwen3:latest found.
+[00:59:24] Starting B1 scenario S03...
+[00:59:35] Completed in 11s (exit: 0)
+[00:59:35] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S03_qwen3_latest/
+[00:59:35] Done B1 S03 qwen3:latest
+[00:59:45] SKIP B1 S04 qwen3_latest (exists)
+
+[00:59:45] ====== B1 S05 qwen3:latest ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S05
+Model:     qwen3:latest
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    1미터 탱크에 물 70% 채우고 공진주파수(0.87Hz) 피치 회전인데, 진폭을 1도, 2도, 3도로 바꿔가며 파라메트릭 해석 해줘. 각각 20초씩.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S05_qwen3_latest
+========================================
+[00:59:45] Applied config: config_qwen3_8b.json
+[00:59:45] Checking Ollama model availability...
+Model qwen3:latest found.
+[00:59:45] Starting B1 scenario S05...
+[00:59:53] Completed in 8s (exit: 0)
+[00:59:53] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S05_qwen3_latest/
+[00:59:53] Done B1 S05 qwen3:latest
+
+[01:00:03] ====== B1 S06 qwen3:latest ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S06
+Model:     qwen3:latest
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    ISOPE 벤치마크 LNG 탱크 (946x118x670mm) 슬로싱 해석. 물 90% 채우고 수평 진동 f=0.6Hz 진폭 20mm. 천장 압력 충격을 보고 싶어.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S06_qwen3_latest
+========================================
+[01:00:03] Applied config: config_qwen3_8b.json
+[01:00:03] Checking Ollama model availability...
+Model qwen3:latest found.
+[01:00:04] Starting B1 scenario S06...
+[01:00:15] Completed in 11s (exit: 0)
+[01:00:15] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S06_qwen3_latest/
+[01:00:15] Done B1 S06 qwen3:latest
+[01:00:25] SKIP B1 S07 qwen3_latest (exists)
+
+[01:00:25] ====== B1 S08 qwen3:latest ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S08
+Model:     qwen3:latest
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    SPHERIC 벤치마크 탱크(900x62x508mm) 물 18% 해석인데, 경계조건을 DBC로 해줘. dp=0.002m로 고해상도로. 센서1 위치 압력 시계열 추출.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S08_qwen3_latest
+========================================
+[01:00:25] Applied config: config_qwen3_8b.json
+[01:00:25] Checking Ollama model availability...
+Model qwen3:latest found.
+[01:00:25] Starting B1 scenario S08...
+[01:00:36] Completed in 11s (exit: 0)
+[01:00:36] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S08_qwen3_latest/
+[01:00:36] Done B1 S08 qwen3:latest
+
+[01:00:46] ====== B1 S09 qwen3:latest ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S09
+Model:     qwen3:latest
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    수평 원통형 탱크 (직경 1m, 길이 3m)에 물 25% 채워서 피치 3도, 주파수 0.55Hz로 슬로싱 해석해줘.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S09_qwen3_latest
+========================================
+[01:00:46] Applied config: config_qwen3_8b.json
+[01:00:46] Checking Ollama model availability...
+Model qwen3:latest found.
+[01:00:46] Starting B1 scenario S09...
+[01:01:05] Completed in 19s (exit: 0)
+[01:01:05] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S09_qwen3_latest/
+[01:01:05] Done B1 S09 qwen3:latest
+
+[01:01:15] ====== B1 S10 qwen3:latest ======
+========================================
+EXP-B B1 (−DomainPrompt)
+========================================
+Scenario:  S10
+Model:     qwen3:latest
+GPU:       0
+Generic:   SLOSIM_GENERIC_PROMPT=1
+Prompt:    자동차 연료탱크 STL 파일(cases/fuel_tank.stl)로 슬로싱 해석해줘. 물 절반 채우고, 수평 방향으로 진폭 50mm, 0.5Hz로 흔들어.
+Output:    /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S10_qwen3_latest
+========================================
+[01:01:15] Applied config: config_qwen3_8b.json
+[01:01:15] Checking Ollama model availability...
+Model qwen3:latest found.
+[01:01:15] Starting B1 scenario S10...
+[01:01:27] Completed in 12s (exit: 0)
+[01:01:27] Done. Results in /home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-b/results/B1_S10_qwen3_latest/
+[01:01:27] Done B1 S10 qwen3:latest
+
+========================================
+B1 Batch complete: 2026. 03. 05. (목) 01:01:37 KST
+========================================

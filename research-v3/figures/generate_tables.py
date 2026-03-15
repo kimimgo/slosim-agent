@@ -1,0 +1,433 @@
+#!/usr/bin/env python3
+"""논문용 LaTeX Table 자동 생성 — EXP-A (Table 3) + EXP-B (Table 4)"""
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "exp-b"))
+from score_expb import parse_xml_params, score_scenario, check_xml_validity
+
+SCRIPT_DIR = Path(__file__).parent.parent
+GT_PATH = SCRIPT_DIR / "exp-a" / "ground_truth.json"
+RESULTS_DIR_A = SCRIPT_DIR / "exp-a" / "results"
+
+with open(GT_PATH) as f:
+    GT = json.load(f)
+
+SCENARIOS = [f"S{i:02d}" for i in range(1, 11)]
+MODELS = ["qwen3_32b", "qwen3_latest"]
+DESCRIPTIONS = {
+    "S01": "SPHERIC Oil Low Fill", "S02": "Chen Shallow Sway",
+    "S03": "Chen Near-Critical", "S04": "Liu Large Pitch",
+    "S05": "Liu Amplitude Parametric", "S06": "ISOPE LNG Roof Impact",
+    "S07": "NASA Cylinder Baffle", "S08": "English mDBC vs DBC",
+    "S09": "Horizontal Cylinder Pitch", "S10": "STL Fuel Tank",
+}
+PAPER_TIERS = {
+    "S01": "Easy", "S02": "Easy", "S03": "Easy",
+    "S04": "Med", "S05": "Med", "S06": "Med", "S07": "Med",
+    "S08": "Hard", "S09": "Hard", "S10": "Hard",
+}
+
+
+def find_xml(result_dir):
+    for name in ["fuel_tank.xml", "fuel_tank_case.xml",
+                  "simulations/fuel_tank.xml",
+                  "simulations/sloshing_case.xml", "sloshing_case.xml",
+                  "simulations/parametric_case.xml", "parametric_case.xml",
+                  "simulations/ISOPE_LNG_Benchmark.xml", "ISOPE_LNG_Benchmark.xml",
+                  "simulations/spheric_benchmark.xml", "spheric_benchmark.xml",
+                  "case.xml"]:
+        p = result_dir / name
+        if p.exists():
+            return p
+    return None
+
+
+def score_run(scenario, result_dir):
+    xml_path = find_xml(result_dir)
+    if not xml_path:
+        return 0
+    validity = check_xml_validity(str(xml_path))
+    if not validity["parseable"]:
+        return 0
+    params, _ = parse_xml_params(str(xml_path))
+    if not params:
+        return 0
+    _, passed, total = score_scenario(scenario, params)
+    return (passed / total * 100) if total > 0 else 0
+
+
+def score_mean(scenario, model, trials=3):
+    """3-trial 평균 M-A3 점수"""
+    scores = []
+    for t in range(1, trials + 1):
+        d = RESULTS_DIR_A / f"{scenario}_{model}_trial{t}"
+        scores.append(score_run(scenario, d))
+    return sum(scores) / len(scores) if scores else 0
+
+
+def table3_expa():
+    """Table 3: EXP-A M-A3 per scenario × model (3-trial mean)"""
+    print("% ══════════════════════════════════════")
+    print("% Table 3: EXP-A M-A3 Parameter Fidelity")
+    print("% ══════════════════════════════════════")
+    print(r"\begin{table}[htbp]")
+    print(r"\centering")
+    print(r"\caption{EXP-A: M-A3 parameter fidelity (\%) across 10 sloshing scenarios (3-trial mean).}")
+    print(r"\label{tab:expa-ma3}")
+    print(r"\begin{tabular}{clccc}")
+    print(r"\toprule")
+    print(r"\textbf{ID} & \textbf{Scenario} & \textbf{Tier} & \textbf{32B} & \textbf{8B} \\")
+    print(r"\midrule")
+
+    all_32b, all_8b = [], []
+    prev_tier = None
+
+    for s in SCENARIOS:
+        tier = PAPER_TIERS[s]
+        if prev_tier and tier != prev_tier:
+            print(r"\midrule")
+        prev_tier = tier
+
+        s32 = score_mean(s, "qwen3_32b")
+        s8 = score_mean(s, "qwen3_latest")
+        all_32b.append(s32)
+        all_8b.append(s8)
+
+        desc = DESCRIPTIONS[s]
+        print(f"{s} & {desc} & {tier} & {s32:.0f} & {s8:.0f} \\\\")
+
+    print(r"\midrule")
+    m32 = sum(all_32b) / len(all_32b)
+    m8 = sum(all_8b) / len(all_8b)
+    print(f"\\multicolumn{{3}}{{r}}{{\\textbf{{Overall}}}} & \\textbf{{{m32:.1f}}} & \\textbf{{{m8:.1f}}} \\\\")
+    print(r"\bottomrule")
+    print(r"\end{tabular}")
+    print(r"\end{table}")
+    print()
+
+
+def compute_expb_scores():
+    """Dynamically compute EXP-B scores for all 10 scenarios × 4 conditions × 2 models"""
+    conditions = ['B0', 'B1', 'B2', 'B4']
+    results_b = SCRIPT_DIR / "exp-b" / "results"
+    all_scores = {}
+
+    for model in MODELS:
+        for cond in conditions:
+            for s in SCENARIOS:
+                if cond == 'B0':
+                    d = RESULTS_DIR_A / f"{s}_{model}_trial1"
+                    xml_path = find_xml(d)
+                else:
+                    d = results_b / f"{cond}_{s}_{model}"
+                    xml_path = d / "generated.xml"
+                    if not xml_path or not xml_path.exists():
+                        xml_path = find_xml(d) if d.exists() else None
+
+                key = f"{cond}_{s}_{model}"
+                if xml_path and xml_path.exists():
+                    validity = check_xml_validity(str(xml_path))
+                    if validity['parseable']:
+                        params, _ = parse_xml_params(str(xml_path))
+                        if params:
+                            _, passed, total = score_scenario(s, params)
+                            all_scores[key] = (passed / total * 100) if total > 0 else 0
+                        else:
+                            all_scores[key] = 0
+                    else:
+                        all_scores[key] = 0
+                else:
+                    all_scores[key] = 0
+
+    return all_scores
+
+
+def table4_expb():
+    """Table 4: EXP-B 2×2 Factorial Results (dynamic, 10 scenarios)"""
+    all_scores = compute_expb_scores()
+    conditions = ['B0', 'B1', 'B2', 'B4']
+    cond_labels = {
+        'B0': ("B0 Full", "\\checkmark", "\\checkmark"),
+        'B1': ("B1 $-$Prompt", "$\\times$", "\\checkmark"),
+        'B2': ("B2 $-$Tool", "\\checkmark", "$\\times$"),
+        'B4': ("B4 Bare", "$\\times$", "$\\times$"),
+    }
+
+    # Compute per-condition means (avg across scenarios and models)
+    cond_means = {}
+    for cond in conditions:
+        scores = []
+        for model in MODELS:
+            for s in SCENARIOS:
+                scores.append(all_scores.get(f"{cond}_{s}_{model}", 0))
+        cond_means[cond] = sum(scores) / len(scores) if scores else 0
+
+    print("% ══════════════════════════════════════")
+    print("% Table 4: EXP-B 2×2 Factorial Ablation")
+    print("% ══════════════════════════════════════")
+    print(r"\begin{table}[htbp]")
+    print(r"\centering")
+    print(r"\caption{EXP-B: 2$\times$2 factorial ablation results (M-A3 \%, 10 scenarios $\times$ 2 models).}")
+    print(r"\label{tab:expb-ablation}")
+    print(r"\begin{tabular}{lcccc}")
+    print(r"\toprule")
+    print(r"\textbf{Condition} & \textbf{Prompt} & \textbf{Tools} & \textbf{Mean M-A3} & \textbf{N} \\")
+    print(r"\midrule")
+
+    for cond in conditions:
+        name, p, t = cond_labels[cond]
+        n_runs = sum(1 for model in MODELS for s in SCENARIOS
+                     if all_scores.get(f"{cond}_{s}_{model}", -1) >= 0)
+        print(f"{name} & {p} & {t} & {cond_means[cond]:.1f} & {n_runs} \\\\")
+
+    # Factorial effects
+    b0, b1, b2, b4 = cond_means['B0'], cond_means['B1'], cond_means['B2'], cond_means['B4']
+    prompt_effect = (b0 + b2) / 2 - (b1 + b4) / 2
+    tool_effect = (b0 + b1) / 2 - (b2 + b4) / 2
+    interaction = b0 - b1 - b2 + b4
+
+    print(r"\midrule")
+    print(f"\\multicolumn{{5}}{{l}}{{\\textit{{2$\\times$2 Factorial Effects:}}}} \\\\")
+    print(f"\\multicolumn{{5}}{{l}}{{\\quad Main effect of Prompt: $+{prompt_effect:.1f}$\\%pp}} \\\\")
+    print(f"\\multicolumn{{5}}{{l}}{{\\quad Main effect of Tools: $+{tool_effect:.1f}$\\%pp}} \\\\")
+    print(f"\\multicolumn{{5}}{{l}}{{\\quad Interaction (Prompt $\\times$ Tools): $+{interaction:.1f}$\\%pp}} \\\\")
+    print(r"\bottomrule")
+    print(r"\end{tabular}")
+    print(r"\end{table}")
+    print()
+
+
+def table2_ma3_definition():
+    """Table 2: M-A3 8-Parameter Definition"""
+    print("% ══════════════════════════════════════")
+    print("% Table 2: M-A3 Parameter Fidelity Definition")
+    print("% ══════════════════════════════════════")
+    print(r"\begin{table}[htbp]")
+    print(r"\centering")
+    print(r"\caption{M-A3 parameter fidelity metric: 8 checked parameters with tolerances.}")
+    print(r"\label{tab:ma3-definition}")
+    print(r"\begin{tabular}{clll}")
+    print(r"\toprule")
+    print(r"\textbf{\#} & \textbf{Parameter} & \textbf{Source (XML)} & \textbf{Tolerance} \\")
+    print(r"\midrule")
+    rows = [
+        ("1", r"tank\_x",       r"\texttt{drawbox} size x (2nd box)", r"$\pm$10\%"),
+        ("2", r"tank\_y",       r"\texttt{drawbox} size y (2nd box)", r"$\pm$10\%"),
+        ("3", r"tank\_z or geometry\_type", r"\texttt{drawbox} size z / \texttt{drawcylinder}", r"$\pm$10\% / exact"),
+        ("4", r"fill\_height",  r"\texttt{drawbox} size z (1st box)", r"$\pm$15\%"),
+        ("5", r"motion\_type",  r"\texttt{mvrectsinu} / \texttt{mvrotsinu}", "exact match"),
+        ("6", r"frequency",     r"\texttt{freq} x or y attribute",    r"$\pm$10\%"),
+        ("7", r"amplitude",     r"\texttt{ampl} x, y, or z attribute", r"$\pm$15\%"),
+        ("8", r"timemax",       r"\texttt{parameter key=TimeMax}",    r"$\pm$10\%"),
+    ]
+    for num, param, source, tol in rows:
+        print(f"{num} & {param} & {source} & {tol} \\\\")
+    print(r"\midrule")
+    print(r"\multicolumn{4}{l}{\textit{Score} = (passed checks / total checks) $\times$ 100\%} \\")
+    print(r"\multicolumn{4}{l}{\textit{Cylindrical tanks}: geometry\_type replaces tank\_x/y/z (1 check instead of 3)} \\")
+    print(r"\bottomrule")
+    print(r"\end{tabular}")
+    print(r"\end{table}")
+    print()
+
+
+def find_best_xml_v4(result_dir):
+    """Find best XML in v4 result directory (prefers root-level)."""
+    if not result_dir.exists():
+        return None
+    candidates = list(result_dir.rglob('*.xml'))
+    candidates = [c for c in candidates if 'simulations/simulations' not in str(c)]
+    if not candidates:
+        return None
+    root_xmls = [c for c in candidates if c.parent == result_dir]
+    nested_xmls = [c for c in candidates if c.parent != result_dir]
+    priority = ['fuel_tank.xml', 'pitch_case.xml', 'sloshing_case_1deg.xml',
+                'spheric_benchmark.xml', 'cylindrical_tank.xml',
+                'sloshing_case.xml', 'case.xml', 'base.xml']
+    for pref in priority:
+        for c in root_xmls:
+            if c.name == pref:
+                return c
+    for pref in priority:
+        for c in nested_xmls:
+            if c.name == pref:
+                return c
+    return candidates[0]
+
+
+def score_v4(scenario, result_dir):
+    xml_path = find_best_xml_v4(result_dir)
+    if not xml_path:
+        return 0
+    params, _ = parse_xml_params(str(xml_path))
+    if not params:
+        return 0
+    _, passed, total = score_scenario(scenario, params)
+    return (passed / total * 100) if total > 0 else 0
+
+
+def table5_v4_improvement():
+    """Table 5: v3→v4 improvement after P1+P2 tool fix"""
+    V4_DIR = SCRIPT_DIR / "exp-a" / "results_v4"
+    PITCH = ['S01', 'S04', 'S05', 'S08', 'S09']
+
+    print("% ══════════════════════════════════════")
+    print("% Table 5: v3→v4 Tool Fix Improvement")
+    print("% ══════════════════════════════════════")
+    print(r"\begin{table}[htbp]")
+    print(r"\centering")
+    print(r"\caption{Impact of tool design fixes (P1: pitch motion, P2: amplitude units) on M-A3 (\%).}")
+    print(r"\label{tab:v4-improvement}")
+    print(r"\begin{tabular}{lccccccc}")
+    print(r"\toprule")
+    print(r"& \multicolumn{3}{c}{\textbf{32B}} & \multicolumn{3}{c}{\textbf{8B}} \\")
+    print(r"\cmidrule(lr){2-4} \cmidrule(lr){5-7}")
+    print(r"\textbf{ID} & \textbf{v3} & \textbf{v4} & \textbf{$\Delta$} & \textbf{v3} & \textbf{v4} & \textbf{$\Delta$} \\")
+    print(r"\midrule")
+
+    all_v3_32b, all_v4_32b = [], []
+    all_v3_8b, all_v4_8b = [], []
+
+    for s in SCENARIOS:
+        # v3 scores (trial1)
+        v3_32b = score_run(s, RESULTS_DIR_A / f"{s}_qwen3_32b_trial1")
+        v3_8b = score_run(s, RESULTS_DIR_A / f"{s}_qwen3_latest_trial1")
+
+        # v4 scores (pitch scenarios only, others unchanged)
+        if s in PITCH:
+            v4_32b = score_v4(s, V4_DIR / f"{s}_qwen3_32b")
+            v4_8b = score_v4(s, V4_DIR / f"{s}_qwen3_latest")
+        else:
+            v4_32b = v3_32b
+            v4_8b = v3_8b
+
+        all_v3_32b.append(v3_32b); all_v4_32b.append(v4_32b)
+        all_v3_8b.append(v3_8b); all_v4_8b.append(v4_8b)
+
+        d32 = v4_32b - v3_32b
+        d8 = v4_8b - v3_8b
+        d32_str = f"+{d32:.0f}" if d32 > 0 else (f"{d32:.0f}" if d32 < 0 else "---")
+        d8_str = f"+{d8:.0f}" if d8 > 0 else (f"{d8:.0f}" if d8 < 0 else "---")
+
+        marker = r" $\dagger$" if s in PITCH else ""
+        print(f"{s}{marker} & {v3_32b:.0f} & {v4_32b:.0f} & {d32_str} & {v3_8b:.0f} & {v4_8b:.0f} & {d8_str} \\\\")
+
+    print(r"\midrule")
+    m_v3_32 = sum(all_v3_32b) / len(all_v3_32b)
+    m_v4_32 = sum(all_v4_32b) / len(all_v4_32b)
+    m_v3_8 = sum(all_v3_8b) / len(all_v3_8b)
+    m_v4_8 = sum(all_v4_8b) / len(all_v4_8b)
+    d32 = m_v4_32 - m_v3_32
+    d8 = m_v4_8 - m_v3_8
+    print(f"\\textbf{{Mean}} & {m_v3_32:.1f} & \\textbf{{{m_v4_32:.1f}}} & +{d32:.1f} "
+          f"& {m_v3_8:.1f} & \\textbf{{{m_v4_8:.1f}}} & +{d8:.1f} \\\\")
+    print(r"\bottomrule")
+    print(r"\multicolumn{7}{l}{\footnotesize $\dagger$ Pitch scenarios affected by P1+P2 fix} \\")
+    print(r"\end{tabular}")
+    print(r"\end{table}")
+    print()
+
+
+CROSSMODEL_DIR = SCRIPT_DIR / "exp-a" / "results_crossmodel"
+CROSSMODEL_MODELS = {
+    "qwen3_32b": ("Qwen3:32b", 32, "Qwen3"),
+    "qwen3_latest": ("Qwen3:8b", 8, "Qwen3"),
+    "llama3.3_70b-instruct-q4_K_M": ("LLaMA 3.3:70b", 70, "LLaMA"),
+    "qwen3_14b": ("Qwen3:14b", 14, "Qwen3"),
+    "llama3.1_8b-instruct-q8_0": ("LLaMA 3.1:8b", 8, "LLaMA"),
+}
+
+
+def score_crossmodel(scenario, model_dir):
+    """Score a single crossmodel run."""
+    d = CROSSMODEL_DIR / model_dir / scenario
+    xml_path = find_best_xml_v4(d)
+    if not xml_path:
+        return 0
+    params, _ = parse_xml_params(str(xml_path))
+    if not params:
+        return 0
+    _, passed, total = score_scenario(scenario, params)
+    return (passed / total * 100) if total > 0 else 0
+
+
+def table6_crossmodel():
+    """Table 6: Cross-Model Generalization (5 models × 10 scenarios)"""
+    # Use v4 scores for Qwen3 32b/8b (from EXP-A v4), crossmodel for others
+    V4_DIR = SCRIPT_DIR / "exp-a" / "results_v4"
+    PITCH = ['S01', 'S04', 'S05', 'S08', 'S09']
+
+    print("% ══════════════════════════════════════")
+    print("% Table 6: Cross-Model Generalization")
+    print("% ══════════════════════════════════════")
+    print(r"\begin{table*}[htbp]")
+    print(r"\centering")
+    print(r"\caption{Cross-model generalization: M-A3 (\%) across 5 open-weight models with identical tool architecture and system prompt.}")
+    print(r"\label{tab:crossmodel}")
+    print(r"\begin{tabular}{lc" + "c" * 5 + "}")
+    print(r"\toprule")
+    print(r"& & \multicolumn{3}{c}{\textbf{Qwen3 family}} & \multicolumn{2}{c}{\textbf{LLaMA family}} \\")
+    print(r"\cmidrule(lr){3-5} \cmidrule(lr){6-7}")
+    print(r"\textbf{ID} & \textbf{Tier} & \textbf{32B} & \textbf{14B} & \textbf{8B} & \textbf{70B} & \textbf{8B} \\")
+    print(r"\midrule")
+
+    # Collect scores per model
+    model_scores = {m: [] for m in CROSSMODEL_MODELS}
+
+    prev_tier = None
+    for s in SCENARIOS:
+        tier = PAPER_TIERS[s]
+        if prev_tier and tier != prev_tier:
+            print(r"\midrule")
+        prev_tier = tier
+
+        row_scores = {}
+        for model_dir, (label, size, family) in CROSSMODEL_MODELS.items():
+            if model_dir in ("qwen3_32b", "qwen3_latest"):
+                # Use v4 scores for Qwen3 models
+                if s in PITCH:
+                    v4_dir = V4_DIR / f"{s}_{model_dir}"
+                    row_scores[model_dir] = score_v4(s, v4_dir)
+                else:
+                    row_scores[model_dir] = score_run(s, RESULTS_DIR_A / f"{s}_{model_dir}_trial1")
+            else:
+                row_scores[model_dir] = score_crossmodel(s, model_dir)
+            model_scores[model_dir].append(row_scores[model_dir])
+
+        # Format row: ID & Tier & Qwen3:32B & Qwen3:14B & Qwen3:8B & LLaMA:70B & LLaMA:8B
+        vals = [f"{row_scores[m]:.0f}" for m in
+                ["qwen3_32b", "qwen3_14b", "qwen3_latest",
+                 "llama3.3_70b-instruct-q4_K_M", "llama3.1_8b-instruct-q8_0"]]
+        print(f"{s} & {tier} & {' & '.join(vals)} \\\\")
+
+    # Means
+    print(r"\midrule")
+    order = ["qwen3_32b", "qwen3_14b", "qwen3_latest",
+             "llama3.3_70b-instruct-q4_K_M", "llama3.1_8b-instruct-q8_0"]
+    means = []
+    for m in order:
+        mean_val = sum(model_scores[m]) / len(model_scores[m])
+        means.append(f"\\textbf{{{mean_val:.1f}}}")
+
+    print(f"\\multicolumn{{2}}{{r}}{{\\textbf{{Mean}}}} & {' & '.join(means)} \\\\")
+
+    # Params row
+    param_counts = {"qwen3_32b": "32B", "qwen3_14b": "14B", "qwen3_latest": "8B",
+                    "llama3.3_70b-instruct-q4_K_M": "70B", "llama3.1_8b-instruct-q8_0": "8B"}
+    pc = [param_counts[m] for m in order]
+    print(f"\\multicolumn{{2}}{{r}}{{Params}} & {' & '.join(pc)} \\\\")
+
+    print(r"\bottomrule")
+    print(r"\end{tabular}")
+    print(r"\end{table*}")
+    print()
+
+
+if __name__ == "__main__":
+    table2_ma3_definition()
+    table3_expa()
+    table4_expb()
+    table5_v4_improvement()
+    table6_crossmodel()

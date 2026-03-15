@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DualSPHysics>
+  <Simulation>
+    <TimeStep>0.001</TimeStep>
+    <TotalTime>10</TotalTime>
+    <Output>
+      <File>output</File>
+      <Frequency>100</Frequency>
+      <Pressure>
+        <Region>
+          <Point>0.946 0.118 0.67</Point>
+          <Radius>0.01</Radius>
+        </Region>
+      </Pressure>
+    </Output>
+  </Simulation>
+  <Fluid>
+    <Density>1000</Density>
+    <Viscosity>0.001</Viscosity>
+  </Fluid>
+  <Boundaries>
+    <Solid>
+      <Box>
+        <Xmin>0</Xmin>
+        <Xmax>0.946</Xmax>
+        <Ymin>0</Ymin>
+        <Ymax>0.118</Ymax>
+        <Zmin>0</Zmin>
+        <Zmax>0.67</Zmax>
+      </Box>
+    </Solid>
+  </Boundaries>
+  <Acceleration>
+    <X>0.284</X>
+    <Y>0</Y>
+    <Z>0</Z>
+  </Acceleration>
+  <InitialConditions>
+    <Fluid>
+      <Height>0.603</Height>
+    </Fluid>
+  </InitialConditions>
+</DualSPHysics>

@@ -1,0 +1,31 @@
+<Case>
+  <Domain>
+    <Size x="2.84" y="3.0" z="0.0"/>
+    <Resolution x="100" y="100" z="0"/>
+    <Time t="0.0" dt="0.001" tEnd="10.0"/>
+  </Domain>
+  <BoundaryConditions>
+    <Solid>
+      <Wall x="-1.42" y="0.0" z="0.0" x2="1.42" y2="0.0" z2="0.0"/>
+      <Wall x="-1.42" y="3.0" z="0.0" x2="1.42" y2="3.0" z2="0.0"/>
+      <Wall x="-1.42" y="0.0" z="0.0" x2="-1.42" y2="3.0" z2="0.0"/>
+      <Wall x="1.42" y="0.0" z="0.0" x2="1.42" y2="3.0" z2="0.0"/>
+    </Solid>
+  </BoundaryConditions>
+  <MovingBoundary>
+    <Wall x="-1.42" y="0.0" z="0.0" x2="-1.42" y2="3.0" z2="0.0">
+      <Motion type="Sinusoidal" dir="x" amp="0.01" freq="0.5"/>
+    </Wall>
+    <Wall x="1.42" y="0.0" z="0.0" x2="1.42" y2="3.0" z2="0.0">
+      <Motion type="Sinusoidal" dir="x" amp="0.01" freq="0.5"/>
+    </Wall>
+  </MovingBoundary>
+  <InitialConditions>
+    <Fluid>
+      <Region x="-1.42" y="0.0" z="0.0" x2="1.42" y2="1.5" z2="0.0"/>
+    </Fluid>
+  </InitialConditions>
+  <Forces>
+    <Gravity y="-9.81"/>
+  </Forces>
+</Case>

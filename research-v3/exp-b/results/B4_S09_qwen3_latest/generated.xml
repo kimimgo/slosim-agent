@@ -1,0 +1,36 @@
+<Case>
+  <Domain>
+    <Size x="3.0" y="1.0" z="1.0"/>
+    <Resolution x="100" y="100" z="100"/>
+    <Gravity y="-9.81"/>
+  </Domain>
+  <Particles>
+    <Fluid>
+      <Count>10000</Count>
+      <InitialPositions>
+        <Distribution type="uniform">
+          <Range x="0.0 3.0" y="-0.5 0.25" z="-0.5 0.5"/>
+        </Distribution>
+      </InitialPositions>
+    </Fluid>
+  </Particles>
+  <Boundary>
+    <Solid>
+      <Faces x="0 3" y="-0.5 0.5" z="-0.5 0.5"/>
+    </Solid>
+  </Boundary>
+  <Motion>
+    <Rotation>
+      <Axis x="1.0" y="0.0" z="0.0"/>
+      <Amplitude>0.0523599</Amplitude>
+      <Frequency>0.55</Frequency>
+      <Phase>0.0</Phase>
+    </Rotation>
+  </Motion>
+  <Physics>
+    <Viscosity>0.0</Viscosity>
+    <SurfaceTension>0.0</SurfaceTension>
+    <TimeStep>0.001</TimeStep>
+    <Duration>10.0</Duration>
+  </Physics>
+</Case>

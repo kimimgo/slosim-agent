@@ -1,0 +1,5 @@
+{
+  "response": "{\"type\": \"function\", \"name\": \"error_recovery\", \"parameters\": {\"error_type\": \"simulation_error\"}}"
+}
+\"function\", \"name\": \"error_recovery\", \"parameters\": {\"case_path\": \"cases/sloshing_analysis\"}}"
+}

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Simulation>
+  <TimeStep>1e-4</TimeStep>
+  <OutputFrequency>100</OutputFrequency>
+  <BoundaryConditions>
+    <DBC type="Wall" x="0" y="0" z="0" xSize="0.9" ySize="0.062" zSize="0.508"/>
+    <DBC type="Wall" x="0.9" y="0" z="0" xSize="0.9" ySize="0.062" zSize="0.508"/>
+    <DBC type="Wall" x="0" y="0.062" z="0" xSize="0.9" ySize="0.062" zSize="0.508"/>
+    <DBC type="Wall" x="0" y="0" z="0.508" xSize="0.9" ySize="0.062" zSize="0.508"/>
+  </BoundaryConditions>
+  <Particles>
+    <Diameter>0.002</Diameter>
+    <InitialConditions>
+      <WaterVolume>0.9*0.062*0.508*0.18</WaterVolume>
+      <WaterHeight>0.508*0.18</WaterHeight>
+    </InitialConditions>
+  </Particles>
+  <Sensors>
+    <Sensor id="1" type="Pressure" position="0.45 0.031 0.254" frequency="10"/>
+  </Sensors>
+</Simulation>

@@ -1,0 +1,8 @@
+{
+    "scenario": "S10",
+    "model": "llama3.3:70b-instruct-q4_K_M",
+    "exit_code": 0,
+    "duration_seconds": 600,
+    "xml_found": false,
+    "timestamp": "2026-03-14T01:10:26+09:00"
+}

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<case title="Fuel Tank Sloshing Simulation" version="5.4">
+  <geometry>
+    <stl file="cases/fuel_tank.stl" name="tank" solid="yes"/>
+  </geometry>
+  <fluid>
+    <domain name="water" type="water" minx="0" maxx="1" miny="0" maxy="1" minz="0" maxz="0.5"/>
+  </fluid>
+  <boundary>
+    <domain name="tank" type="solid" stl="tank"/>
+  </boundary>
+  <motion>
+    <boundary name="tank" axis="x" function="0.05*sin(2*pi*0.5*t)"/>
+  </motion>
+  <particle>
+    <dp value="0.01"/>
+    <k value="1.2"/>
+    <dt value="0.005"/>
+  </particle>
+  <gravity>
+    <value x="0" y="0" z="-9.81"/>
+  </gravity>
+  <time>
+    <tmax value="10"/>
+    <tout value="0.1"/>
+  </time>
+  <output>
+    <directory name="fuel_tank_simulation"/>
+    <type value="bin"/>
+  </output>
+</case>

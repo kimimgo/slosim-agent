@@ -1,0 +1,5 @@
+{
+  "response": "No content available"
+}
+인: XML 파일 경로 오류\n\n1. 문제 원인:\n   - gencase가 XML 파일을 찾지 못함 (simulations/fuel_tank.xml 미발견)\n   - stl_import 실행 결과 XML 생성 여부 확인 필요\n\n2. 해결 방법:\n   - cases/ 디렉토리에 fuel_tank.xml 파일이 생성되었는지 확인\n   - 생성되지 않았다면 stl_import 파라미터 재확인 필요\n   - 정확한 XML 경로를 gencase에 전달\n\n3. 추천 조치:\n   - 먼저 XML 파일 존재 여부 확인\n   - 존재하면 gencase 재시도\n   - 미존재 시 stl_import 재실행\n\nXML 파일 확인 방법:\n```bash\nls -l simulations/fuel_tank.xml\n```\n\n필요 시 XML 생성 경로를 명시적으로 지정해주세요."
+}

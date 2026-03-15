@@ -1,0 +1,84 @@
+{
+  "total_scenarios": 1,
+  "ma2_pass": 1,
+  "ma3_pass": 1,
+  "ma3_partial": 0,
+  "ma3_fail": 0,
+  "results": [
+    {
+      "scenario": "S02",
+      "tier": "Easy",
+      "checks": [
+        {
+          "name": "tank_x",
+          "status": "PASS",
+          "expected": 0.6,
+          "actual": 0.6,
+          "error_pct": 0.0
+        },
+        {
+          "name": "tank_y",
+          "status": "PASS",
+          "expected": 0.3,
+          "actual": 0.3,
+          "error_pct": 0.0
+        },
+        {
+          "name": "tank_z",
+          "status": "PASS",
+          "expected": 0.65,
+          "actual": 0.65,
+          "error_pct": 0.0
+        },
+        {
+          "name": "fill_height",
+          "status": "PASS",
+          "expected": 0.083,
+          "actual": 0.083,
+          "error_pct": 0.0
+        },
+        {
+          "name": "motion_type",
+          "status": "PASS",
+          "expected": "mvrectsinu",
+          "actual": "mvrectsinu"
+        },
+        {
+          "name": "frequency",
+          "status": "PASS",
+          "expected": 0.756,
+          "actual": 0.756,
+          "error_pct": 0.0
+        },
+        {
+          "name": "amplitude_m",
+          "status": "PASS",
+          "expected": 0.007,
+          "actual": 0.007,
+          "error_pct": 0.0
+        },
+        {
+          "name": "timemax",
+          "status": "PASS",
+          "expected": 10.0,
+          "actual": 10.0,
+          "error_pct": 0.0
+        },
+        {
+          "name": "dp_range",
+          "status": "PASS",
+          "expected": [
+            0.003,
+            0.01
+          ],
+          "actual": 0.006
+        }
+      ],
+      "ma2_xml_valid": true,
+      "total_checks": 9,
+      "passed_checks": 9,
+      "ma3_score": 1.0,
+      "xml_file": "/home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-a/results/S02_qwen3_32b_trial1/sloshing_case.xml"
+    }
+  ]
+}

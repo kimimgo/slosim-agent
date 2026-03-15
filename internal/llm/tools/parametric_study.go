@@ -120,7 +120,7 @@ func (p *parametricStudyTool) Info() ToolInfo {
 
 func (p *parametricStudyTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error) {
 	var params ParametricStudyParams
-	if err := json.Unmarshal([]byte(call.Input), &params); err != nil {
+	if err := UnmarshalToolInput(call.Input, &params); err != nil {
 		return NewTextErrorResponse(fmt.Sprintf("파라미터 파싱 오류: %s", err)), nil
 	}
 

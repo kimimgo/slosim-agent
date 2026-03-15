@@ -1,0 +1,8 @@
+{
+    "scenario": "S01",
+    "model": "qwen3:14b",
+    "exit_code": 0,
+    "duration_seconds": 45,
+    "xml_found": false,
+    "timestamp": "2026-03-14T01:13:03+09:00"
+}

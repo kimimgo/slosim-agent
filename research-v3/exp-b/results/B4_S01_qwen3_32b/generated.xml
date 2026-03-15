@@ -1,0 +1,32 @@
+```xml
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Case name="SPHERIC_Sloshing" version="5.4">
+  <Fluids>
+    <Fluid id="1" name="SunflowerOil" density="990.0" viscosity="0.045"/>
+  </Fluids>
+  <Geometry>
+    <Box name="Tank" id="1" pos="0.45 0.031 0.254" size="0.9 0.062 0.508" solid="1"/>
+  </Geometry>
+  <InitialConditions>
+    <FluidBody name="SunflowerOil" fluid="1" pos="0.45 0.031 0.0457" size="0.9 0.062 0.0914" type="box"/>
+  </InitialConditions>
+  <BoundaryConditions>
+    <Wall name="TankWall" geometry="1" type="solid"/>
+  </BoundaryConditions>
+  <Motion>
+    <RigidBody name="TankMotion" geometry="1" type="pitch" center="0.45 0.031 0.0" axis="0 1 0" amplitude="4.0" period="1.535"/>
+  </Motion>
+  <NumericalSetup>
+    <ParticleSpacing dp="0.002"/>
+    <SpeedOfSound c0="10.0"/>
+    <TimeStep dt="0.0001"/>
+    <SimulationTime tmax="15.35"/>
+    <Output dtout="0.01"/>
+  </NumericalSetup>
+  <PostProcessing>
+    <SaveFluid save="1"/>
+    <SaveWalls save="1"/>
+    <SaveForces save="1"/>
+  </PostProcessing>
+</Case>
+```

@@ -1,0 +1,292 @@
+\begin{thebibliography}{48}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[{Allied Market Research}(2024)]{marketreport2024}
+{Allied Market Research}.
+\newblock Maritime {AI} market report 2024.
+\newblock Market Analysis Report, 2024.
+
+\bibitem[{Anthropic}(2024)]{mcp2024}
+{Anthropic}.
+\newblock Model context protocol.
+\newblock 2024.
+
+\bibitem[Boiko et~al.(2023)Boiko, MacKnight, Kline, and
+  Gomes]{boiko2023coscientist}
+Daniil~A Boiko, Robert MacKnight, Ben Kline, and Gabe Gomes.
+\newblock Autonomous chemical research with large language models.
+\newblock \emph{Nature}, 624:\penalty0 570--578, 2023.
+
+\bibitem[{Boston Consulting Group}(2025)]{bcg2025}
+{Boston Consulting Group}.
+\newblock {AI} in {R\&D}: Accelerating innovation.
+\newblock Executive Perspectives, 2025.
+
+\bibitem[Bran et~al.(2024)Bran, Cox, Schilter, Baldassari, White, and
+  Schwaller]{bran2024chemcrow}
+Andres~M Bran, Sam Cox, Oliver Schilter, Carlo Baldassari, Andrew~D White, and
+  Philippe Schwaller.
+\newblock {ChemCrow}: Augmenting large-language models with chemistry tools.
+\newblock \emph{Nature Machine Intelligence}, 6:\penalty0 525--535, 2024.
+
+\bibitem[Buehler(2024)]{mechagents2024}
+M~J Buehler.
+\newblock {MechAgents}: Large language model multi-agent collaborations for
+  finite element analysis.
+\newblock \emph{arXiv preprint arXiv:2404.09645}, 2024.
+
+\bibitem[{CadCrowd}(2024)]{cadcrowd2024}
+{CadCrowd}.
+\newblock {CFD} consulting rate guide.
+\newblock \url{https://www.cadcrowd.com/}, 2024.
+
+\bibitem[{Cadence Design Systems}(2024)]{cadence2024}
+{Cadence Design Systems}.
+\newblock Simulation-driven design: Reducing pre-processing time.
+\newblock White Paper, 2024.
+
+\bibitem[Chen and Nokes(2018)]{chen2018sloshing}
+Bangqi Chen and Roger Nokes.
+\newblock Numerical study of liquid sloshing in a tank with a {3D} numerical
+  wave tank approach.
+\newblock \emph{Applied Ocean Research}, 73:\penalty0 42--59, 2018.
+
+\bibitem[Chen et~al.(2024)]{metaopenfoam2024}
+Yuxuan Chen et~al.
+\newblock {MetaOpenFOAM}: An {LLM}-based multi-agent framework for {CFD}.
+\newblock \emph{arXiv preprint arXiv:2407.21320}, 2024.
+
+\bibitem[Crespo et~al.(2015)Crespo, Dom{\'\i}nguez, Rogers, G{\'o}mez-Gesteira,
+  Longshaw, Canelas, Vacondio, Barreiro, and Garc{\'\i}a-Feal]{crespo2011gpu}
+Alejandro~JC Crespo, Jos{\'e}~M Dom{\'\i}nguez, Benedict~D Rogers, Moncho
+  G{\'o}mez-Gesteira, Stephen Longshaw, Ricardo~B Canelas, Renato Vacondio,
+  Anxo Barreiro, and Orlando Garc{\'\i}a-Feal.
+\newblock {DualSPHysics}: Open-source parallel {CFD} solver based on {Smoothed
+  Particle Hydrodynamics} ({SPH}).
+\newblock \emph{Computer Physics Communications}, 187:\penalty0 204--216, 2015.
+
+\bibitem[Dom{\'\i}nguez et~al.(2022)Dom{\'\i}nguez, Fourtakas, Altomare,
+  Canelas, Tafuni, Garc{\'\i}a-Feal, Mart{\'\i}nez-Est{\'e}vez, Mokos,
+  Vacondio, Crespo, et~al.]{dominguez2022dualsphysics}
+Jos{\'e}~M Dom{\'\i}nguez, Georgios Fourtakas, Corrado Altomare, Ricardo~B
+  Canelas, Angelo Tafuni, Orlando Garc{\'\i}a-Feal, Ivan
+  Mart{\'\i}nez-Est{\'e}vez, Athanasios Mokos, Renato Vacondio, Alejandro~JC
+  Crespo, et~al.
+\newblock {DualSPHysics}: from fluid dynamics to multiphysics problems.
+\newblock \emph{Computational Particle Mechanics}, 9\penalty0 (5):\penalty0
+  867--895, 2022.
+
+\bibitem[Dong et~al.(2025)]{autocfd2025}
+X~Dong et~al.
+\newblock {AutoCFD}: Fine-tuned multi-agent framework for automated {CFD}.
+\newblock \emph{arXiv preprint}, 2025.
+
+\bibitem[English et~al.(2022)English, Dom{\'\i}nguez, Vacondio, Crespo,
+  Stansby, Lind, Chiapponi, and G{\'o}mez-Gesteira]{english2021mdbc}
+Alex English, Jos{\'e}~M Dom{\'\i}nguez, Renato Vacondio, Alejandro~JC Crespo,
+  Peter~K Stansby, Steven~J Lind, Luca Chiapponi, and Moncho
+  G{\'o}mez-Gesteira.
+\newblock Modified dynamic boundary conditions ({mDBC}) for general-purpose
+  smoothed particle hydrodynamics ({SPH}): application to tank sloshing, dam
+  break and fish pass problems.
+\newblock \emph{Computational Particle Mechanics}, 9:\penalty0 911--925, 2022.
+
+\bibitem[Fan et~al.(2026)]{chatcfd2026}
+Z~Fan et~al.
+\newblock {ChatCFD}: A knowledge-augmented {LLM} framework for computational
+  fluid dynamics.
+\newblock \emph{arXiv preprint}, 2026.
+
+\bibitem[{Federal Motor Carrier Safety Administration}(2023)]{fmcsa2023}
+{Federal Motor Carrier Safety Administration}.
+\newblock Large truck and bus crash facts.
+\newblock Technical report, FMCSA, U.S. Department of Transportation, 2023.
+
+\bibitem[Hatayama et~al.(2004)]{hatayama2004}
+Ken Hatayama et~al.
+\newblock Lessons from the 2003 {Tokachi-Oki} earthquake for prediction of
+  long-period strong ground motions and sloshing damage to oil storage tanks.
+\newblock \emph{Journal of Seismology}, 8:\penalty0 553--561, 2004.
+
+\bibitem[{ISOPE Sloshing Benchmark Group}(2012)]{isope2012sloshing}
+{ISOPE Sloshing Benchmark Group}.
+\newblock A benchmark study on sloshing with 9 participating institutions.
+\newblock In \emph{Proceedings of the 22nd International Offshore and Polar
+  Engineering Conference}. ISOPE, 2012.
+
+\bibitem[Kim et~al.(2019)]{kim2019sloshing}
+Sung-Pil Kim et~al.
+\newblock Sloshing load estimation using artificial neural network.
+\newblock \emph{International Journal of Naval Architecture and Ocean
+  Engineering}, 2019.
+
+\bibitem[Liu et~al.(2024)]{liu2024pitch}
+C~Liu et~al.
+\newblock Numerical investigation of violent sloshing in large-scale tanks
+  induced by pitch motion.
+\newblock \emph{Ocean Engineering}, 2024.
+
+\bibitem[{Lloyd's Register}(2024)]{lloyd2024}
+{Lloyd's Register}.
+\newblock {LNG} carrier fleet: Market outlook and technical trends.
+\newblock Technical Report, 2024.
+
+\bibitem[Lu et~al.(2024)Lu, Lu, Lange, Foerster, Clune, and
+  Ha]{lu2024aiscientist}
+Chris Lu, Cong Lu, Robert~Tjarko Lange, Jakob Foerster, Jeff Clune, and David
+  Ha.
+\newblock The {AI} scientist: Towards fully automated open-ended scientific
+  discovery.
+\newblock \emph{arXiv preprint arXiv:2408.06292}, 2024.
+
+\bibitem[Luo et~al.(2018)Luo, Koh, and Bai]{sjtu_ofw13_2018}
+M~Luo, C~G Koh, and W~Bai.
+\newblock Numerical simulation of sloshing in {LNG} tanks with a compressible
+  multiphase model.
+\newblock In \emph{Proceedings of the 13th OpenFOAM Workshop}, 2018.
+
+\bibitem[{NASA}(2023)]{nasa2023baffle}
+{NASA}.
+\newblock Anti-slosh baffle design for cylindrical propellant tanks.
+\newblock \emph{NASA Technical Report}, 2023.
+
+\bibitem[{Nuclear Regulatory Commission}(2011)]{nrc2011}
+{Nuclear Regulatory Commission}.
+\newblock Recommendations for enhancing reactor safety in the 21st century: The
+  near-term task force review of insights from the {Fukushima Dai-ichi}
+  accident.
+\newblock Technical report, NRC, 2011.
+
+\bibitem[{Ollama Team}(2024)]{ollama2024}
+{Ollama Team}.
+\newblock Ollama: Run large language models locally.
+\newblock \url{https://ollama.com/}, 2024.
+
+\bibitem[Pandey et~al.(2025)]{openfoamgpt2025}
+A~Pandey et~al.
+\newblock {OpenFOAMGPT} 2.0: Fully autonomous {CFD} simulations with large
+  language models.
+\newblock \emph{arXiv preprint}, 2025.
+
+\bibitem[{PolyU Team}(2026)]{phynikce2026}
+{PolyU Team}.
+\newblock {PhyNiKCE}: Neurosymbolic {AI} for computational engineering.
+\newblock \emph{arXiv preprint arXiv:2602.11666}, 2026.
+
+\bibitem[{Qwen Team}(2025)]{qwen2025}
+{Qwen Team}.
+\newblock {Qwen3} technical report.
+\newblock \emph{arXiv preprint}, 2025.
+
+\bibitem[{Rescale}(2025)]{rescale2025}
+{Rescale}.
+\newblock Institutional knowledge loss in engineering.
+\newblock Blog, 2025.
+
+\bibitem[{Resolved Analytics}(2024)]{resolved_analytics}
+{Resolved Analytics}.
+\newblock {CFD} engineer salary and cost analysis.
+\newblock \url{https://www.resolvedanalytics.com/}, 2024.
+
+\bibitem[Shinn et~al.(2023)Shinn, Cassano, Gopinath, Narasimhan, and
+  Yao]{shinn2023reflexion}
+Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu
+  Yao.
+\newblock Reflexion: Language agents with verbal reinforcement learning.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36, 2023.
+
+\bibitem[Souto-Iglesias et~al.(2009)Souto-Iglesias, Botia-Vera, and
+  Bulian]{spheric2009}
+Antonio Souto-Iglesias, Elkin Botia-Vera, and Gabriele Bulian.
+\newblock {SPHERIC} test case 10: {2D} sloshing.
+\newblock In \emph{SPHERIC Newsletter}, 2009.
+\newblock Available at \url{http://canal.etsin.upm.es/ftp/SPHERIC_BENCHMARKS/}.
+
+\bibitem[{SpaceX}(2007)]{spacex2007}
+{SpaceX}.
+\newblock {SpaceX} falcon 1 flight 2 post-flight review.
+\newblock Mission Update, 2007.
+
+\bibitem[Team(2025{\natexlab{a}})]{cfdcopilot2025}
+CFD-Copilot Team.
+\newblock {CFD-Copilot}: Autonomous {CFD} simulation agent with local {LLMs}.
+\newblock \emph{arXiv preprint}, 2025{\natexlab{a}}.
+
+\bibitem[Team(2025{\natexlab{b}})]{matsciagent2025}
+MatSciAgent Team.
+\newblock {MatSciAgent}: An {LLM}-driven multi-agent framework for materials
+  science.
+\newblock \emph{arXiv preprint}, 2025{\natexlab{b}}.
+
+\bibitem[Team(2025{\natexlab{c}})]{mdcrow2025}
+MDCrow Team.
+\newblock {MDCrow}: Molecular dynamics agent with 40+ tools.
+\newblock In \emph{ICLR}, 2025{\natexlab{c}}.
+
+\bibitem[Team(2025{\natexlab{d}})]{pasimodo2025}
+Pasimodo Team.
+\newblock Retrieval-augmented generation for particle simulation software.
+\newblock \emph{arXiv preprint arXiv:2502.03916}, 2025{\natexlab{d}}.
+
+\bibitem[Team(2025{\natexlab{e}})]{scienceagentbench2025}
+ScienceAgentBench Team.
+\newblock {ScienceAgentBench}: Toward rigorous assessment of language agents
+  for data-driven scientific discovery.
+\newblock In \emph{ICLR}, 2025{\natexlab{e}}.
+
+\bibitem[{U.S. Geological Survey}(1964)]{usgs1964}
+{U.S. Geological Survey}.
+\newblock The {Alaska} earthquake, {March 27, 1964}: Effects on communities.
+\newblock Technical Report Professional Paper 542, USGS, 1964.
+
+\bibitem[Various(2025{\natexlab{a}})]{agentic2025}
+Various.
+\newblock Agentic {AI} for scientific discovery: A survey.
+\newblock \emph{arXiv preprint arXiv:2503.08979}, 2025{\natexlab{a}}.
+
+\bibitem[Various(2025{\natexlab{b}})]{fromaitoscience2025}
+Various.
+\newblock From {AI} for science to agentic science.
+\newblock \emph{arXiv preprint arXiv:2508.14111}, 2025{\natexlab{b}}.
+
+\bibitem[Vieira et~al.(2017)Vieira, Brito, Crespo, Dom{\'\i}nguez, Altomare,
+  and G{\'o}mez-Gesteira]{vieira2017designsphysics}
+Andr{\'e} Vieira, Miguel Brito, Alejandro~JC Crespo, Jos{\'e}~M Dom{\'\i}nguez,
+  Corrado Altomare, and Moncho G{\'o}mez-Gesteira.
+\newblock {DesignSPHysics}: a software tool for {DualSPHysics}.
+\newblock \emph{Environmental Modelling \& Software}, 2017.
+
+\bibitem[Yao et~al.(2023)Yao, Zhao, Yu, Du, Shafran, Narasimhan, and
+  Cao]{yao2023react}
+Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan,
+  and Yuan Cao.
+\newblock {ReAct}: Synergizing reasoning and acting in language models.
+\newblock \emph{arXiv preprint arXiv:2210.03629}, 2023.
+
+\bibitem[Yue et~al.(2025{\natexlab{a}})]{foamagent2025}
+Z~Yue et~al.
+\newblock {Foam-Agent} 2.0: {MCP}-powered {AI} agents for computational fluid
+  dynamics.
+\newblock In \emph{NeurIPS ML4PS Workshop}, 2025{\natexlab{a}}.
+
+\bibitem[Yue et~al.(2025{\natexlab{b}})]{foamgpt2025}
+Z~Yue et~al.
+\newblock {FoamGPT}: Fine-tuned {LLM} for {OpenFOAM}.
+\newblock In \emph{NeurIPS ML4PS Workshop}, 2025{\natexlab{b}}.
+
+\bibitem[Zhang et~al.(2025)]{mooseagent2025}
+Y~Zhang et~al.
+\newblock {MooseAgent}: {LLM} agents for {MOOSE}-based finite element
+  simulation.
+\newblock \emph{arXiv preprint}, 2025.
+
+\bibitem[Zhao et~al.(2024)]{zhao2024lng}
+Y~Zhao et~al.
+\newblock {SPH} simulation of sloshing with elastic baffles in {LNG} tanks.
+\newblock \emph{Engineering Analysis with Boundary Elements}, 2024.
+
+\end{thebibliography}

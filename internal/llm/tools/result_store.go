@@ -110,7 +110,7 @@ func (r *resultStoreTool) Info() ToolInfo {
 
 func (r *resultStoreTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error) {
 	var params ResultStoreParams
-	if err := json.Unmarshal([]byte(call.Input), &params); err != nil {
+	if err := UnmarshalToolInput(call.Input, &params); err != nil {
 		return NewTextErrorResponse(fmt.Sprintf("파라미터 파싱 오류: %s", err)), nil
 	}
 

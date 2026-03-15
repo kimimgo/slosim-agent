@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -23,6 +22,7 @@ type XMLGeneratorParams struct {
 	ExcitationType string `json:"excitation_type,omitempty"` // "sinusoidal", "seismic", "custom"
 	SeismicFile    string `json:"seismic_file,omitempty"`    // EXC-01: Path to seismic wave file
 	BoundaryMethod string `json:"boundary_method,omitempty"` // MDBC-01: "dbc" (default) or "mdbc"
+	MotionType     string `json:"motion_type,omitempty"`     // "sway" (default) or "pitch"
 }
 
 type xmlGeneratorTool struct{}
@@ -88,6 +88,10 @@ func (x *xmlGeneratorTool) Info() ToolInfo {
 				"type":        "string",
 				"description": "경계 조건 방식: dbc (기본, 빠름) 또는 mdbc (고정밀, 압력 정확도 향상)",
 			},
+			"motion_type": map[string]any{
+				"type":        "string",
+				"description": "운동 유형: sway (수평 병진, 기본값) 또는 pitch (회전). pitch일 때 amplitude 단위는 degrees",
+			},
 		},
 		Required: []string{
 			"tank_length", "tank_width", "tank_height",
@@ -98,7 +102,7 @@ func (x *xmlGeneratorTool) Info() ToolInfo {
 
 func (x *xmlGeneratorTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error) {
 	var params XMLGeneratorParams
-	if err := json.Unmarshal([]byte(call.Input), &params); err != nil {
+	if err := UnmarshalToolInput(call.Input, &params); err != nil {
 		return NewTextErrorResponse(fmt.Sprintf("파라미터 파싱 오류: %s", err)), nil
 	}
 
@@ -167,6 +171,11 @@ func generateSloshingXML(p XMLGeneratorParams) string {
 		W = p.DP * 3 // Minimal width for 2D simulation
 	}
 
+	// Default motion type
+	if p.MotionType == "" {
+		p.MotionType = "sway"
+	}
+
 	// SWL gauge positions
 	leftX := fmt.Sprintf("%.4f", 0.05*L)
 	centerX := fmt.Sprintf("%.4f", 0.50*L)
@@ -175,6 +184,9 @@ func generateSloshingXML(p XMLGeneratorParams) string {
 
 	// Calculate SimulationDomain X margin based on motion amplitude
 	marginPct := p.Amplitude / L * 100 + 10
+	if p.MotionType == "pitch" {
+		marginPct = 15 // pitch uses angle, not displacement
+	}
 	if marginPct < 10 {
 		marginPct = 10
 	}
@@ -185,6 +197,36 @@ func generateSloshingXML(p XMLGeneratorParams) string {
 		boundaryMethodLine = "\n            <parameter key=\"BoundaryMethod\" value=\"2\" comment=\"2:mDBC\" />"
 	} else if p.BoundaryMethod == "dbc" {
 		boundaryMethodLine = "\n            <parameter key=\"BoundaryMethod\" value=\"1\" comment=\"1:DBC\" />"
+	}
+
+	// Generate motion XML block based on motion_type
+	var motionXML string
+	if p.MotionType == "pitch" {
+		// Pitch (rotation) — amplitude in degrees, rotation center at tank center-bottom
+		motionXML = fmt.Sprintf(`        <motion>
+            <objreal ref="0">
+                <begin mov="1" start="0" />
+                <mvrotsinu id="1" duration="%g" anglesunits="degrees">
+                    <axisp1 x="%.4f" y="%.4f" z="0" />
+                    <axisp2 x="%.4f" y="%.4f" z="0" />
+                    <freq v="%g" units_comment="Hz" />
+                    <ampl v="%g" units_comment="degrees" />
+                    <phase v="0" units_comment="degrees" />
+                </mvrotsinu>
+            </objreal>
+        </motion>`, p.TimeMax, L/2, W/2, L/2, -W/2, p.Freq, p.Amplitude)
+	} else {
+		// Sway (horizontal translation) — amplitude in metres
+		motionXML = fmt.Sprintf(`        <motion>
+            <objreal ref="0">
+                <begin mov="1" start="0" />
+                <mvrectsinu id="1" duration="%g" anglesunits="degrees">
+                    <freq x="%g" y="0" z="0" units_comment="Hz" />
+                    <ampl x="%g" y="0" z="0" units_comment="metres (m)" />
+                    <phase x="0" y="0" z="0" units_comment="degrees" />
+                </mvrectsinu>
+            </objreal>
+        </motion>`, p.TimeMax, p.Freq, p.Amplitude)
 	}
 
 	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8" ?>
@@ -228,16 +270,7 @@ func generateSloshingXML(p XMLGeneratorParams) string {
                 </mainlist>
             </commands>
         </geometry>
-        <motion>
-            <objreal ref="0">
-                <begin mov="1" start="0" />
-                <mvrectsinu id="1" duration="%g" anglesunits="degrees">
-                    <freq x="%g" y="0" z="0" units_comment="Hz" />
-                    <ampl x="%g" y="0" z="0" units_comment="metres (m)" />
-                    <phase x="0" y="0" z="0" units_comment="degrees" />
-                </mvrectsinu>
-            </objreal>
-        </motion>
+%s
     </casedef>
     <execution>
         <special>
@@ -298,8 +331,8 @@ func generateSloshingXML(p XMLGeneratorParams) string {
 		L, W, fH,
 		// tank drawbox size
 		L, W, H,
-		// motion: duration, freq, amplitude
-		p.TimeMax, p.Freq, p.Amplitude,
+		// motion XML block
+		motionXML,
 		// SWL_Left: point0 xy, point2 xy z
 		leftX, centerY, leftX, centerY, H,
 		// SWL_Center: point0 xy, point2 xy z

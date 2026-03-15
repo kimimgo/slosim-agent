@@ -1,0 +1,98 @@
+{
+  "total_scenarios": 1,
+  "ma2_pass": 1,
+  "ma3_pass": 0,
+  "ma3_partial": 1,
+  "ma3_fail": 0,
+  "results": [
+    {
+      "scenario": "S01",
+      "tier": "Easy",
+      "checks": [
+        {
+          "name": "tank_x",
+          "status": "PASS",
+          "expected": 0.9,
+          "actual": 0.9,
+          "error_pct": 0.0
+        },
+        {
+          "name": "tank_y",
+          "status": "PASS",
+          "expected": 0.062,
+          "actual": 0.062,
+          "error_pct": 0.0
+        },
+        {
+          "name": "tank_z",
+          "status": "PASS",
+          "expected": 0.508,
+          "actual": 0.508,
+          "error_pct": 0.0
+        },
+        {
+          "name": "fill_height",
+          "status": "PASS",
+          "expected": 0.09144,
+          "actual": 0.09144,
+          "error_pct": 0.0
+        },
+        {
+          "name": "rhop0",
+          "status": "FAIL",
+          "expected": 990,
+          "actual": 1000.0,
+          "reason": "used_default_water_density"
+        },
+        {
+          "name": "motion_type",
+          "status": "FAIL",
+          "expected": "mvrotsinu",
+          "actual": "mvrectsinu"
+        },
+        {
+          "name": "frequency",
+          "status": "PASS",
+          "expected": 0.6515,
+          "actual": 0.6515,
+          "error_pct": 0.0
+        },
+        {
+          "name": "amplitude_deg",
+          "status": "FAIL",
+          "expected": 4.0,
+          "actual": 0.0314,
+          "error_pct": 99.215
+        },
+        {
+          "name": "timemax",
+          "status": "PASS",
+          "expected": 7.68,
+          "actual": 7.68,
+          "error_pct": 0.0
+        },
+        {
+          "name": "viscosity",
+          "status": "FAIL",
+          "expected": 0.045,
+          "actual": 0.01,
+          "error_pct": 77.77777777777777
+        },
+        {
+          "name": "dp_range",
+          "status": "PASS",
+          "expected": [
+            0.003,
+            0.008
+          ],
+          "actual": 0.005
+        }
+      ],
+      "ma2_xml_valid": true,
+      "total_checks": 11,
+      "passed_checks": 7,
+      "ma3_score": 0.6363636363636364,
+      "xml_file": "/home/imgyu/workspace/02_active/sim/slosim-agent/research-v3/exp-a/results/S01_qwen3_32b_trial1/sloshing_case.xml"
+    }
+  ]
+}

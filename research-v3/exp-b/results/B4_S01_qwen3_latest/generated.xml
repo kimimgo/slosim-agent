@@ -1,0 +1,34 @@
+<Simulation>
+  <TimeStep>0.001</TimeStep>
+  <NumSteps>10000</NumSteps>
+  <Output>
+    <File>output</File>
+    <Frequency>10</Frequency>
+  </Output>
+  <Fluid>
+    <Density>990</Density>
+    <Viscosity>0.045</Viscosity>
+    <SmoothingLength>0.02</SmoothingLength>
+  </Fluid>
+  <Boundary>
+    <RigidBody>
+      <ID>1</ID>
+      <Position>0.45 0.031 0</Position>
+      <Size>0.9 0.062 0.508</Size>
+      <Motion>
+        <Rotation>
+          <Axis>0 0 1</Axis>
+          <Amplitude>0.0698</Amplitude>
+          <Frequency>4.13</Frequency>
+        </Rotation>
+      </Motion>
+    </RigidBody>
+  </Boundary>
+  <InitialConditions>
+    <Fluid>
+      <Level>0.0913</Level>
+      <Volume>0.005094</Volume>
+    </Fluid>
+  </InitialConditions>
+  <Gravity>9.81</Gravity>
+</Simulation>

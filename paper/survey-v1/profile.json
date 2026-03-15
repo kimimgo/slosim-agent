@@ -1,0 +1,25 @@
+{
+  "topic": "Domain-Specific AI Agent Architecture for Automated Sloshing Simulation: Enabling Non-Expert CFD Analysis through Tool-Augmented Local SLM",
+  "motivation": "Sloshing simulation using DualSPHysics requires expert knowledge in SPH parameters, XML case configuration, mesh sensitivity, and post-processing — creating a significant barrier for non-expert engineers. Existing LLM-for-CFD approaches (OpenFOAMGPT, Foam-Agent, ChatCFD) target OpenFOAM with cloud-based proprietary models, leaving DualSPHysics (GPU-accelerated SPH) completely unaddressed. No prior work combines local SLM deployment with domain-specific tool augmentation for particle-based CFD solvers.",
+  "hypothesis": "A domain-specific AI agent (SlosimAgent) powered by a locally-deployed Qwen3-32B SLM, augmented with 18 specialized tools via MCP protocol and guided by a ReAct reasoning loop with sloshing-specific domain prompts, can enable non-expert users to configure, execute, and analyze DualSPHysics sloshing simulations with comparable fidelity to expert-configured cases, while maintaining full data privacy through local inference.",
+  "existing_approaches": [
+    "OpenFOAMGPT 2.0 (2025): Multi-agent framework for OpenFOAM, GPT-4o, 100% success on 450+ sims",
+    "Foam-Agent 2.0 (2025): Claude 3.5 Sonnet, 88.2% success, HPC deployment",
+    "ChatCFD (2025-2026): DeepSeek-R1/V3, 82.1% execution, 68.12% physics fidelity, 315 benchmarks",
+    "NL2FOAM (2025): Qwen2.5-7B fine-tuned on 28,716 CFD cases, 88.7% accuracy",
+    "SimLLM (2025): Multi-stage SFT+DPO for SimPy, Qwen2.5-Coder-7B",
+    "MetaOpenFOAM (2024): MetaGPT assembly line paradigm for OpenFOAM",
+    "ChemCrow (2023): 13 domain-specific chemistry tools with LLM agent"
+  ],
+  "researcher_capabilities": {
+    "available_data": [],
+    "compute_resources": "",
+    "existing_code": [],
+    "research_background": "",
+    "accessible_benchmarks": []
+  },
+  "target_venue": "Engineering with Computers",
+  "deadline": null,
+  "constraints": [],
+  "related_projects": []
+}

@@ -1,0 +1,25 @@
+{
+  "oil_lateral": {
+    "peaks_detected": 4,
+    "M7_pass": true,
+    "M1_in_band": "2/4",
+    "M1_pass": true,
+    "cross_corr_r": 0.57,
+    "time_shift_s": -1.047
+  },
+  "water_roof": {
+    "probe_x_m": 0.05,
+    "peaks_mbar": [
+      12.6,
+      null,
+      null,
+      null
+    ],
+    "M1_in_band": "0/4",
+    "M1_pass": false,
+    "M2_mae_pct": 70.7,
+    "M2_pass": false,
+    "cross_corr_r": 0.367,
+    "time_shift_s": -0.784
+  }
+}

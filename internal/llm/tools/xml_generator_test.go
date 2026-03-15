@@ -470,6 +470,84 @@ func TestXMLGeneratorTool_MDBC(t *testing.T) {
 		assert.Contains(t, content, `value="1"`, "DBC should use method value 1")
 	})
 
+	t.Run("MDBC-01: motion_type=pitch generates mvrotsinu", func(t *testing.T) {
+		tool := NewXMLGeneratorTool()
+		tmpDir := t.TempDir()
+
+		outPath := filepath.Join(tmpDir, "test_pitch_Def")
+		params := XMLGeneratorParams{
+			TankLength:  0.9,
+			TankWidth:   0.062,
+			TankHeight:  0.508,
+			FluidHeight: 0.093,
+			Freq:        0.613,
+			Amplitude:   4.0,
+			DP:          0.004,
+			TimeMax:     7.0,
+			OutPath:     outPath,
+			MotionType:  "pitch",
+		}
+
+		paramsJSON, err := json.Marshal(params)
+		require.NoError(t, err)
+
+		call := ToolCall{
+			Name:  "xml_generator",
+			Input: string(paramsJSON),
+		}
+
+		response, err := tool.Run(context.Background(), call)
+		require.NoError(t, err)
+		assert.False(t, response.IsError)
+
+		xmlContent, err := os.ReadFile(outPath + ".xml")
+		require.NoError(t, err)
+		content := string(xmlContent)
+
+		assert.Contains(t, content, "mvrotsinu", "pitch motion should use mvrotsinu")
+		assert.NotContains(t, content, "mvrectsinu", "pitch motion should NOT contain mvrectsinu")
+		assert.Contains(t, content, `ampl v="4"`, "amplitude should be in degrees")
+		assert.Contains(t, content, "axisp1", "pitch needs rotation axis")
+		assert.Contains(t, content, "axisp2", "pitch needs rotation axis")
+	})
+
+	t.Run("MDBC-01: default motion_type generates mvrectsinu", func(t *testing.T) {
+		tool := NewXMLGeneratorTool()
+		tmpDir := t.TempDir()
+
+		outPath := filepath.Join(tmpDir, "test_sway_Def")
+		params := XMLGeneratorParams{
+			TankLength:  1.0,
+			TankWidth:   0.5,
+			TankHeight:  0.6,
+			FluidHeight: 0.3,
+			Freq:        0.5,
+			Amplitude:   0.05,
+			DP:          0.02,
+			TimeMax:     5.0,
+			OutPath:     outPath,
+		}
+
+		paramsJSON, err := json.Marshal(params)
+		require.NoError(t, err)
+
+		call := ToolCall{
+			Name:  "xml_generator",
+			Input: string(paramsJSON),
+		}
+
+		response, err := tool.Run(context.Background(), call)
+		require.NoError(t, err)
+		assert.False(t, response.IsError)
+
+		xmlContent, err := os.ReadFile(outPath + ".xml")
+		require.NoError(t, err)
+		content := string(xmlContent)
+
+		assert.Contains(t, content, "mvrectsinu", "default (sway) should use mvrectsinu")
+		assert.NotContains(t, content, "mvrotsinu", "sway should NOT contain mvrotsinu")
+	})
+
 	t.Run("MDBC-01: invalid boundary method returns error", func(t *testing.T) {
 		tool := NewXMLGeneratorTool()
 		tmpDir := t.TempDir()

@@ -1,0 +1,3 @@
+{
+  "response": "The \"No files found\" response typically indicates that the search pattern or path may need adjustment. Could you clarify the following to help refine the search?\n\n1. **Pattern Used**: What glob/regex pattern did you use?  \n2. **Target Directory**: Which directory were you searching (e.g., `/path/to/dir`)?  \n3. **Hidden Files**: Do you need to include hidden files (those starting with `.`)?  \n\nFor example:  \n- If you're looking for JavaScript files, try `**/*.js`.  \n- If files are in a subdirectory, specify the path (e.g., `/project/src/**/*.ts`).  \n\nLet me know, and I’ll adjust the search!"
+}
