@@ -58,6 +58,11 @@ case_defs = [
     ("4.0",  f"{sim_base}/spheric_oil_art_a4_0/out/measure_lateral_Press.csv"),
     ("5.0",  f"{sim_base}/spheric_oil_art_a5_0/out/measure_lateral_Press.csv"),
     ("10.0", f"{sim_base}/spheric_oil_art_a10_0/out/measure_lateral_Press.csv"),
+    ("1.0",  f"{sim_base}/spheric_oil_art_a1_0/out/measure_lateral_Press.csv"),
+    ("1.1",  f"{sim_base}/spheric_oil_art_a1_1/out/measure_lateral_Press.csv"),
+    ("1.2",  f"{sim_base}/spheric_oil_art_a1_2/out/measure_lateral_Press.csv"),
+    ("1.3",  f"{sim_base}/spheric_oil_art_a1_3/out/measure_lateral_Press.csv"),
+    ("1.4",  f"{sim_base}/spheric_oil_art_a1_4/out/measure_lateral_Press.csv"),
 ]
 
 sph = {}
@@ -68,7 +73,7 @@ for alpha, path in case_defs:
         sph[alpha] = (t, p)
         sph_peaks_all[alpha] = find_sph_peaks(t, p)
 
-alpha_list = ["0.1", "1.5", "2.0", "2.5", "3.0", "4.0", "5.0", "10.0"]
+alpha_list = ["0.1", "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.5", "3.0", "4.0", "5.0", "10.0"]
 cmap = plt.cm.viridis
 colors = {a: cmap(i / (len(alpha_list)-1)) for i, a in enumerate(alpha_list)}
 
