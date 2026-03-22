@@ -1,0 +1,365 @@
+arXiv:2504.19338v1 [physics.flu-dyn] 27 Apr 2025
+
+OpenFOAMGPT 2.0: end-to-end, trustworthy
+automation for computational fluid dynamics
+
+Jingsen Feng
+Department of Engineering
+University of Exeter
+
+Ran Xu
+Cluster of Excellence SimTech
+University of Stuttgart
+
+Xu Chu
+Department of Engineering
+University of Exeter
+x.chu@exeter.ac.uk
+
+Abstract
+We propose the first multi-agent framework for computational fluid dynamics that
+enables fully automated, end-to-end simulations directly from natural-language
+queries. The approach integrates four specialized agents—Pre-processing, Prompt
+Generation, OpenFOAMGPT (simulator), and Post-processing—decomposing
+complex computational fluid dynamics workflows into collaborative components
+powered by large language models. Extensive validation through diverse case studies, including Poiseuille flows, single- and multi-phase porous media flows, and
+aerodynamic analyses, demonstrates 100% success and reproducibility rates across
+over 450 simulations. Rigorous trustworthiness verification confirms that properly designed multi-agent systems can achieve the reliability standards necessary
+for zero-tolerance scientific computing applications while significantly lowering
+entry barriers. The framework establishes a foundation for conversation-driven
+simulation workflows in computational science, potentially accelerating discovery
+and innovation through more accessible tools for complex numerical simulations.
+Results reveal that multi-agent architectures, when properly specialized and orchestrated, can effectively handle the stringent requirements of computational physics
+while maintaining the intuitive interface of natural language interaction.
+
+1
+
+Introduction
+
+The rapid advancement of Large Language Models (LLMs) has catalyzed a transformative era in
+artificial intelligence, propelling multi-agent systems into a new phase of robust development and
+application [1–4]. These multi-agent frameworks, which orchestrate multiple specialized AI entities
+toward solving complex tasks, have demonstrated remarkable versatility across disciplines including
+sociology, economics, medicine, pharmaceuticals, computer science, mathematics, and engineering
+[5–15], and are even capable of conducting scientific research independently [16, 17]. Indeed,
+multi-agent architectures are increasingly recognized as an effective approach for maximizing the
+capabilities of LLMs through specialization, collaboration, and iterative refinement processes.
+Computational Fluid Dynamics (CFD), a branch of fluid mechanics employing numerical methods
+and algorithms to analyze and solve problems involving fluid flows [18–23], represents a domain with
+particularly widespread applications [24]—spanning aerospace engineering [25], weather prediction
+[26], biomedical flows [27, 28], and Geo-Engineering [29, 30]. The computational complexity,
+domain expertise requirements, and labor-intensive workflows associated with CFD simulations have
+historically limited its accessibility and practical deployment despite its critical importance across
+scientific and engineering disciplines.
+The integration of LLMs with CFD presents a compelling opportunity to address these limitations
+[31–33]. However, this integration faces significant challenges: CFD simulations demand precise numerical specifications, complex geometry handling, sophisticated physics modeling, and specialized
+Preprint. Under review.
+
+result interpretation. In this paper, we build upon OpenFOAMGPT system [34, 35] to present a comprehensive end-to-end multi-agent framework specifically designed for CFD applications. Through
+careful agent specialization and orchestration, we achieve truly conversational simulation capabilities,
+where natural language queries are automatically transformed into complete, executable CFD simulations with appropriate visualization and analysis of results, while maintaining exceptional levels
+of trustworthiness and reproducibility. This system represents a significant advancement in humancomputer interaction for scientific computing, effectively democratizing access to sophisticated fluid
+dynamics simulations while maintaining numerical rigor and solution quality.
+By enabling end-to-end "conversation-to-simulation" workflows, our multi-agent framework reduces
+the technical barriers to CFD utilization while simultaneously increasing productivity for domain
+experts. Experimental validation across diverse flow scenarios demonstrates the system’s robustness,
+accuracy, and practical utility for both academic and industrial applications.
+
+2
+
+Multi-Agent LLM framework for CFD
+
+The proposed multi-agent framework for CFD automation, as illustrated in Figure 1, comprises
+four specialized intelligent agents that collaboratively orchestrate end-to-end CFD workflows from
+pre-processing, simulation to post-processing without any human intervention. This framework
+represents a significant advancement in automated CFD simulation by integrating LLMs:
+Pre-processing Agent: This agent harnesses LLMs’ advanced semantic understanding capabilities
+to comprehensively analyze user queries.
+In CFD simulations, mesh generation is a fundamental step that significantly impact the accuracy and
+comprehensiveness of numerical results. For mesh generation, which discretizes the computational
+domain into small control volumes, OpenFOAM [36] provides two primary utilities: blockMesh for
+structured hexahedral meshes in simple geometries, and snappyHexMesh for unstructured meshes
+that can accurately capture flow fields around complex geometries, enabling detailed resolution of
+boundary layers, wake regions, and other critical flow features in the vicinity of intricate geometric
+configurations. The quality and resolution of these spatial discretizations directly impact the accuracy
+of the numerical solutions and the stability of the computational process.
+Additionally, CFD studies typically require multiple simulation cases with controlled parameter
+variations to investigate their effects on the flow physics, rather than relying on single-case results.
+This parametric study approach is essential for understanding the sensitivity of flow behavior to
+various input parameters, establishing correlations between design variables and performance metrics,
+and validating numerical models across different operating conditions.
+Recognizing these essential requirements, this agent intelligently determines critical simulation
+parameters through two primary decision paths: (1) simulation scope classification (single-case
+vs. multi-case parametric studies) and (2) mesh generation strategy selection (blockMesh for
+simple geometries vs. snappyHexMesh for complex geometries). For parametric studies, the agent
+automatically identifies key variables (e.g., mesh resolution, physical properties, boundary conditions).
+This agent defaults to single-case simulations with blockMesh-generated grids for computational
+efficiency in simple geometries. The agent employs contextual reasoning to resolve ambiguities in
+problem specifications, ensuring robust parameter formalization before downstream processing. By
+automating these critical pre-processing decisions, the agent significantly reduces the manual effort
+required in traditional CFD workflows while ensuring the generation of high-quality computational
+setups suitable for accurate flow simulations.
+Prompt Generation Agent: This agent implements an adaptive prompt engineering pipeline that
+dynamically constructs simulation instructions tailored to each specific case requirement. This agent
+demonstrates remarkable capability in precisely identifying all parameters requiring adjustment
+across the simulation space, even in complex scenarios involving multiple interacting variables—a
+capability we will demonstrate in Section 3.3.
+For single-case scenarios, it directly employs user query as input prompt. In multi-case scenarios,
+it systematically decomposes parametric variables (e.g., mesh resolution, physical properties like
+viscosity or density, boundary conditions) to generate a structured set of case-specific prompts. This
+2
+
+Figure 1: The design of multi-Agent framework for CFD. Red components represent user interfaces
+for input queries and output results. Green components indicate LLM-based intelligent agents. Blue
+components show built-in code modules working alongside agents to implement specific functionalities. Yellow components denote information and states provided during workflow execution. Orange
+components represent text-based output logs.
+approach of generating dedicated prompts for each parametric variation was deliberately chosen over
+alternative methods.
+A seemingly straightforward alternative would be to replicate configuration files from an initial
+successful simulation and subsequently modify specific parameters for derivative cases. However,
+this approach presents significant challenges in the context of OpenFOAM, whose configuration files
+adhere to extremely strict syntactical requirements and structural hierarchies. Such an approach would
+necessitate an additional specialized agent to guide the LLM in making precise modifications to the
+correct parameter locations across multiple interconnected files. When dealing with multi-variable
+modifications, this method becomes highly inefficient and prone to errors, as even minor syntax
+inconsistencies can cause simulation failures that are difficult to diagnose and correct automatically.
+By contrast, our approach of generating fresh, comprehensive prompts for each simulation case offers
+superior efficiency, robustness, and adaptability. These prompts are systematically organized in a
+Prompt Pool repository (Figure 1), which serves as a dynamic knowledge base for orchestrating sequential parametric studies. This methodology ensures that each simulation case receives a complete,
+coherent set of instructions, eliminating the risks associated with incremental file modifications while
+maintaining a high level of automation across diverse simulation requirements.
+OpenFOAMGPT: This agent functions as the core simulation engine[34, 35], executing a robust
+self-correcting simulation loop through three sophisticated modules that work in concert to ensure
+successful CFD simulations:
+1. Configuration Generation: Synthesizes comprehensive OpenFOAM case configurations by intelligently mapping task-specific requirements to appropriate numerical schemes and solver parameters.
+This module serves as the critical foundation for simulation accuracy, as the correctness and completeness of configuration files directly determine whether OpenFOAM can properly execute the
+simulation. The system employs a carefully constructed system prompt that constrains the LLM’s
+output format and structure. Each case-specific prompt is processed alongside this system prompt,
+enabling the LLM to understand specific simulation requirements while generating syntactically
+precise configuration files. Given the extremely stringent formatting requirements of OpenFOAM
+3
+
+configuration files, where even minor syntax errors can cause simulation failure, we deliberately avoid
+using the LLM’s "thinking" capabilities and instead set the temperature parameter to 0. This design
+choice ensures consistent, deterministic outputs, eliminating the variability that could introduce subtle
+errors in dictionary structures, parameter specifications, or boundary condition definitions.
+2. Automated Execution Management: Orchestrates simulation workflows in executed OpenFOAM
+environment. While this module does not directly involve LLM inference, it represents an essential
+component in the automation pipeline. The execution environment utilizes the OpenFOAM v2406
+Docker container, providing a standardized, reproducible runtime environment independent of the
+host system configuration. This module automatically executes the "Allrun" script generated in
+the previous step, monitors the simulation progress, and captures all console output and log files for
+potential error analysis.
+3. Error-Driven Iterative Refinement: Despite the precision-focused approach in configuration
+generation, LLM-generated configuration files may occasionally contain errors or omit necessary
+components that lead to simulation failures. In such cases, this module captures detailed error logs and
+contextual information about the failure, structuring this feedback for the LLM. The error information
+is then fed back to the LLM along with the original case prompt and system constraints, enabling
+intelligent refinement of the configuration files. This creates a closed-loop learning process where the
+system iteratively improves configurations based on specific error feedback until achieving successful
+simulation. This self-correcting capability significantly enhances the system’s robustness and success
+rate across diverse simulation requirements.
+
+Post-processing Agent: This agent extracts visualization and analysis requirements from original
+user queries, functioning as the final component in the automated CFD workflow. This agent operates
+on the simulation outputs systematically stored by OpenFOAM in the Post-processing directory—a
+structured repository containing field data, probe measurements, and derived quantities that were
+specified during the configuration generation phase by OpenFOAMGPT based on the requirements
+interpreted from each case’s prompt. Upon simulation completion, this agent automatically accesses
+and parses these output files, intelligently matching the available data with the visualization and
+analysis requirements originally specified in the user query. It will generate optimized Python scripts
+leveraging scientific computing libraries (NumPy, Matplotlib) for data processing and visualization,
+while also providing Paraview VTK files for visualization analysis. Its capabilities include automated
+generation of publication-quality visualizations adapted to the specific simulation context—such as
+contour plots of pressure and velocity fields, streamlines and vector plots to illustrate flow patterns,
+and integrated quantities such as forces and moments. For parametric studies involving multiple
+simulation cases, the agent automatically generates comparative visualizations that highlight trends
+and relationships between input parameters and output results—such as parameter sensitivity plots.
+Through this integrated approach to Post-processing, the agent transforms raw simulation data into
+actionable engineering insights, completing the automated workflow from problem specification to
+results interpretation without requiring manual intervention at any stage.
+
+3
+
+Experiments
+
+In this section, we present a comprehensive evaluation of the proposed multi-agent, end-to-end
+workflow through five representative case studies that span a diverse range of CFD applications:
+(i) single-phase Poiseuille flow, (ii) multi-phase Poiseuille flow, (iii) single-phase flow in porous
+media, (iv) multi-phase flow in porous media, and (v) aerodynamics of a motorbike. These cases
+were deliberately selected to assess the framework’s capability across varying levels of physical
+complexity, from fundamental channel flows to more complex scenarios. All intelligent agents within
+the framework are powered by the Claude-3.7-Sonnet, which provides the foundation for natural
+language understanding and generation capabilities. Throughout our experimental validation, the
+framework demonstrated remarkable robustness and reliability. When provided with well-formulated
+user queries and operating under the constraints of our carefully designed system prompts, the
+framework achieved a 100% success rate across both single-case simulations and parametric multicase studies. Importantly, all simulation results maintained complete reproducibility across multiple
+execution instances, indicating the deterministic nature of the workflow.
+4
+
+3.1
+
+Single-phase Poiseuille flow
+
+Single-phase Poiseuille flow represents a canonical case in fluid mechanics that describes the laminar
+flow of a viscous fluid through a straight channel under a pressure gradient. This flow configuration
+is particularly valuable as a validation case due to its well-established analytical solution, making it
+an ideal benchmark for verifying numerical methods.
+Our multi-agent workflow autonomously processed the user query through its complete pipeline.
+The Pre-processing Agent correctly identified this as a single-case simulation requiring blockMesh
+for the simple rectangular geometry. The Prompt Generation Agent transformed the user query
+into a structured simulation directive, which was then passed to OpenFOAMGPT. OpenFOAMGPT
+successfully generated all necessary configuration files, including appropriate boundary conditions
+for the pressure-driven channel flow, correct specification of the fluid properties, and proper numerical
+schemes for the icoFoam solver.
+Once the simulation completed, the Post-processing Agent automatically extracted the velocity
+profile data from the sampling location specified in the prompt. Notably, without any additional
+guidance, the agent recognized the need for analytical comparison and implemented the appropriate
+Poiseuille flow equation u(y) = −∆P y(H − y)/2µL, where ∆P is the pressure difference, µ is the
+dynamic viscosity, L is the channel length, and H is the channel height. The agent then generated a
+publication-quality plot comparing the numerical results with the analytical solution, demonstrating
+excellent agreement between the two and confirming the accuracy of the simulation (Figure 2(a)).
+3.2
+
+Multi-phase Poiseuille flow
+
+Multi-phase Poiseuille flow represents a validation case for immiscible, incompressible multi-phase
+flows. This configuration features a stratified flow arrangement where a non-wetting phase flows
+between two layers of a wetting phase adjacent to the channel walls. This arrangement creates distinct
+interfaces between the phases and introduces complex momentum transfer mechanisms that must be
+accurately resolved. The analytical solution for this stratified flow [37] provides a rigorous reference
+for validating numerical implementations.
+To comprehensively evaluate our multi-agent framework’s capability in handling this more complex multi-phase scenario, we designed a parametric study comprising three series of continuous
+simulations:
+1. Grid Independence Study: To establish the numerical accuracy and convergence characteristics
+of the solution, we conducted simulations with progressively refined mesh resolutions: 5 × 10,
+10 × 20, 20 × 40, 30 × 60, and 40 × 80 cells,as shown in Figure 2(b).
+2. Saturation Variation Study: To investigate the influence of phase distribution on flow behavior,
+we varied the wetting phase saturation (the volume fraction of the wetting phase relative to the total
+fluid volume) across four cases: 0.2, 0.4, 0.6, and 0.8, as shown in Figure 2(c).
+3. Viscosity Ratio Study: To examine the system’s response to varying degrees of viscous coupling,
+we implemented simulations with viscosity ratios (µnw /µw ) of 1, 5, 10, and 20, as shown in Figure
+2(d).
+Our multi-agent workflow correctly identified this as a multi-case simulation requiring multiphase
+physics. The Prompt Generation Agent successfully created individual prompts for each distinct
+simulation cases. OpenFOAMGPT correctly generate configuration files for all cases, and the
+simulations completed successfully. The Post-processing Agent automatically generated comparative
+visualizations showing grid convergence, saturation, and viscosity ratio influences. The successful
+execution of three continuous simulations demonstrates our framework’s robust capability to handle
+complex parametric studies without manual intervention.
+3.3
+
+Single-phase flow in porous media
+
+Fluid flow through porous media represents a common engineering phenomenon encountered in
+various applications ranging from groundwater flow to oil recovery. The complex geometric boundaries inherent in porous structures necessitate the use of unstructured meshes, as structured meshes
+5
+
+Figure 2: Validation and parametric studies of Poiseuille flow simulations. (a) Comparison between
+numerical results and analytical solution for single-phase Poiseuille flow; (b) Grid independence study
+for multi-phase Poiseuille flow; (c) Effect of viscosity ratio on velocity distribution in multi-phase
+Poiseuille flow; (d) Influence of wetting phase (water) saturation on velocity profiles in multi-phase
+Poiseuille flow. All subfigures are generated by the OpenFOAMGPT 2.0
+
+generated by blockMesh cannot adequately represent the intricate flow paths. This case study
+evaluates our multi-agent workflow’s capability to correctly employ snappyHexMesh for generating
+unstructured meshes around complex geometries and subsequently simulate the flow physics.
+We selected a 2D packed circular geometry with dimensions of 4 mm × 2 mm and porosity of 0.5567
+as our test case. The workflow autonomously executed three series of simulations to characterize this
+porous structure:
+First, a mesh independence study was conducted to ensure solution accuracy, employing resolutions
+of 300 × 150, 400 × 200, 500 × 250, 600 × 300, and 700 × 350 cells. Buffer regions comprising
+0.025% of the domain length were added to both sides to ensure proper implementation of pressure
+boundary conditions. Our multi-agent system correctly identified that permeability calculations
+with the 700 × 350 mesh differed by less than 2% from those with the 600 × 300 mesh, confirming
+sufficient resolution with the latter, as shown in Figure 3(a).
+Subsequently, the framework conducted a permeability representative elementary volume (REV) [38]
+determination study. This involved eight continuous simulations with domain sizes of 0.5 × 0.25,
+1 × 0.5, 1.5 × 0.75, 2 × 1, 2.5 × 1.25, 3 × 1.5, 3.5 × 1.75, and 4 × 2 mm. To maintain consistent
+mesh resolution and pressure gradients across scales, the system automatically adjusted grid counts
+to 75 × 38, 150 × 75, 225 × 113, 300 × 150, 400 × 200, 450 × 225, 525 × 263, and 600 × 300,
+while scaling pressure differences proportionally from 0.06 to 0.48 Pa. Despite the complexity of
+simultaneously varying geometry dimensions, mesh counts, and pressure conditions, our workflow
+correctly identified all simulation parameters for each case and successfully determined the REV size
+as 3 × 1.5 mm, as shown in Figure 3(b).
+Finally, using the established REV geometry, the system executed eight continuous simulations across
+different pressure gradients to characterize the flow regime. The Post-processing agent automatically
+generated plots that clearly illustrated the transition from Darcy flow (where flow rate varies linearly
+with pressure gradient according to q = −k∇p/µ at low pressure differences to non-Darcy flow at
+higher gradients, where inertial effects become significant and the relationship deviates from linearity,
+as shown in Figure 3(c).
+This case study demonstrates our framework’s ability to handle complex geometry preparation, unstructured mesh generation, and physics-based analysis requiring multiple interconnected parametric
+studies—capabilities essential for practical engineering applications beyond simple benchmark cases.
+6
+
+Figure 3: Results of single-phase flow in porous media simulation. (a) Grid independence study
+of permeability; (b) Determination of permeability REV size; (c) Relationship between flux and
+pressure difference. All three upper figures are generated by OpenFOAMGPT 2.0
+3.4
+
+Multi-phase flow in porous media
+
+Building upon the porous geometry established in Section 3.3, we extended our investigation to multiphase flow dynamics by simulating drainage processes—a phenomenon of significant importance in
+petroleum engineering and hydrogeology where a non-wetting phase displaces a wetting phase from
+a porous medium [39, 40]. Using the 4 mm × 2 mm porous structure with porosity of 0.5567, our
+multi-agent workflow autonomously executed three parametric studies to investigate the influence of
+key parameters on drainage efficiency:
+1. Contact Angle Study: Five simulations with the invading non-wetting phase at a fixed inlet
+velocity of 0.001 m/s while varying the contact angle at 95◦ , 110◦ , 125◦ , 140◦ , and 155◦ , as shown
+in Figure 4(a).
+2. Injection Velocity Study: Four simulations with a fixed contact angle of 110◦ and viscosity ratio
+of 1 while varying the invading phase velocity at 0.001 m/s, 0.002 m/s, 0.004 m/s, and 0.006 m/s, as
+shown in Figure 4(b).
+3. Viscosity Ratio Study: Four simulations with a fixed 0.002 m/s inlet velocity and contact angle
+of 110◦ while varying the viscosity ratio between displaced and invading fluids at 1, 2, 5, and 10, as
+shown in Figure 4(c).
+Our multi-agent workflow successfully executed all three parametric simulations, correctly handling
+complex geometry preparation, interface physics, and parameter variations across contact angles,
+injection velocities, and viscosity ratios. The system autonomously generated visualizations and
+identified displacement efficiency, demonstrating the framework’s capability to conduct sophisticated
+multi-phase investigations without human intervention.
+3.5
+
+Aerodynamics of a motorbike
+
+Aerodynamics of a motorbike serves as an example of turbulent flow simulations. This case study
+employs a provided polyMesh folder to demonstrate our multi-agent workflow’s capability in
+handling pre-generated mesh geometries. The investigation characterizes a motorcycle’s aerodynamic
+behavior across ten velocity conditions ranging from 10 m/s to 100 m/s in 10 m/s increments.
+The framework conducted an aerodynamic coefficient study across the velocity. As shown in Figure
+5(a), the post-processing agent automatically extracted drag coefficients (Cd ) from each simulation,
+7
+
+Figure 4: Displacement efficiency in drainage process of multi-phase flow through porous media. (a)
+Effect of contact angle variation; (b) Influence of inlet velocity; (c) Impact of viscosity ratio between
+displaced and invading fluids. All three upper figures are generated by OpenFOAMGPT 2.0
+
+Figure 5: Results of aerodynamics of a motorbike simulation. (a) Drag coefficient (Cd ) in different
+velocity; (b) The streamline flow characteristics surrounding a motorbike operating at 100m/s. The
+left figure is generated by OpenFOAMGPT 2.0
+where the drag coefficient is defined as the dimensionless quantity expressing the aerodynamic drag
+force normalized by dynamic pressure and reference area: Cd = D/(0.5ρu2 A), where D is the
+drag force (N), ρ is the air density (kg/m3 ), u is the flow velocity (m/s), and A is the characteristic
+reference area (m2 ). This analysis revealed Cd variations across different velocities. Subsequently,
+the workflow analyzed streamline flow through automated visualization. Figure 5(b) illustrates a
+visualization of velocity magnitude contours and streamline trajectories at 100 m/s, highlighting key
+flow features including helmet wake vortices, fairing boundary layer development, and rear wheel
+turbulence.
+This case demonstrates the capability of our multi-agent workflow to directly accept provided mesh
+files, validating its technical competence in maintaining simulation integrity while circumventing the
+geometry pre-processing phase. This characteristic substantiates the workflow’s compatibility with
+specialized cases requiring custom meshing.
+3.6
+
+Trustworthiness verification
+
+High trustworthiness is a critical requirement for CFD simulations, where even minor inconsistencies
+can lead to significant discrepancies in results. A well-designed CFD multi-agent system must
+demonstrate exceptional reproducibility to be considered reliable for practical applications. To
+rigorously assess this aspect of our framework, we conducted extensive verification experiments
+across all test cases (Table 1).
+Each case study underwent multiple executions to verify consistent behavior. Particular attention
+was devoted to the single-phase flow in porous media case, for this scenario, we performed 10
+8
+
+

@@ -1,0 +1,598 @@
+State-of-the-art SPH solver DualSPHysics:
+from fluid dynamics to multiphysics problems
+J.M. Domínguez1*, G. Fourtakas2, C. Altomare3,4, R.B. Canelas5, A. Tafuni6, O. García-Feal1, I. MartínezEstévez1, A. Mokos7, R. Vacondio8, A.J.C. Crespo1, B.D. Rogers2, P.K. Stansby2, M. Gómez-Gesteira1
+1
+
+EPHYSLAB Environmental Physics Laboratory, CIM-UVIGO, Universidade de Vigo, Spain
+
+2
+
+Department of Mechanical, Aerospace and Civil Engineering (MACE), University of Manchester,
+United Kingdom
+3
+
+Maritime Engineering Laboratory, Universitat Politècnica de Catalunya – BarcelonaTech, Barcelona,
+Spain
+4
+
+Ghent University, Department of Civil Engineering, Technologiepark 60, 9052 Gent, Belgium
+
+5
+
+Bentley Systems, Lisbon, Portugal
+
+6
+
+School of Applied Engineering and Technology, New Jersey Institute of Technology, Newark, US
+
+7
+
+Saint-Venant Hydraulics Laboratory, Ecole des Ponts ParisTech, Paris, France
+
+8
+
+Department of Engineering and Architecture, University of Parma, Parma, Italy
+
+*Corresponding author. E-mail address: jmdominguez@uvigo.es, ORCID: 0000-0002-2586-5081
+
+Abstract
+DualSPHysics is a weakly compressible smoothed particle hydrodynamics (SPH) Navier-Stokes solver initially
+conceived to deal with coastal engineering problems, especially those related to wave impact with coastal
+structures. Since the first release back in 2011, DualSPHysics has shown to be robust and accurate for simulating
+extreme wave events along with a continuous improvement in efficiency thanks to the exploitation of hardware
+such as graphics processing units (GPUs) for scientific computing or the coupling with wave propagating models
+such as SWASH and OceanWave3D. Numerous additional functionalities have also been included in the
+DualSPHysics package over the last few years which allow the simulation of fluid-driven objects. The use of the
+discrete element method (DEM) has allowed the solver to simulate the interaction among different bodies
+(sliding rocks, for example), which provides a unique tool to analyse debris flows. In addition, the recent coupling
+with other solvers like Project Chrono or MoorDyn has been a milestone in the development of the solver. Project
+Chrono allows the simulation of articulated structures with joints, hinges, sliders and springs and MoorDyn allows
+simulating moored structures. Both functionalities make DualSPHysics one of the meshless model world leaders
+in the simulation of offshore energy harvesting devices. Lately, the present state of maturity of the solver goes
+beyond single phase simulations, allowing multi-phase simulations with gas-liquid and a combination of
+Newtonian and non-Newtonian models expanding further the capabilities and range of applications for the
+DualSPHysics solver. These advances and functionalities make DualSPHysics a state-of-the-art meshless solver
+with emphasis on free-surface flow modelling.
+
+Keywords: Meshfree, Lagrangian, SPH, Particles, DualSPHysics, Navier-Stokes equations, Free-surface
+flows
+
+1
+
+1. Introduction
+The meshless method smoothed particle hydrodynamics (SPH) has made great progress over the past
+two decades with many contributions to the method continually appearing. Modern SPH schemes enable
+the simulation of violent free-surface flows with improved accuracy, while new physical processes can
+be included with relative ease accompanied by a significant reduction of the computational time
+achieved through hardware acceleration.
+The development of SPH enables the simulation of different physical phenomena, including violent
+hydrodynamics of coastal/offshore waves impacting structures, galaxy and planetary formation and
+evolution, flow in process industries characterised by multiple phases and mixing, large deformations
+of solids and structures, modelling damage and failure, including opening and propagation of cracks,
+fluid-structure interaction, and exploitation in computer graphics and computer games (see [1–4] for
+recent examples). The most relevant advantages over Eulerian methods [5] are the exact conservation
+of mass and momentum and the meshless properties. Despite these advances, some key challenges still
+remain, and are encapsulated in the SPHERIC Grand Challenges (https://spheric-sph.org/grandchallenges).
+With the large numbers of neighbouring particle interactions and the time step restricted by the Courant
+condition for weakly-compressible flow, SPH is computationally demanding and there have been
+multiple efforts within the broad SPH community to accelerate the simulations. Massive parallelisation
+is the traditional approach where machines with tens of thousands of processing cores are used in a
+combination of distributed and shared memory frameworks [6–8]. In the past 10 years, the exploitation
+of hardware such as graphics processing units (GPUs) for scientific computing has gained traction. SPH
+is particularly suitable to graphics processing unit (GPU) acceleration thanks to its vector lists of
+particles and their interactions. Multiple GPU-based SPH codes now exist [9–11].
+The open-source code DualSPHysics is being developed precisely to address these issues. The
+DualSPHysics project is an open-source SPH package with a growing user community, including annual
+international Users Workshops and 52,000 downloads in total with up to 10,000 downloads for each
+sub-release. In a highly collaborative approach, the Universidade de Vigo, University of Manchester,
+University of Lisbon, Università di Parma, Flanders Hydraulics Research, Universitat Politécnica de
+Catalunya, and New Jersey Institute of Technology have developed DualSPHysics, which represents
+the state-of-the-art for exploiting the computational power of modern GPUs and enables simulation of
+real engineering problems using a standard desktop PC. The open-source code is freely available at
+https://dual.sphysics.org/ and is released under GNU Lesser General Public License (LGPL).
+DualSPHysics’ name derives from being able to run on both central processing unit (CPU) using the
+shared memory OpenMP approach, or on a GPU. The main thrust of the DualSPHysics development
+has been to exploit the computational acceleration using the compute unified device architecture
+(CUDA) programming framework on Nvidia GPUs. One of the guiding philosophies for this dual
+functionality is that new features are developed first in C++ language for the CPU version, and once
+validated they are more easily ported to a GPU using CUDA. This can facilitate new developers to
+implement their own customized solutions without learning CUDA, which is less widespread than C++.
+This approach allows engineers to focus on developing new functionalities, while computer scientists
+can work on ensuring computational efficiency of the GPU version. The code has highly optimised
+CUDA kernels for a single GPU, it uses hierarchical templates and optimized cell-linked neighbour lists
+[12] to achieve maximum code flexibility and processing speed [13].
+DualSPHysics comes with dedicated pre- and post-processing tools. In particular, the GenCase
+application is used to generate all the necessary inputs. In the XML input files constants, geometries,
+and parameters are specified. Recently, a graphical user interface (GUI) plugin for the open-source
+software FreeCAD, namely DesignSPHysics (https://design.sphysics.org/), has made the workflow for
+the generation of new test cases more straightforward and accessible. Different post-processing tools
+2
+
+are available inside the DualSPHysics package, either to visualise the simulation using any scientific
+visualisation software such as Paraview or to extract computed quantities of interest (vorticity, surface
+elevation, forces, etc.).
+The DualSPHysics code has evolved continuously since its first release in 2011. The most recent release
+(version 5.0, July 2020) includes many relevant novelties: (i) Coupling with the discrete element method
+and Project Chrono (https://projectchrono.org/); (ii) Coupling with MoorDyn (http://www.matthall.ca/moordyn.html); (iii) a multi-phase solver (soil-water and gas-liquid); (iv) specialised
+functionality for second-order wave generation and active wave absorption, plus relaxation zones; (v)
+coupling with wave propagation models; and (vi) inlet/outlet flow conditions. Some limitations remain
+related to the SPHERIC Grand Challenges (GC3: Adaptivity, GC4: Coupling, GC5: Applicability to
+industry), which are the focus of ongoing research.
+The aim of this paper is to present the novel developments of the DualSPHysics software, emphasising
+the process of validation that is undertaken before software releases. The paper is organised as follows:
+Section 2 describes the core SPH formulation. Section 3 is dedicated to the description of different
+features: wave generation, fluid-structure interaction, inflow-outflow, and multi-phase formulations.
+Section 4 presents one of the key developments of coupling with other models, including wave
+propagation models, DEM, the physics engine Project Chrono and the library MoorDyn. Section 5
+presents the new code implementation, which has changed significantly over the lifespan of the code.
+In Section 6 validations and applications are presented. Finally, the current challenges are briefly
+discussed in Section 7 in the context of ever-changing hardware, user demands and ongoing research.
+
+2. SPH formulation
+2.1.
+
+Interpolants and kernel functions
+
+The integral (continuous) representation of SPH in a domain 𝛺 for a smooth function 𝑓(𝐫), 𝐫 ∈ ℝ𝑑 can
+be written as the convolution a kernel function 𝑊 and 𝑓
+f  r  :  f  r 'W  r  r ', h  dr ' ,
+
+
+(1)
+
+where the 〈∙〉 symbol denotes an SPH interpolant and will be dropped henceforth for simplicity, 𝐫′ ∈ 𝛺
+is a temporary position variable and 𝑊(𝐫, ℎ) is a positive function with the general form of,
+W  r, h  :
+
+1
+ q ,
+hd
+
+(2)
+
+with ℎ > 0 and 𝑞 = |𝐫|/ℎ. The function 𝜔: ℝ → ℝ is a smooth non-negative function such that,
+
+   q  dr  1 ,
+
+(3)
+
+
+
+with compact support (see Figure 1),
+  q   0 for r  kh, k 
+
+
+
+.
+
+(4)
+
+3
+
+Figure 1. Shape and compact support of overlapping kernel functions.
+
+The discrete convolution of 𝑊 and 𝑓, defined herein as the SPH discrete approximation, is obtained by
+f  ra  :  f  rb W  ra  rb , h  rbd ,
+
+(5)
+
+bP
+
+where the subscripts 𝑎, 𝑏 ∈ P = {1, ⋯ , 𝑁} denote the interpolating and neighbouring discrete particles,
+while 𝛥𝑟𝑏𝑑 is the associated volume 𝑉 of the b-th particle in P. The set P contains all particles within
+the domain i.e. fluid F, boundary B and floating objects K as shown in Figure 2 with P = F ∪ B and K ⊂
+B.
+
+Figure 2. Sketch of different sets of particles 𝑎 ∈ P.
+
+For a more complete description of SPH, the reader is referred to [14, 15] and a recent review in [5].
+Similar integral and discrete expressions can be formulated for a gradient operator for a given function
+𝑓 by,
+f  r 
+r
+
+  f  r '
+
+
+W
+r  r ', h  dr ' ,
+r
+
+(6)
+
+by employing the convolution identity,
+4
+
+f
+W
+W  f 
+.
+r
+r
+
+(7)
+
+The discrete gradient takes the following form,
+
+
+f  ra  :  f  rb  W  ra  rb , h Vb , a  1, , N .
+r
+r
+bP
+
+(8)
+
+Several smoothing kernels have been proposed in the literature as summarised in [16]. The smoothing
+kernel or simply kernel takes the form of Eq. (2) and satisfies Eq. (3) and (4), with 𝑊: ℝ𝑑 → ℝ.
+Moreover, it is positively defined within the support domain {∀𝐫 ′ ∈ Ω; 𝑊(𝐫 − 𝐫 ′ , ℎ) > 0}, it is a
+monotonic decreasing sufficiently smooth function defined over the interval 𝑘ℎ and,
+limh0 W  r, h    (r) ,
+
+(9)
+
+where 𝛿 is the Dirac delta function [17, 18]. Several kernel functions have been implemented in
+DualSPHysics.
+The widely used third order B-splines kernel (cubic spline) reads [18]
+ 3 2 3 3
+ 1 2 q  4 q
+
+3
+1
+W  r , h   aD   2  q 
+4
+0
+
+
+
+
+0  q 1
+1 q  2 ,
+
+(10)
+
+otherwise
+
+where 𝛼𝐷 is 10/7𝜋ℎ2 and 1/𝜋ℎ3 in 2-D and 3-D respectively.
+The Wendland function [19], namely the C2 kernel which exhibits a positive kernel Fourier transform
+[16, 20] and better pairing instability characteristics. The Wendland C2 reads
+4
+
+ q
+W  r, h   aD 1    2q  1
+ 2
+
+0 q  2,
+
+(11)
+
+where 𝛼𝐷 is 7/4𝜋ℎ2 and 21/16𝜋ℎ3 in 2-D and 3-D respectively.
+
+2.2.
+
+Governing equations
+
+The governing equations are described by the Navier-Stokes equations for a compressible fluid. The
+continuity and momentum equations in Lagrangian form can be written as,
+d
+    v ,
+dt
+
+(12)
+
+dv
+1
+  P    f ,
+dt
+
+
+(13)
+
+and
+
+respectively, where 𝑑 denotes the total or material derivative, v is the velocity vector, ρ is density, P is
+pressure, Γ denotes the dissipation terms and f represents accelerations due to external forces, such as
+the gravity.
+
+5
+
+2.3.
+
+SPH discretisation of the governing equations
+
+The mass conservation property of SPH,
+dm
+0,
+dt
+
+(14)
+
+where the mass is conserved exactly within a Lagrangian particle, results in a density change due to the
+volumetric change of the term at the right-hand side of Eq. (12). In the SPH formalism, the discrete form
+of the continuity equation at a point 𝑎 with position 𝐫𝑎 reads [14],
+m
+d
+ ρa  b v ab  aWab  Da ,
+dt aP
+bP ρb
+
+(15)
+
+where the second term in the right-hand side represents a numerical density diffusion term [21].
+The discrete form of the Euler equation in a SPH formalism reads
+
+ P  Pb 
+dv
+  mb  a
+ Wab  f ,
+dt aF
+bP
+  a b 
+
+(16)
+
+where a symmetric SPH operator has been used that guarantees conservation of momentum [22].
+2.3.1. Density diffusion terms
+Two density diffusion terms (DDT) formulations are implemented in DualSPHysics which act as a high
+frequency numerical noise filter improving the stability of the scheme by smoothing the density and
+consequently the pressure. The latter is known to be spurious due to the collocated (in velocity and
+density) and explicit (time integration) nature of weakly compressible SPH. These terms take the general
+form of
+Da   hca  ab WabVb ,
+
+(17)
+
+bF
+
+where 𝛿 controls the magnitude of the diffusion term. The term 𝛹𝑎𝑏 is based on the Neumann–
+Richtmeyer artificial dissipation. Molteni and Colagrossi [23] introduced this artificial dissipation term
+as
+ ab  2  b  a 
+
+rab
+rab
+
+2
+
+.
+
+(18)
+
+Lately, Fourtakas et al. [24] modified Eq. (18) by accounting for the dynamic component of the density
+by,
+
+
+
+
+
+ ab  2 ba
+ ab
+
+ rr
+
+ab
+2
+
+,
+
+(19)
+
+ab
+
+where superscripts (∙)𝑇 and (∙)𝐻 denote the total and hydrostatic component of the density of a weakly
+compressible and barotropic fluid by locally constructing the hydrostatic pressure as,
+
+Pab
+ 0 gzab .
+
+(20)
+
+Although both terms are not consistent near a truncated kernel support [21] (such as free-surface or a
+wall boundary) thus, resulting in an outwards vector net contribution, the latter term improves the
+behaviour of pressure near the wall boundaries by operating on the dynamic pressure.
+6
+
+2.3.2. Dissipation terms
+2.3.2.1.
+
+Artificial viscosity
+
+An artificial diffusive term can be used in the momentum equation [25] based on the Neumann–
+Richtmeyer artificial viscosity, aiming to reduce oscillations and stabilise the SPH scheme. The artificial
+viscosity term is added in the SPH gradient operator in right hand side of Eq. (16) and reads,
+  cab   hv ab  rab 
+
+
+
+ ab   ab   rab2   2 
+
+ 0
+
+v ab  rab  0
+
+,
+
+(21)
+
+v ab  rab  0
+
+(∙)𝑎𝑏 = [(∙)𝑎 − (∙)𝑏 ]/2. Herein, c denotes the numerical speed of sound
+where (∙)𝑎𝑏 = (∙)𝑎 − (∙)𝑏 and ̅̅̅̅̅̅
+(see Section 2.4) and α is the artificial viscosity coefficient. The parameter 𝜂 = 0.001ℎ2,
+with {𝜂 ∈ ℝ; 𝑟𝑎𝑏 > 𝜂} guarantees a non-singular operator. It can be shown that Π𝑎𝑏 ∝ 𝜐0 ∇2 𝐯, where
+𝜐0 is the kinematic viscosity [14, 26]. The final form of the momentum equation in the presence of
+artificial viscosity reads,
+
+ P  Pb
+
+dv
+  mb  a
+  ab  Wab  f ,
+dt aF
+bP
+  a b
+
+
+(22)
+
+Due to its simplicity, the artificial viscosity formulation is commonly used in SPH as a viscous
+dissipation term.
+2.3.2.2.
+
+Laminar viscosity
+
+Viscous dissipation of momentum in the laminar regime in DualSPHysics is approximated by Lo and
+Shao [27],
+02 v a   mb
+bP
+
+40 rab Wab
+
+ a  b   rab2   2 
+
+v ab ,
+
+(23)
+
+where 𝜐0 denotes the kinematic viscosity of the fluid.
+2.3.2.3.
+
+Sub-particle scale model
+
+The large eddy simulation sub-particle scale model (SPS) [28] as described by Dalrymple and Rogers
+[29] using Favre averaging in a weakly compressible approach is implemented in DualSPHysics. The
+SPS stress tensor τ is defined in Einstein notation over superscripts i, j according to
+ ij  vi v j  vi v j ,
+
+(24)
+
+2
+ ij
+1
+
+ 2
+ 2SPS  S ij  S ii ij   Cl  2 ij S ij .
+
+3
+3
+
+
+
+(25)
+
+modelled by an eddy viscosity closure as,
+
+2
+
+Here, 𝜐𝑆𝑃𝑆 = [𝐶𝑆 𝛥]2 |𝑆 𝑖𝑗 | , where 𝐶𝑆 = 0.12 is the Smagorinsky constant 𝐶𝑙 = 0.0066, ∆ is the initial
+1/2
+
+particle spacing, and |𝑆 𝑖𝑗 | = 1⁄2 (2𝑆 𝑖𝑗 𝑆 𝑖𝑗 ) , where 𝑆 𝑖𝑗 is an element of the SPS strain tensor. Using
+the same variationally-consistent form of the pressure gradient (Eq. 16), the discrete form of the term
+reads [29],
+  ij   bij  i
+  aij   mb  a
+  Wab .
+
+bP
+  a b 
+1
+
+(26)
+7
+
+Finally, the momentum dissipation term in DualSPHysics takes the following form
+a   mb
+bP
+
+2.4.
+
+40rab Wab
+
+  aij   bij  i
+v
+
+m
+
+  Wab .
+
+ab
+b
+ a  b   rab2   2 
+bP
+  a b 
+
+(27)
+
+Equation of state and compressibility
+
+In the SPH formulation implemented in DualSPHysics, density and pressure are coupled by means of
+an equation of state (EOS) allowing for weak compressibility of the fluid based on the numerical speed
+of sound [30],
+
+
+cs2 0   
+   1 ,
+P
+   0 
+
+
+
+(28)
+
+where 𝛾 is the polytropic index (usually 7 for water), 𝜌0 is the reference density, and the numerical speed
+of sound is defined as 𝑐𝑠 = √𝜕𝑃⁄𝜕𝜌 [31].
+Therefore, a numerical speed of sound is chosen based on the typical lengthscale and timescale of the
+domain allowing for a 1% variation in density that results in a Mach number 𝑀𝑎 ≈ 0.1 with, 𝑐𝑠 =
+10‖𝐯‖𝑚𝑎𝑥 . Such a restriction in the speed of sound allows for larger timesteps within the explicit time
+integration [30].
+
+2.5.
+
+Time integrators and time step
+
+In DualSPHysics, two explicit time integration schemes are implemented. For brevity, the governing
+equations are written as
+dv a
+d a
+dr
+ Fa ;
+ Ra ; a  v a .
+dt
+dt
+dt
+
+(29)
+
+The time integrators are briefly introduced below.
+2.5.1. Verlet time integration scheme
+The Verlet scheme [32] is commonly used in molecular dynamics since it is a low computational cost
+scheme with a second order accurate space integrator that does not require multiple calculation steps
+within an iteration interval, the WCSPH variables are calculated according to,
+
+v na1  v na1  2 tFan ;
+
+an1  an1  2 tRan
+
+ran1  ran  tv an  1 t 2Fan ;
+2
+,
+
+(30)
+
+Due to the integration over a staggered time interval, the equations of density and velocity are decoupled,
+which may lead to divergence of the integrated values. Therefore, an intermediate step is required every
+N𝑆 steps (N𝑆 ≈ 40 is recommended) according to
+
+v na1  v na  tFan ,
+
+an1  an  tRan
+
+ran 1  ran  tv na  1 t 2Fan ,
+2
+,
+
+(31)
+
+8
+
+

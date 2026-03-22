@@ -68,12 +68,20 @@ def parse_xml_params(xml_path):
             freq_el = mot.find('freq')
             ampl_el = mot.find('ampl')
             if freq_el is not None:
-                params['freq_x'] = float(freq_el.get('x', 0))
-                params['freq_y'] = float(freq_el.get('y', 0))
+                # mvrectsinu: <freq x="..." y="..." z="..."/>
+                # mvrotsinu:  <freq v="..."/>
+                if freq_el.get('v') is not None:
+                    params['freq_x'] = float(freq_el.get('v', 0))
+                else:
+                    params['freq_x'] = float(freq_el.get('x', 0))
+                    params['freq_y'] = float(freq_el.get('y', 0))
             if ampl_el is not None:
-                params['ampl_x'] = float(ampl_el.get('x', 0))
-                params['ampl_y'] = float(ampl_el.get('y', 0))
-                params['ampl_z'] = float(ampl_el.get('z', 0))
+                if ampl_el.get('v') is not None:
+                    params['ampl_x'] = float(ampl_el.get('v', 0))
+                else:
+                    params['ampl_x'] = float(ampl_el.get('x', 0))
+                    params['ampl_y'] = float(ampl_el.get('y', 0))
+                    params['ampl_z'] = float(ampl_el.get('z', 0))
             params['duration'] = float(mot.get('duration', 0))
             break
 

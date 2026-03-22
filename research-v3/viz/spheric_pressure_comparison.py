@@ -2,8 +2,13 @@
 """SPHERIC Test 10 — Simulation vs Experiment pressure time-series comparison.
 Peak-based time alignment: align first major impact peak, then compare.
 
-Water Lateral: run_001 (dp=0.004), run_002 (dp=0.002), run_003 (dp=0.001)
-Oil Lateral:   run_005 (Artificial), run_009b (Laminar+SPS 10ms)
+Water Lateral: run_001 (dp=0.004), run_002 (dp=0.002), run_003v2 (dp=0.001)
+Oil Lateral:   run_005 (dp=0.002, mDBC), run_010 (probe fix), run_011 (dp=0.001)
+
+Probe positions corrected for 1.5h rule:
+  dp=0.004 → x=0.013 (1.56h)
+  dp=0.002 → x=0.007 (1.68h)
+  dp=0.001 → x=0.005 (1.51h)
 """
 from pathlib import Path
 import numpy as np
@@ -18,6 +23,7 @@ OUT_DIR = Path(__file__).parent / "plots"
 OUT_DIR.mkdir(exist_ok=True)
 
 SIMDATA = Path("/mnt/simdata/dualsphysics/exp1")
+SIMDATA_C = Path("/mnt/simdata/dualsphysics/exp-c")
 EXPDATA = Path(__file__).resolve().parents[2] / "datasets" / "spheric" / "case_1"
 ANALYSIS_DIR = Path(__file__).resolve().parents[1] / "exp-c" / "analysis"
 
@@ -51,16 +57,22 @@ def load_dsph_csv(filepath, probe=0):
     return np.array(times), np.array(pressures)
 
 
-def find_impact_peaks(t, p, min_height, min_spacing_sec):
-    """Detect impact peaks with minimum height and spacing."""
+def find_impact_peaks(t, p, min_height, min_spacing_sec, max_height=None,
+                      smooth_win=5):
+    """Detect impact peaks on smoothed signal to avoid SPH spikes."""
     if len(t) < 2:
         return [], []
+    p_sm = smooth_pressure(p, smooth_win) if smooth_win > 1 else p
     dt = np.median(np.diff(t))
     dist = max(1, int(min_spacing_sec / dt))
-    peaks, _ = find_peaks(p, height=min_height, distance=dist, prominence=min_height * 0.3)
+    peaks, _ = find_peaks(p_sm, height=min_height, distance=dist,
+                          prominence=min_height * 0.3)
     # Skip startup transients: require t > 0.5s
     valid = [pk for pk in peaks if t[pk] > 0.5]
-    return [t[pk] for pk in valid], [p[pk] for pk in valid]
+    # Filter remaining SPH spikes
+    if max_height is not None:
+        valid = [pk for pk in valid if p_sm[pk] <= max_height]
+    return [t[pk] for pk in valid], [p_sm[pk] for pk in valid]
 
 
 def compute_peak_shift(exp_peak_times, sim_peak_times, n_match=3):
@@ -72,13 +84,22 @@ def compute_peak_shift(exp_peak_times, sim_peak_times, n_match=3):
     return np.mean(shifts)
 
 
-def find_peak_in_window(t, p, t_center, window=0.4):
-    """Find max pressure within time window."""
+def smooth_pressure(p, window=5):
+    """Moving average smoothing to suppress SPH pressure spikes."""
+    if len(p) < window:
+        return p
+    kernel = np.ones(window) / window
+    return np.convolve(p, kernel, mode='same')
+
+
+def find_peak_in_window(t, p, t_center, window=0.4, smooth_win=5):
+    """Find max pressure within time window, with spike filtering."""
     mask = (t >= t_center - window) & (t <= t_center + window)
     if mask.sum() == 0:
         return 0.0, t_center
-    idx = np.argmax(p[mask])
-    return p[mask][idx], t[mask][idx]
+    p_smooth = smooth_pressure(p[mask], smooth_win) if smooth_win > 1 else p[mask]
+    idx = np.argmax(p_smooth)
+    return p_smooth[idx], t[mask][idx]
 
 
 # ============================================================
@@ -102,20 +123,26 @@ def plot_water_lateral():
         print(f"    P{i+1}: t={exp_pk_t[i]:.3f}s, P={exp_pk_p[i]:.0f} Pa "
               f"(stats: {pk_mean[i]:.0f} +/- {pk_2sig[i]:.0f})")
 
-    # Simulation runs
+    # Simulation runs — consistent probe at x=0.013m (safe for all dp)
+    # probe index differs per CSV: run_001→0, run_002→3, run_003v2→TBD
     runs = [
-        ('run_001', 'dp=4mm (DBC)', '#1976D2', 1.0),
-        ('run_002', 'dp=2mm (DBC)', '#F57C00', 1.0),
-        ('run_003', 'dp=1mm (DBC)', '#388E3C', 1.0),
+        ('run_001', SIMDATA / 'run_001' / 'PressLateral_dp004_Press.csv',
+         0, 'dp=4mm (DBC)', '#1976D2', 1.0),
+        ('run_002', SIMDATA / 'run_002' / 'PressLateral_dp002_Press.csv',
+         3, 'dp=2mm (DBC)', '#F57C00', 1.0),
+        ('run_003v2', SIMDATA_C / 'run_003v2' / 'PressLateral_Press.csv',
+         4, 'dp=1mm (DBC)', '#388E3C', 1.0),  # probe 4 = x=0.013
     ]
 
     sim_data = {}
-    for name, label, color, lw in runs:
-        csv = SIMDATA / name / "PressConsistent_Press.csv"
+    for name, csv, probe_idx, label, color, lw in runs:
         if not csv.exists():
+            print(f"  {name}: SKIP (not found: {csv})")
             continue
-        t, p = load_dsph_csv(csv)
-        sim_pk_t, sim_pk_p = find_impact_peaks(t, p, min_height=800, min_spacing_sec=1.0)
+        t, p = load_dsph_csv(csv, probe=probe_idx)
+        # Water peaks ~3700 Pa; cap at 10000 Pa to filter SPH spikes
+        sim_pk_t, sim_pk_p = find_impact_peaks(t, p, min_height=800,
+                                                min_spacing_sec=1.0, max_height=10000)
 
         # Peak-based time shift
         shift = compute_peak_shift(exp_pk_t, sim_pk_t, n_match=3)
@@ -123,9 +150,13 @@ def plot_water_lateral():
             't': t, 'p': p, 'label': label, 'color': color, 'lw': lw,
             'shift': shift, 'pk_t': sim_pk_t, 'pk_p': sim_pk_p
         }
-        print(f"  {name}: shift={shift:.3f}s, peaks={len(sim_pk_t)}")
+        print(f"  {name} ({label}): shift={shift:.3f}s, peaks={len(sim_pk_t)}")
         for i in range(min(4, len(sim_pk_t))):
             print(f"    P{i+1}: t={sim_pk_t[i]:.3f}→{sim_pk_t[i]+shift:.3f}s, P={sim_pk_p[i]:.0f} Pa")
+
+    if not sim_data:
+        print("  No simulation data available, skipping figure")
+        return
 
     # ---- Figure: 3 rows (timeseries + peak zoom + peak bars) ----
     fig = plt.figure(figsize=(16, 14))
@@ -249,9 +280,11 @@ def plot_oil_lateral():
 
     sim_configs = [
         ('run_005', SIMDATA / 'run_005' / 'PressConsistent_Press.csv',
-         'Artificial visc. (mDBC, 1kHz)', '#1976D2', 0.8),
-        ('run_009b', ANALYSIS_DIR / 'run_009b' / 'pressure_009b.csv',
-         'Laminar+SPS (DBC, 10ms)', '#E53935', 1.0),
+         'dp=2mm 1kHz (mDBC)', '#1976D2', 1.0),
+        ('run_010', SIMDATA_C / 'run_010' / 'PressLateral_Press.csv',
+         'dp=2mm 100Hz probe@7mm', '#90CAF9', 0.7),
+        ('run_011', SIMDATA_C / 'run_011' / 'PressLateral_Press.csv',
+         'dp=1mm 100Hz (mDBC)', '#388E3C', 1.0),
     ]
 
     sim_data = {}
@@ -397,13 +430,17 @@ def plot_peak_summary():
     # Collect all simulation peak values
     all_results = {}
 
-    # Water runs
-    for name in ['run_001', 'run_002', 'run_003']:
-        csv = SIMDATA / name / "PressConsistent_Press.csv"
+    # Water runs — consistent probe at x=0.013m
+    water_runs = [
+        ('run_001', SIMDATA / 'run_001' / 'PressLateral_dp004_Press.csv', 0),
+        ('run_002', SIMDATA / 'run_002' / 'PressLateral_dp002_Press.csv', 3),
+        ('run_003v2', SIMDATA_C / 'run_003v2' / 'PressLateral_Press.csv', 4),
+    ]
+    for name, csv, probe_idx in water_runs:
         if not csv.exists():
             continue
-        t, p = load_dsph_csv(csv)
-        spt, spp = find_impact_peaks(t, p, 800, 1.0)
+        t, p = load_dsph_csv(csv, probe=probe_idx)
+        spt, spp = find_impact_peaks(t, p, 800, 1.0, max_height=10000)
         shift = compute_peak_shift(exp_w_t, spt, 3)
         ts = t + shift
 
@@ -425,7 +462,8 @@ def plot_peak_summary():
     # Oil runs
     for name, csv in [
         ('run_005', SIMDATA / 'run_005' / 'PressConsistent_Press.csv'),
-        ('run_009b', ANALYSIS_DIR / 'run_009b' / 'pressure_009b.csv'),
+        ('run_010', SIMDATA_C / 'run_010' / 'PressLateral_Press.csv'),
+        ('run_011', SIMDATA_C / 'run_011' / 'PressLateral_Press.csv'),
     ]:
         if not csv.exists():
             continue

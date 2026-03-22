@@ -1,0 +1,39 @@
+ ~^~._.~^~._.~^~._.~^~._.~^~
+   Sloshing Simulator unknown
+ DualSPHysics GPU Sloshing Analysis Agent
+
+ cwd: /home/imgyu/workspace/02_active/sim/slosim-agent
+
+ LSP Configuration
+ • gopls (gopls)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ press enter to send the message, write \ and enter to add
+  a new line
+───────────────────────────────────────────────────────────
+
+>
+
+
+
+
+
+ ctrl+? help                         No diagnostics  Qwen3

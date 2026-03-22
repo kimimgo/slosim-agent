@@ -1,0 +1,6 @@
+POINTS
+0.005  0.031  0.093  #P1_left_2.4h (lateral, z=fill height, safe for dp=0.001)
+0.005  0.031  0.083  #P1_left_below10mm
+0.005  0.031  0.103  #P1_left_above10mm
+0.007  0.031  0.093  #P2_left_3.4h (cross-comparison with dp=0.002)
+0.895  0.031  0.093  #P3_right_2.4h (symmetric right wall)

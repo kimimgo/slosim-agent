@@ -1,0 +1,700 @@
+Computational Particle Mechanics (2022) 9:911–925
+https://doi.org/10.1007/s40571-021-00403-3
+
+Modified dynamic boundary conditions (mDBC) for general‑purpose
+smoothed particle hydrodynamics (SPH): application to tank sloshing,
+dam break and fish pass problems
+A. English1 · J. M. Domínguez2 · R. Vacondio3
+L. Chiapponi3 · M. Gómez‑Gesteira2
+
+· A. J. C. Crespo2
+
+· P. K. Stansby1
+
+· S. J. Lind1
+
+·
+
+Received: 10 November 2020 / Revised: 28 February 2021 / Accepted: 11 March 2021 / Published online: 12 April 2021
+© The Author(s) 2021
+
+Abstract
+Dynamic boundary conditions (DBC) for solid surfaces are standard in the weakly compressible smoothed particle hydrodynamics (SPH) code DualSPHysics. A stationary solid is simply represented by fixed particles with pressure from the
+equation of state. Boundaries are easy to set up and computations are relatively stable and efficient, providing robust numerical simulation for complex geometries. However, a small unphysical gap between the fluid and solid boundaries can form,
+decreasing the accuracy of pressures measured on the boundary. A method is presented where the density of solid particles
+is obtained from ghost positions within the fluid domain by linear extrapolation. With this approach, the gap between fluid
+and boundary is reduced and pressures in still water converge to hydrostatic, including the case of a bed with a sharp corner.
+The violent free-surface cases of a sloshing tank and dam break impact on an obstacle show pressures measured directly
+on solid surfaces in close agreement with experiments. The complex 3-D flow in a fish pass, with baffles to divert the flow,
+is simulated showing close agreement with measured water levels with weirs open and gates closed, but less close with
+gates open and weirs closed. This indicates the method is suitable for rapidly varying free-surface flows, but development
+for complex turbulent flows is necessary. The code with the modified dynamic boundary condition (mDBC) is available in
+DualSPHysics to run on CPUs or GPUs.
+Keywords SPH · Boundary conditions · DualSPHysics · Free-surface flows
+
+1 Introduction
+Smoothed particle hydrodynamics (SPH) is a meshless
+Lagrangian particle numerical method particularly adept
+at modelling complex, highly deforming interfacial and
+free-surface flows. In recent years, SPH numerical schemes
+have been successfully applied to a number of different
+phenomena, including sloshing tanks [1], sediment scour
+[2], debris flows [3], flow around bodies [4] and submarines
+* A. English
+aaron.english@manchester.ac.uk
+1
+
+Department of Mechanical, Aerospace, and Civil
+Engineering, University of Manchester, Manchester, UK
+
+2
+
+Environmental Physics Laboratory, Universidade de Vigo,
+Ourense, Spain
+
+3
+
+Department of Civil Environmental Engineering, University
+of Parma, Parma, Italy
+
+[5], landslides and flooding [6, 7], fish pass flows [8], wave
+action on breakwaters [9] with encouraging results. The SPH
+method is based on an integral approximation incorporating
+a kernel function (typically of compact support and characterised by a smoothing length, h). The meshless nature of
+SPH and the issue of kernel truncation near boundaries can
+create difficulties in enforcing solid boundary conditions,
+and, accordingly, boundary conditions have been highlighted
+as one of the Grand Challenges of SPH [10]. A recent review
+addressing accuracy in SPH is provided by Lind et al. [11],
+and a review of applications in coastal and ocean engineering is available in Gotoh and Khayyar [12]
+Many different approaches have been proposed in the literature to enforce solid boundary conditions, and they can
+be grouped into three main types: the first approach is the
+method of repulsive forces ([13, 14]), which enables the discretization of 2-D and 3-D irregular geometries. However,
+non-physical forces are added to prevent particle penetration
+and kernel truncation is not addressed and so the accuracy
+
+13
+
+Vol.:(0123456789)
+
+912
+
+of SPH spatial interpolation near the walls is remarkably
+reduced. A second possible way to discretize the boundaries
+is the so-called semi-analytical formulation ([15–17]) where
+additional terms in the conservation equations are considered to compensate for the kernel truncation. At continuous
+level, there are no terms of SPH spatial interpolation, but
+when the particle discretization is introduced, surface integrals have to be approximated and this remains a challenge
+for complex 3-D geometries and/or multi-phase flows. The
+third class of boundary methods are based on fictitious particles to fill the space beyond the boundary interface to mimic
+the presence of a wall ([18–21]). A hybrid of the first and
+third classes has also been proposed [22]. The method herein
+proposed belongs to the third class and may be considered
+an extension of the dynamic boundary condition (DBC) currently used in the online version of DualSPHysics [23].
+DualSPHysics [23] is an open source SPH code for simulating free-surface flows that is able to run on both CPUs
+and GPUs (graphics processing units) [24]. Using DBC,
+complex geometries can be created such as those in [3, 8]
+and [9]. This tackles one of the aspects of the Grand Challenge on boundary condition in SPH [10]. However, with
+DBC unphysical gaps form between the boundary and fluid
+particles. The work of [9] estimated the size of the gap to be
+of the order of the kernel smoothing length, but a realistic
+surface pressure may be obtained at this distance from the
+surface.
+The main purpose of the present work is thus to avoid
+some of the limitations of DBC, while maintaining the capability for discretizing complex geometries, without affecting
+the efficiency of the GPU implementation. To reduce the
+gap and increase the accuracy of the pressure measured at
+the boundary particles, we follow the approach of [19] for
+updating physical quantities of the boundary particles by
+means of a first-order consistent SPH interpolation evaluated
+at ghost nodes, located inside the fluid domain. First-order
+consistency in the boundary is obtained by introducing the
+SPH corrected interpolation proposed in [25]. In this way,
+the flow properties may be extrapolated into the boundary
+and a fluid continuum is presented. Finally, the use of an
+adequate number of layers of boundary particles prevents
+inconsistencies due to kernel truncation effects for fluid particles located near the boundaries, as discussed in the early
+work of Vacondio et al. [26]. The corrected SPH interpolation herein adopted does not require an additional particle
+sweep, and thus the computational overheads of the proposed correction are low. The modified boundary conditions
+are named mDBC (modified DBC).
+This paper is organised as follows: in Sect. 2 the SPH
+method used in this work is outlined; in Sect. 3 the DBC
+methodology is described and the advantages and issues
+with the method highlighted along with the new mDBC
+method. In Sect. 4 results for a number of 2D and 3D test
+
+13
+
+Computational Particle Mechanics (2022) 9:911–925
+
+cases are presented comparing between the existing DBC
+and the new mDBC, finally in Sect. 5 conclusions of the
+work are provided along with suggestions for future work.
+
+2 SPH methodology
+The open source SPH solver DualSPHysics is described as
+follows. The conservation of mass is defined in compressible
+form, including the density diffusion term
+
+∑ mj
+d𝜌i ∑
+mj vij ⋅ ∇Wij + 𝛿hc0
+Ψ ⋅ ∇Wij
+=
+dt
+𝜌j ij
+j
+j
+
+(1)
+
+where 𝜌i is particle density, mi its mass,c0 is the speed of
+sound in the fluid, vij = vi − vj is the velocity difference
+between particles i and j , and ∇W ij is the kernel gradient. 𝛿
+=0.1 is generally applied. The SPH kernel used in this work
+is the quintic Wendland kernel [27] given by
+
+)(
+)
+(
+2rij
+rij 4
+1+
+Wij = 𝛼D 1 −
+2h
+h
+
+for 0 ≤ rij ≤ 2h
+
+(2)
+
+where rij is the distance between particles, h = 𝜅dp is the
+smoothing length (𝜅 = 1.3 or 2 in this work) and the normalisation term 𝛼D = 7∕4𝜋h2 in 2D and 𝛼D = 21∕16𝜋h3 in
+3D . Two options for the density diffusion function Ψij are
+used, the first of Molteni and Colagrossi [28] is given by
+
+(
+) rij
+ΨMOL
+= 2 𝜌j − 𝜌i
+ij
+| |2
+|rij |
+| |
+
+(3)
+
+The second option is that of Fourtakas et al. [21] and is
+given by
+) rij
+(
+ΨFOUR
+= 2 𝜌Tji − 𝜌H
+ij
+ij
+(4)
+| |2
+|rij |
+| |
+where 𝜌T and 𝜌H are the total hydrostatic densities. The conservation of momentum is given by
+(
+)
+∑
+Pj + Pi
+dvi
+mj
++ Πij ∇Wij + g
+=−
+(5)
+dt
+𝜌i 𝜌j
+j
+where g is the acceleration due to gravity, Pi is the particle
+pressure and Πij is the artificial viscosity given by
+{
+hvij ⋅rij
+c0
+for vij ⋅ rij < 0
+−𝛼 𝜌 +𝜌
+2
+r
+i
+j
+| ij | +0.01h2
+Πij =
+(6)
+0
+for vij ⋅ rij ≥ 0
+A standard value of 𝛼 = 0.01 will be used unless otherwise stated.
+Finally, the pressure is given by the Tait equation of state
+
+Computational Particle Mechanics (2022) 9:911–925
+
+P=
+
+c20 𝜌0
+𝛾
+
+[(
+
+𝜌
+𝜌0
+
+)𝛾
+
+913
+
+]
+−1
+
+(7)
+
+where 𝜌0 = 1000 kg/m3 is the reference density of water and
+𝛾 = 7.
+Time stepping is by the Symplectic predictor–corrector option with time step given a CFL (Courant–Friedrichs–Lewy) value of 0.2. The speed of sound
+√ is usually
+given a value of 10× times the wave speed, gH , where
+g is the modulus of the gravitational acceleration and H is
+initial water depth.
+Note that the SPH formulation adopted in the present
+work is variationally consistent and therefore conserves
+mass, linear and angular momentum. In particular, the conservative form of the momentum equation (Eq. (5)) is used
+here and it is used both for fluid–fluid and fluid-boundary
+interactions. Mass is also conserved, as in the proposed
+scheme each particle carries its own mass during the simulation. This allows the continuity equation to be written in
+non-conservative form (Eq. (1)) without breaking conservation of relevant physical quantities and allows density to be
+assigned to boundary particles through a consistency correction (Eq. (12)) which improves remarkably the accuracy
+of the pressure field.
+
+3 mDBC formulation
+Dynamic boundary conditions were first introduced in [29]
+and further studied in [18]. The boundaries consist of a set
+of particles that satisfy the same continuity equation as
+the fluid particles. To approximate the no-slip condition
+at solid boundaries, the velocities of the boundary particles are set to zero. The repulsion mechanism generated
+by the dynamic boundary particles works in the following way: the incoming fluid particle increases the density locally according to the continuity equation (Eq. 1),
+which results in an increase in pressure following equation of state (Eq. 7) and in an increase in the pressure
+term ( (Pj + Pi )∕𝜌i 𝜌j ). In consequence, this increase in the
+pressure term in momentum equation (Eq. 5) will lead
+to an increase in the acceleration magnitude ( dv∕dt ) for
+the incoming fluid particle, which defines the repulsion
+force. The study of Domínguez et al. [30] showed how it
+is evident that as a repulsive force, this boundary keeps the
+particles at a certain distance from the boundary, and this
+“gap” was found to be of the order of the smoothing length
+(h). Therefore, this approach presents a drawback in that
+the evolution of density and pressure of the fixed boundary
+particles leads to unphysical values at the surface, with
+unphysically large boundary layers in the flow. The boundary pressure has to be output at a distance of a smoothing
+
+length from the actual surface to be representative and the
+dynamic boundary particles need to be initially created
+considering that “gap” in order to generate the repulsion
+force at the desired boundary limit. On the other hand, an
+advantage of these boundary particles is their computational simplicity, since density, and therefore pressure, can
+be calculated inside the same loops as fluid particles with
+a considerable saving of computational time. These conditions are able to represent complex shaped geometries.
+Validations with dam-break flows and wave flumes have
+been published and DBC has been successfully applied
+to coastal engineering problems, discretizing complex 3D
+geometries without the need for implementing complex
+mirroring techniques or semi-analytical wall boundary
+conditions. A good example is the work of Zhang et al.
+[9] where DualSPHysics was used to reproduce a laboratory test where a porous breakwater structure made of
+cubes was analysed. The SPH results were obtained for 52
+numerical wave probes, and good agreement was obtained
+for this complex problem.
+We propose here a new method to palliate the problems described for DBC that is named mDBC (modified
+dynamic boundary conditions). The boundary particles
+of mDBC are arranged in the same way as the boundary
+particles in the original DBC, with an additional boundary interface created between the fluid and the boundary
+particles. The boundary interface is located half a particle
+spacing ( dp∕2 ) from the layer of boundary particles closest to the fluid. For each boundary particle, a ghost node
+is projected into the fluid across the boundary interface
+in a procedure similar to Marrone et al. [19]. For a flat
+surface, the ghost node is mirrored across the boundary
+interface along the direction of the boundary normal pointing into the fluid (Fig. 1a) and fluid properties are found
+at this ghost node through a first-order consistent SPH
+spatial interpolation over the surrounding fluid particles
+only (Fig. 1b). For a boundary particle located in a corner,
+the boundary normal is ill defined with more than one
+option. However, the boundary interfaces of each solid
+boundary meet to form an interface corner, and the ghost
+node is mirrored through the point of this corner into the
+fluid region (Fig. 1c). Again, fluid properties are found at
+the ghost node through a first-order consistent SPH spatial
+interpolation of the surrounding fluid (Fig. 1d).
+The boundary particles receive fluid properties using
+the values calculated at the ghost node and an extrapolation method similar to the one used for open boundaries in
+𝜌b the ghost
+[31]. For the density of the
+[ boundary particle
+]
+density 𝜌g and its gradient 𝜕x 𝜌g ;𝜕y 𝜌g ;𝜕z 𝜌g are computed at
+the ghost node using the first-order consistent SPH interpolation proposed by Liu and Liu [25], which requires
+solving the following linear system for each ghost node:
+
+13
+
+914
+
+Computational Particle Mechanics (2022) 9:911–925
+
+Fig. 1  Mirroring of ghost nodes
+(crosses) and the kernel radius
+around the ghost nodes for
+boundary particles in a flat surface (a) and a corner (c). Fluid
+particles (pink) included in the
+kernel sum around ghost nodes
+for boundary particles in a flat
+surface (b) and a corner (d)
+
+⎡ 𝜌g ⎤
+⎢𝜕 𝜌 ⎥
+𝐀g ⋅ ⎢ x g ⎥ = 𝐛g
+⎢ 𝜕y 𝜌g ⎥
+⎣ 𝜕z 𝜌g ⎦
+
+(8)
+
+cases remains well-conditioned (with condition numbers of
+O(10) even for disordered particle distributions) provided
+there is near complete support. Due to [this property, the
+]
+adopted formulation to compute 𝜌g and 𝜕x 𝜌g ;𝜕y 𝜌g ;𝜕z 𝜌g is
+
+still suitable for real engineering applications with complex
+surfaces. If ghost node neighbours decrease to very low
+�
+�
+�
+∑�
+∑�
+∑�
+∑
+⎡
+Wgj Vj
+xj − xg Wij Vj
+yj − yg Wgj Vj
+zj − zg Wgj Vj ⎤
+⎥
+⎢ ∑j
+j�
+j�
+j�
+�
+�
+�
+⎢ 𝜕x Wgj Vj ∑ xj − xg 𝜕x Wij Vj ∑ yj − yg 𝜕x Wgj Vj ∑ zj − zg 𝜕x Wgj Vj ⎥
+⎥
+⎢ j
+j �
+j �
+j �
+�
+�
+�
+(9)
+∑
+∑
+∑
+𝐀g = ⎢ ∑
+⎥
+⎢ j 𝜕y Wgj Vj j xj − xg 𝜕y Wij Vj j yj − yg 𝜕y Wgj Vj j zj − zg 𝜕y Wgj Vj ⎥
+�
+�
+�
+∑�
+∑�
+∑�
+⎢∑
+⎥
+xj − xg 𝜕z Wij Vj
+yj − yg 𝜕z Wgj Vj
+zj − zg 𝜕z Wgj Vj ⎥
+⎢ 𝜕z Wgj Vj
+j
+j
+j
+⎣ j
+⎦
+where:
+
+𝐛Tg =
+
+�∑
+
+Wgj mj
+
+j
+
+∑
+j
+
+𝜕x Wgj mj
+
+∑
+j
+
+𝜕y Wgj mj
+
+∑
+j
+
+𝜕z Wgj mj
+
+�
+
+(10)
+
+where the volume V j is computed as Vj = mj ∕𝜌j.
+To evaluate the matrix 𝐀g and the vector 𝐛g at each ghost
+node g , a new particle interaction loop needs to be set up.
+The new interaction requires the inversion of the matrix 𝐀g;
+however, this requires limited additional computational
+effort when compared to the original DBC formulation. Note
+also that the matrix 𝐀g is diagonally dominant and in most
+
+13
+
+numbers (e.g. less than 3 or 4 fluid particles), the ­Ag matrix
+does become ill-conditioned and the matrix is not inverted.
+The density at the ghost node is then found through a Shepard filter evaluated at the ghost node according to:
+∑
+j 𝜌j Wgj Vj
+𝜌g = ∑
+(11)
+j Wgj Vj
+Once the density and density gradient are computed at the
+ghost node, then the density of the boundary particle 𝜌b is
+
+Computational Particle Mechanics (2022) 9:911–925
+
+obtained by means of a linear extrapolation with the values
+found using the above relations through:
+]
+) [
+(
+𝜌b = 𝜌g + 𝐫b − 𝐫g ⋅ 𝜕x 𝜌g ;𝜕y 𝜌g ;𝜕z 𝜌g
+(12)
+where rb and rg are the position of the boundary particle
+and associated ghost node, respectively. In this way, the
+boundary density is presented as part of a fluid continuum
+and pressure from the equation of state gives smoother and
+more physical pressure fields, avoiding the non-physical gap
+between the boundary and the fluid observed when using
+DBC. If the matrix is ill-conditioned, the boundary particle is given the Shephard filtered ghost node density found
+in Eq. (11). The boundary particles have zero velocity as
+before. As the boundary velocity is set to zero for all boundary particles; by definition, u ∙ n = 0 (as u = 0 ) is guaranteed on the boundary. It is noted, however, that this approach
+is at best first order for velocity and velocity gradients on and
+near the boundary are in general not as well approximated
+as they are in other velocity boundary condition approaches
+(see [19], for example). Neumann boundary conditions on
+the pressure, however, are approximated at higher order following from the formulation above, and this is sufficient to
+significantly improve results over the standard DBC.
+
+4 Results
+This section will show the capabilities of mDBC and the
+improvements comparing with original DBC. Initially 2D
+simulations are investigated including still water with a triangular corner (a wedge) and a sloshing tank, and the 3D
+cases of a dam break impacting a cuboid obstacle, and flow
+through a fish pass. In each test case the performance of the
+boundary conditions will be assessed.
+
+915
+
+4.1 Still water on bed with a wedge (sharp corner)
+A 2D still water tank with dimensions of 2.4 m × 1.2
+m encloses a trigonal wedge in the bottom centre of the
+tank with a height of 0.24 m. The initial water height is
+H = 0.5 m. Results are analysed during 4 s of physical time.
+The ratio of smoothing length h to initial particle spacing dp,
+h∕dp = 2. Two simulations with different resolutions were
+executed (dp = 0.02 m and dp = 0.01 m).
+The final instant (t = 4 s) is depicted in Fig. 2 for the
+two different resolutions and using DBC (left) and mDBC
+(right). The first row corresponds to dp = 0.02 m and the second row to dp = 0.01 m. Good results and improvements can
+be observed using mDBC with smoother and more physical pressure values now being obtained for the boundary
+particles, not only in the flat surface but also in the corners. Figure 3 shows more detail at the corners for the case
+with dp = 0.01 m, where this improvement becomes more
+apparent.
+The vertical distribution of pressure is plotted to show the
+accuracy of the hydrostatic pressure distribution. Values of
+depth ( z∕H ) against pressure ( p∕𝜌gH) are plotted in Fig. 4
+(at 4 s) for each fluid particle. For both resolutions, much
+improved hydrostatic pressure behaviour is obtained using
+mDBC, accurate down to the solid surface. In addition, the
+kinetic energy of the particles is measured. The time series
+for the summation of kinetic energy of all the fluid particles
+is shown in Fig. 5 (note a logarithmic scale is used). It is
+clear that mDBC generates much smaller particle movement than DBC. Runs up to 20 s showed negligible noise in
+the pressure, but a small amount of noise became apparent
+around 200 s.
+
+4.2 Sloshing tank (moving boundaries)
+The second 2D test case reproduces an experiment with
+moving boundaries. This is the SPHERIC Benchmark Test
+
+Fig. 2  Pressure in a 2D
+still water tank: last instant
+of the simulation for:
+a DBC dp = 0.02 m; b
+mDBC dp = 0.02 m; c DBC
+dp = 0.01 m, and d mDBC
+dp = 0.01 m
+
+13
+
+916
+
+Computational Particle Mechanics (2022) 9:911–925
+
+Fig. 3  Last instant of the still
+water simulation: a DBC
+dp = 0.01 m, and b mDBC
+dp = 0.01 m (close up of the
+pressure field in the corners)
+
+Fig. 4  Particle pressure values versus depth at last instant of the still water simulation for: a DBC dp = 0.02 m; b mDBC dp = 0.02 m; c DBC
+dp = 0.01 m, and d mDBC dp = 0.01 m
+
+Case 10 (https://​spher​ic-​sph.​org/​tests/​test-​10), consisting of
+a sloshing tank of 0.9 m × 0.508 m with an initial water level
+H = 0.093 m (Fig. 6). The numerical pressures are obtained
+using DBC and mDBC and compared with the experimental values detected at Sensor 1 (Fig. 6). Two simulations
+
+13
+
+with different resolutions are executed ( dp = 0.004 m and
+dp = 0.002 m), again with h∕dp = 2.
+The instant of the simulation at time t = 2.47 s seconds
+is shown in Fig. 7, where the first impact of the fluid with
+left wall (Sensor 1) has just occurred. The colour of the
+particles corresponds to their pressure values.
+
+Computational Particle Mechanics (2022) 9:911–925
+
+Fig. 5  Time series of fluid particles kinetic energy during the still
+water simulation for initial partial spacings a dp = 0.02 m and b
+dp = 0.01 m
+
+Fig. 6  Initial setup of the sloshing tank including location of pressure
+sensor 1 and the centre of rotation denoted as COR
+
+Figure 8 shows in more detail the pressure field of the particles with DBC (left) and mDBC (right) with dp = 0.002 m.
+Two improvements can be observed using mDBC: (i) values of pressure for the boundary particles in the walls using
+mDBC are less noisy than the ones shown for DBC and
+(ii) the unphysical gap between the fluid and the boundary is negligible when mDBC is used. This is an important
+improvement since the computation of pressure values at
+Sensor 1 (Fig. 6) with DBC provides representative results
+only if the numerical pressure gauge is moved to take into
+account the size of the gap between the fluid and the boundary. The work of [32] estimated the size of the gap to be the
+smoothing length ( h ). There is a small high pressure region
+seen towards the top of the boundary of Fig. 8(b), which
+
+917
+
+is a spurious but ineffectual pressure carried from a previous time step. This may occur when there are no nearby
+fluid particles: the correction matrix (Eq. (9)) does not meet
+the criteria to be solved due to its poor conditioning and
+the Shepard filter (Eq. 11) cannot be used as there are no
+fluid particles near a ghost node. This spurious pressure is
+not a concern in practice as it only results when there are
+no nearby fluid particles (within the support length of the
+ghost node) and so can have no effect on the fluid dynamics.
+As soon as there is fluid near the boundary, the correction
+matrix is able to solve and so provides correct densities (and
+pressures) in the boundary.
+The experimental pressure (black line) is compared with
+numerical results in Fig. 9. The blue line, in the first row,
+corresponds to numerical pressure computed using DBC
+with pressure gauge at the original location; however the
+results are erroneous due to the large gap (in the order of h )
+without fluid particles. The second row shows the numerical
+pressure (green line) using DBC with pressure gauge moved
++h into the fluid, much improving agreement with experimental data. However the use of mDBC, avoiding the gap
+and creating a realistic boundary layer, allows the computation of pressure at the exact location of the gauge obtaining
+very good results; the red line in the bottom panel of Fig. 9
+shows again a good agreement with the experimental data.
+Note that negative pressures are observed in the experimental data and the mDBC numerical data around the time of
+the most violent impacts, coinciding with highly transient
+pressure shocks rebounding after high velocity water impact.
+The fact these transients are captured provides a further
+demonstration of the benefit of the mDBC approach over
+DBC. While persistent negative pressures can be an issue in
+SPH (leading potentially to the tensile instability), no evidence of this instability was observed here as the negative
+pressure event is so short-lived (existing for only O(1) time
+steps).
+
+4.3 3D Dam break over cuboid obstacle
+This is the SPHERIC Benchmark Test Case 2 (https://​spher​
+ic-​sph.​org/​tests/​test-2) shown in Fig. 10; surface elevation
+was measured at positions H1, H2, H3 and H4 and pressures on the centreline plane of the cuboid obstacle surface
+[33]. Particle spacings dp = 0.01 m and 0.02 m were applied
+giving a particle number close to 1 million and 170,000,
+respectively. In this case h∕dp = 1.3.
+Results of surface elevation at H4, H3, H2 are shown in
+Fig. 11 to be in close agreement with experiment, closer than
+DBC which shows a spurious value for H2 for small time.
+Figure 12 shows the particle distribution at t = 0.8 s with
+jet height close to maximum, and the spurious DBC value
+at H2 is due to jet formation too far upstream, in front of
+the obstacle.
+
+13
+
+918
+
+Computational Particle Mechanics (2022) 9:911–925
+
+Fig. 7  Sloshing tank simulation at time t = 2.47 s, with:
+a DBC dp = 0.004 m; b
+mDBC dp = 0.004 m; c DBC
+dp = 0.002 m, and d mDBC
+dp = 0.002 m
+
+Fig. 8  Sloshing tank simulation
+at the time t = 2.47 s, close up of
+the pressure field in the corner
+and the lateral wall for DBC
+boundary (left) and mDBC
+boundaries (right)
+
+Pressures are shown at P2 (front face) and P5 (top corner
+of upper surface) in Fig. 13. For P2 agreement of mDBC
+with experiment is again close, generally closer than DBC.
+The peak pressures for P2 are in close agreement with
+experiment. Note again that DBC requires measurement
+at + h from the surface. For P5 mDBC with finer resolution
+is generally close to experiment as is DBC. Now the coarser
+mDBC shows some spurious fluctuations not present with
+the finer resolution.
+This test case demonstrates how SPH with mDBC predicts highly transient free surface flow and pressures quite
+accurately.
+
+4.4 Fish pass
+The complex 3D test case of a fish pass, as shown in
+Fig. 14, is now simulated. A fish pass is a structure that
+facilitates the natural migration of some species of fish
+on or around artificial and natural barriers (such as dams,
+
+13
+
+locks and waterfalls). Technical fish passes include: pool
+and weir fish passes, which is the type treated in the present work; vertical slot fish passes, and Denil fish passes.
+The principle of a pool and weir fish pass is to divide a
+channel by installing cross-walls, in order to form a succession of stepped pools from the headwater to the tailwater. The discharge usually passes through openings in the
+cross-walls and fishes migrate from one pool to the next
+through the submerged orifices (or gates) or through the
+notches (or weirs). Previous examples of fish pass flows
+being simulated using DualSPHysics with DBC include
+the work of Novak et al. [8] for a vertical slot type fish
+pass.
+The fish pass considered here comprises a long channel
+inclined at an angle of 4.5° to the horizontal with vertical
+cross baffles restricting the flow, dividing the pass into
+three pools. Each of the baffles has a gate in one of the
+bottom corners and a weir in the opposite top corner, the
+orientation of the gates and weirs alternates between pairs
+
+

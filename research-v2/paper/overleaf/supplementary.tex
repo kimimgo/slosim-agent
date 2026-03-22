@@ -1,0 +1,281 @@
+% ============================================================
+% Supplementary Materials — SPH 슬로싱 검증 논문
+% ============================================================
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{kotex}
+\usepackage{booktabs}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{hyperref}
+\usepackage{longtable}
+
+\title{Supplementary Materials:\\
+SPH 슬로싱 충격 압력의 체계적 정량 검증 프레임워크}
+\author{Hyung-Jun Park, Imgyu Kim}
+\date{2026년 3월}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+
+% ============================================================
+\section{S1. 체계적 문헌 조사 (Systematic Survey)} \label{sec:s1}
+% ============================================================
+
+\subsection{조사 방법론}
+
+본 연구의 문헌 조사는 research-sniper 자동화 파이프라인을 사용하여 체계적으로 수행되었다.
+
+\begin{itemize}
+    \item \textbf{검색 쿼리}: 8개 (``SPH sloshing validation'',
+          ``SPHERIC benchmark pressure'',
+          ``DualSPHysics sloshing tank'',
+          ``particle method sloshing verification'',
+          ``SPH free surface impact pressure'',
+          ``meshless sloshing simulation'',
+          ``SPH convergence analysis sloshing'',
+          ``GCI particle method'')
+    \item \textbf{수집 논문}: 742편
+    \item \textbf{Tier 1 선별}: 30편 (연관성 및 인용 영향도 기반)
+    \item \textbf{Deep Read}: 6편 (검증 방법론이 상세히 기술된 논문 전문 분석)
+    \item \textbf{핵심 질문}: ``SPH 슬로싱에서 SPHERIC Test 10 벤치마크를 어떻게 검증했는가?''
+\end{itemize}
+
+
+\subsection{Deep Read 논문 상세 분석}
+
+\subsubsection{English et al. (2022) --- mDBC}
+
+DOI: 10.1007/s40571-021-00403-3 $|$ 인용: 263회
+
+\begin{itemize}
+    \item DualSPHysics DBC의 비물리적 갭 문제를 해결하는 mDBC 제안
+    \item Section 4.2에서 SPHERIC Test 10으로 슬로싱 검증
+    \item dp = 0.004\,m, dp = 0.002\,m, h/dp = 2
+    \item DBC vs mDBC 비교: 시계열 오버레이 그래프 3개
+    \item \textbf{보고된 정량 메트릭: 0개}
+    \item 사용 표현: ``good agreement with the experimental data''
+    \item 피크 오차 (\%), RMSE, 교차상관, GCI: 일절 보고 없음
+\end{itemize}
+
+\subsubsection{Vacondio et al. (2020) --- Grand Challenges for SPH}
+
+DOI: 10.1007/s40571-020-00354-1 $|$ 인용: 241회
+
+\begin{itemize}
+    \item SPHERIC 커뮤니티가 정의한 5대 Grand Challenges
+    \item GC5 (산업 적용성): ``convincing quantitative error analysis'' 요구
+    \item GC1 (수렴): Richardson extrapolation 언급, SPH 입자 기반 수렴의 어려움 강조
+    \item Quinlan et al. (2006): 입자 분포에 따라 수렴률 변동 보고
+    \item \textbf{구체적 통과/불합격 기준값은 미제시} → 리뷰어 재량
+\end{itemize}
+
+\subsubsection{Dominguez et al. (2022) --- DualSPHysics v5}
+
+인용: 494회
+
+\begin{itemize}
+    \item DualSPHysics 코드 전반 리뷰, multiphysics 확장
+    \item 슬로싱 검증: English et al. (2022) 참조로 대체 — 별도 정량 검증 없음
+    \item DualSPHysics 개발팀 자체가 슬로싱에서 정량 검증을 수행하지 않았음
+\end{itemize}
+
+\subsubsection{Delorme et al. (2009) --- Canonical Sloshing Part I}
+
+\begin{itemize}
+    \item SPH 슬로싱 canonical problems 정의
+    \item SPH가 실험 대비 과추정(overestimation) 경향을 정량적으로 보고
+    \item 한계: 2D SPH, GCI 미적용, dp 비교 제한적
+    \item 정량적 보고를 한 드문 사례 → 본 연구의 확장 대상
+\end{itemize}
+
+\subsubsection{Laha et al. (2024) --- Heart Valve SPH FSI}
+
+DOI: 10.1038/s41598-024-57177-w
+
+\begin{itemize}
+    \item DualSPHysics를 심장판막 FSI에 적용
+    \item 정량 검증 수행: leaflet angle error 5.6\%
+    \item 동일 코드가 다른 응용에서는 정량 검증을 하면서 슬로싱에서는 하지 않는 이중 기준
+\end{itemize}
+
+\subsubsection{Green \& Peir\'o (2018) --- Long Duration SPH Sloshing}
+
+\begin{itemize}
+    \item DualSPHysics 기반 장시간 SPH 슬로싱 시뮬레이션
+    \item 에너지 소산 분석 위주, 정성적 + 안정성 검증
+    \item 정량적 피크 오차 메트릭 없음, GCI 없음
+\end{itemize}
+
+
+\subsection{GAP 도출 근거}
+
+\begin{longtable}{@{}p{2cm}p{4cm}p{4cm}p{4cm}@{}}
+\toprule
+GAP & 현상 & 근거 & 본 연구의 대응 \\
+\midrule
+\endhead
+GAP 1 & 대부분 정성적 비교(``good agreement'')만 수행 &
+  English 2022: 메트릭 0개 보고; 742편 중 정량 메트릭 보고 논문 극소수 &
+  M1--M8: 8개 정량 메트릭으로 PASS/FAIL 체계 \\
+\midrule
+GAP 2 & GCI/Richardson extrapolation SPH 슬로싱 적용 사례 없음 &
+  742편 전수 조사에서 미발견; Vacondio 2020 GC1 수렴 요구 &
+  3-level dp 수렴 + 2-level GCI (SPH 슬로싱 최초) \\
+\midrule
+GAP 3 & SPH 전용 검증 표준 프레임워크 부재 &
+  ASME V\&V 20은 격자 기반; SPHERIC GC5 ``통과 기준'' 미명시 &
+  M1--M8 + PASS/FAIL 기준 + 공개 스크립트 \\
+\midrule
+GAP 4 & 단일 유체/단일 하중 검증 지배적 &
+  English 2022: 물만; Delorme 2009: 2D 물만 &
+  Water + Oil + Roof 3개 서브케이스 \\
+\bottomrule
+\end{longtable}
+
+
+% ============================================================
+\section{S2. 실행 상세 (Run Details)} \label{sec:s2}
+% ============================================================
+
+\subsection{Run 003 (dp = 1mm) 상세}
+
+\begin{itemize}
+    \item 입자 수: 6,100,000
+    \item GPU: NVIDIA RTX 4090 (24GB VRAM)
+    \item 실행 시간: $\sim$48시간
+    \item TimeOut = 0.01s (100Hz 출력) → 피크 캡처 제한
+    \item Part 파일: 187MB/프레임 → 디스크 부담으로 1kHz 재실행 계획이 있었으나 미수행
+    \item 교차상관: $r = 0.697$, $\tau = +0.630$\,s
+\end{itemize}
+
+\subsection{Run 007 (Water Roof, 점성 $\alpha = 0.001$)}
+
+\begin{itemize}
+    \item 목적: 인공 점성 감소로 roof 충격 개선 시도
+    \item 결과: 3.0\,s 시뮬레이션, 최대 도달 높이 $z = 501$\,mm
+    \item 탱크 천장 508\,mm에 $\sim$7\,mm 미도달 → DBC 한계 재확인
+    \item 결론: 인공 점성 감소만으로는 DBC 소산 극복 불가
+\end{itemize}
+
+\subsection{Run 008 (mDBC 시도)}
+
+\begin{itemize}
+    \item 목적: mDBC로 DBC 소산층 제거하여 roof 충격 검증
+    \item Normal 벡터 설정: 272,250/272,250 (100\% 정확)
+    \item free-slip: 28\% 입자 손실 at $t = 0.175$\,s → 솔버 발산
+    \item no-slip: 26\% 입자 손실 at $t = 0.200$\,s → 솔버 발산
+    \item 원인: 단일층 DBC 입자에 공진 pitch 운동이 결합 → ghost node 보정 불안정
+    \item SPHERIC Grand Challenge GC2 (경계 처리)와 직접 관련
+\end{itemize}
+
+
+% ============================================================
+\section{S3. 필터링 파라미터 상세} \label{sec:s3}
+% ============================================================
+
+\begin{table}[h]
+\caption{케이스별 SPH 노이즈 필터링 파라미터.}
+\centering
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+케이스 & Median $k$ & Moving Avg $w$ & 적용 순서 & 이유 \\
+\midrule
+Water Lateral & 5 & 11 & Median $\to$ MovAvg & 큰 피크 보존 + 잡음 제거 \\
+Water Roof & 5 & 11 & Median $\to$ MovAvg & Water와 동일 \\
+Oil Lateral & 3 & 7 & Median $\to$ MovAvg & 피크 $\sim$5 mbar → 과필터링 방지 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Oil 케이스에서 더 가벼운 필터를 사용하는 이유:
+충격 피크가 $\sim$5\,mbar로 매우 작아서 ($k=5, w=11$ 적용 시 피크가 30\% 이상 감쇠),
+피크 형태를 보존하기 위해 의도적으로 약한 필터를 적용하였다.
+모든 경우에서 필터링 전후의 피크 진폭 변화율을 모니터링하여
+15\% 이상 감쇠가 발생하지 않음을 확인하였다.
+
+
+% ============================================================
+\section{S4. 실험 데이터 통계} \label{sec:s4}
+% ============================================================
+
+SPHERIC Test 10 실험은 102회 반복 수행되어 피크 압력의 통계량을 제공한다.
+
+\begin{table}[h]
+\caption{Water Lateral 실험 피크 통계 (102회 반복).}
+\centering
+\begin{tabular}{@{}crrrr@{}}
+\toprule
+피크 \# & $\mu$ [mbar] & $\sigma$ [mbar] & CoV [\%] & $\pm 2\sigma$ 범위 [mbar] \\
+\midrule
+1 & 37.1 & 7.3 & 19.7 & [22.5, 51.7] \\
+2 & 48.2 & 14.95 & 31.0 & [18.3, 78.1] \\
+3 & 46.9 & 17.0 & 36.2 & [12.9, 80.9] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+피크 2--3의 CoV가 31--36\%로 매우 높다. 이는 슬로싱 충격 압력의 본질적
+확률성(stochastic nature)을 반영하며, 시뮬레이션 오차 19.5\%가
+실험 산포 범위 내에 있음을 의미한다.
+
+
+% ============================================================
+\section{S5. CFD 커뮤니티 오차 허용 기준} \label{sec:s5}
+% ============================================================
+
+\begin{table}[h]
+\caption{CFD 커뮤니티의 암묵적 오차 허용 범위.}
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+오차 범위 & 수용 수준 & 적용 맥락 \\
+\midrule
+$< 5\%$ & 우수 & 산업 표준, 확립된 방법 \\
+$5$--$10\%$ & 양호 & 일반 CFD, 대부분의 저널 \\
+$10$--$15\%$ & 허용 & 복잡한 유동, 새로운 방법 \\
+$15$--$30\%$ & 조건부 허용 & 어려운 문제, 개념 증명 (정당화 필요) \\
+$> 30\%$ & 일반적 불허 & 강한 정당화 또는 정성적 연구만 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+본 연구의 M2 = 19.5\%는 ``조건부 허용'' 범위에 해당한다.
+다만, 이를 맥락에서 평가하면:
+\begin{itemize}
+    \item 대부분의 SPH 슬로싱 논문은 오차를 보고조차 하지 않음
+    \item 실험 자체의 CoV = 20--40\% (102회 반복)
+    \item 격자 기반 Flow3D의 RMS 4.79\%와 SPH는 방법론적 특성상 직접 비교 부적절
+    \item 본 연구가 ``최초로 정량적 오차를 보고한 SPH 슬로싱 연구 중 하나''
+\end{itemize}
+
+
+% ============================================================
+\section{S6. M1--M8 메트릭 상세 결과} \label{sec:s6}
+% ============================================================
+
+\begin{table}[h]
+\caption{전체 메트릭 결과 요약.}
+\centering
+\small
+\begin{tabular}{@{}clllcc@{}}
+\toprule
+ID & 메트릭 & Water Lat (002) & Oil Lat (005) & Water Roof (006) & 기준 \\
+\midrule
+M1 & Peak-in-band & 3/3 (100\%) & 2/4 (50\%) & N/A & $\geq 67\%$ \\
+M2 & 피크 오차 & 19.5\% & N/A & N/A & $<30\%$ \\
+M3 & 수렴 단조성 & $r$: 단조 수렴 & -- & -- & 단조 \\
+M4 & GCI & 계산 완료 & -- & -- & 보고 \\
+M5 & 교차상관 $r$ & 0.655 & 0.570 & -- & $>0.5$ \\
+M6 & 시간 이동 $\tau$ & +0.570\,s & $-$1.047\,s & -- & $|\tau|<T$ \\
+M7 & 피크 검출률 & -- & 4/4 (100\%) & -- & $\geq 75\%$ \\
+M8 & 충격 FWHM & 보고 & 보고 & -- & 보고 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\end{document}

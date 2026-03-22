@@ -1,0 +1,40 @@
+
+ ┃
+ ┃ Tank dimensions: L=0.5, W=0.3, H=0.4.      Analysis A
+ ┃ Fluid height is 0.2. Excitation            gent
+ ┃ frequency is 2 Hz (since period is
+ ┃ 0.5s). Amplitude is 0.02m. Simulation      cwd:
+ ┃ time is 1s. Dp is 0.006m.
+ ┃                                            /home/imgy
+ ┃ I should also check if there are any       u/work
+ ┃ other parameters needed, like              space/02_a
+ ┃ boundary method. The user didn't           ctive/
+ ┃ specify, so default to "dbc".              sim/slosim
+ ┃                                            -agent
+ ┃ Putting it all together, the
+ ┃ xml_generator function call should         Session: N
+ ┃ include all these parameters. The          ew
+ ┃ out_path would be
+ ┃ simulations/sloshing_case.                 Session
+ ┃
+ ┃ After generating the XML, the next         LSP Config
+ ┃ steps are gencase, solver, partvtk,        urati…
+ ┃ etc., but the user's first request is      • gopls (g
+ ┃ to generate the simulation, so the         opls)
+ ┃ first tool to call is xml_generator.
+                                              Modified F
+ ░ Generating...                              iles:
+ press esc to exit cancel                     No modifie
+                                              d file
+                                              s
+
+
+───────────────────────────────────────────────────────────
+
+>
+
+
+
+
+
+ ctrl+? help  Context: 0, Cost: $0.00    No diagnostics  Qw

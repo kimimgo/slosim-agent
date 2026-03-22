@@ -1,0 +1,40 @@
+                                                                                         alysis
+                                                                                         Agent
+
+
+                                                                                         cwd:
+
+                                                                                         /home/imgyu/workspace/02_act
+                                                                                         ive/si
+                                                                                         m/slosim-
+                                                                                         agent
+
+                                                                                         Session: New Session
+
+
+                                                                                         LSP Configuration
+
+                                                                                         • gopls (gopls)
+
+
+                                                                                         Modified Files:
+
+                                                                                         No modified files
+
+
+
+
+
+
+
+ ░ Generating...
+ press esc to exit cancel
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+>
+
+
+
+
+
+ ctrl+? help  Context: 0, Cost: $0.00                                                             No diagnostics  Qwen3

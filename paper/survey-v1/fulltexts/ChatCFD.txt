@@ -1,0 +1,376 @@
+C HAT CFD: A N LLM-D RIVEN AGENT FOR E ND - TO -E ND CFD
+AUTOMATION WITH S TRUCTURED K NOWLEDGE AND
+R EASONING
+
+arXiv:2506.02019v3 [cs.CL] 7 Feb 2026
+
+E Fan2, † , Kang Hu1, † , Zhuowen Wu3 , Jiangyang Ge1 , Jiawei Miao3 , Yuzhi Zhang3 , He Sun4,5 , Weizong Wang1,6 , and
+Tianhan Zhang1,7,*
+1
+School of Astronautics, Beihang University
+Department of Mechanics and Aerospace Engineering, Southern University of Science and Technology
+3
+DP Technology, Beijing
+4
+College of Future Technology, Peking University
+5
+National Biomedical Imaging Center, Peking University
+6
+State Key Laboratory of High-Efficiency Reusable Aerospace Transportation Technology
+7
+Key Laboratory of Spacecraft Design Optimization and Dynamic Simulation Technology, Ministry of Education
+†
+These authors contributed equally to this work and are listed alphabetically.
+*
+Corresponding author, thzhang@buaa.edu.cn
+2
+
+A BSTRACT
+Computational Fluid Dynamics (CFD) is essential for advancing scientific and engineering fields, but
+is hindered by operational complexity, high expertise requirements, and limited accessibility. This
+paper introduces ChatCFD, a LLM-driven agent system for end-to-end CFD automation. Powered
+by DeepSeek-R1/V3, a multi-agent architecture, structured OpenFOAM knowledge bases, precise
+error locator, and iterative reflection, ChatCFD dramatically outperforms prior systems. On 315
+benchmark cases it attains 82.1% execution success (vs. 6.2% MetaOpenFOAM, 42.3% FoamAgent) and, crucially, 68.12% physical fidelity—the first rigorous metric capturing whether a
+runnable simulation is scientifically meaningful. A dedicated Physics Interpreter achieves 97.4%
+summary fidelity, exposing the striking LLM gap between fluent narration and enforcing dozens
+of tightly coupled physical constraints in executable code. Resource-efficiency analysis highlights
+ChatCFD’s practical advantage, achieving an average of 192.1k tokens and $0.208 per case—half
+the tokens of Foam-Agent and 1.5× cheaper than MetaOpenFOAM. Ablation studies confirm
+structured domain knowledge and reasoning is indispensable: removing the Solver Template DB
+collapses accuracy to 48%, while the Error Locator Module proves the single most critical component.
+Flexibility experiments show autonomous solver selection across compressible/incompressible and
+steady/transient regimes (95.23% success) and turbulence-model switching (100% success), even
+on unseen configurations. By faithfully reproducing complex literature cases NACA0012 airfoil
+and supersonic nozzle with 60–80% end-to-end success where baselines fail entirely, ChatCFD
+establishes new benchmarks for AI-driven CFD automation. Physics coupling analyses reveal higher
+resource demands for multi-physics-coupled cases, while LLM bias toward simpler setups introduces
+persistent errors. ChatCFD’s modular, MCP-compatible design directly enables collaborative multiagent networks and paves the way for scalable AI-driven CFD innovation. The code for ChatCFD is
+available at: https://github.com/ConMoo/ChatCFD.
+
+Keywords large language model, multi-agent system, computational fluid dynamics, OpenFOAM, automated CFD
+
+1
+
+Introduction
+
+Computational Fluid Dynamics (CFD) is a cornerstone technology in diverse scientific and engineering disciplines,
+including aerospace [1, 2], energy systems [3, 4, 5], urban environment [6, 7, 8], combustion [9, 10, 11], astrophysics[12],
+and biomedical applications [13, 14]. It provides indispensable tools for simulating intricate fluid behaviors, thereby
+enabling design innovation and scientific discovery [15, 16]. However, CFD implementation faces substantial barriers,
+requiring deep domain expertise [17] and often relying on expensive commercial software. Even experts invest
+significant time in tasks such as solver selection, model setup, mesh generation, boundary condition definition, and
+post-processing [18]. These demands, combined with high computational costs, limit CFD accessibility for smaller
+organizations and hinder broader innovation [16]. Thus, there is an urgent need for automated, intuitive, and affordable
+CFD solutions. To meet this need, we present ChatCFD, an AI-driven agent system that streamlines CFD workflows,
+facilitating automated scientific discovery in fluid mechanics and engineering by enabling rapid iteration and exploration
+of complex flow phenomena without extensive manual intervention.
+Recent progress in Artificial Intelligence (AI) has transformed the automation of sophisticated scientific processes.
+Large Language Models (LLMs), such as GPT [19], Gemini [20], and DeepSeek [21], alongside multi-agent frameworks
+like MetaGPT [22] and AutoGen [23], excel in natural language processing, code generation, and reasoning via chainof-thought techniques [24]. Frameworks like ReAct [25] synergize reasoning and acting in LLMs, while Reflexion [26]
+uses verbal reinforcement learning to improve agent performance through self-reflection. Toolformer [27] teaches LLMs
+to self-learn tool usage. Retrieval-Augmented Generation (RAG) [28] further bolsters these agents by incorporating
+domain-specific knowledge, reducing hallucinations, and improving domain adaptation for tasks like CFD automation.
+This synergy has enabled LLM-based agents to automate CFD pipelines, from interpreting user inputs to running
+simulations. OpenFOAM [29], a leading open-source CFD platform, supports this trend due to its flexibility and
+community backing. Notable efforts include MetaOpenFOAM [30], which automates simulations from natural
+language using RAG and MetaGPT, though limited to tutorial-level cases and struggling with complex geometries;
+OpenFOAMGPT [31], evaluating RAG-augmented LLMs for zero-shot setup and boundary adjustments, but facing
+difficulties in turbulence model modifications; Foam-Agent [32], introducing hierarchical retrieval for dependencyaware generation, yet constrained in handling unseen configurations; and NL2FOAM [33], fine-tuning LLMs for natural
+language-to-CFD translation using LoRA [34], but reliant on domain-specific datasets and less effective for diverse
+physical models. Despite these advances, existing systems often fall short in end-to-end automation for complex cases
+without human oversight, particularly due to a fundamental challenge: LLMs lack sufficient training on niche scientific
+tasks like OpenFOAM setup, necessitating expert-designed architectures to bridge this gap through structured reasoning,
+reflection, and knowledge integration.
+Existing CFD automation agents are often limited by their focus on rudimentary tasks, typically restricted to OpenFOAM tutorial-level examples, raising concerns about their generalization to complex, unseen cases. This challenge
+primarily stems from the scarcity of domain-specific scientific coding corpora, such as OpenFOAM setups, requiring
+sophisticated multi-agent system designs to effectively incorporate physical knowledge into agent architectures, thereby
+enhancing LLMs’ capabilities in specialized scientific tool invocation. Recent representative work in this area includes
+SciToolAgent [35], which develops a knowledge graph-driven agent for integrating hundreds of scientific tools across
+biology, chemistry, and materials science, using graph-based RAG and safety-checking to automate workflows like
+protein engineering and chemical synthesis. While not directly focused on CFD, its approach to tool integration
+and domain adaptation offers valuable insights for fluid automation agents in handling coupled physics and complex
+simulations.
+Three critical challenges in CFD automation agents remain unaddressed. First, incorporating domain-specific knowledge
+into CFD agents remains challenging. Engineering-scale simulations require comprehensive initial and boundary
+condition specifications, necessitating domain-specific structural thinking and seamless integration of specialized
+domain expertise into the automation pipeline. Second, designing effective agent frameworks, especially for future
+multi-MCP agent collaborations, is essential to maximize complementary capabilities. Typical issues include whether
+we need to contain mesh generation in the agent scope, where real-world geometries exceed basic OpenFOAM tools like
+blockMesh and require specialized integration of external meshes. Third, enabling large-scale testing and evolution
+of fluid agents is crucial. Current reliance on simplistic natural language descriptions often leads to ambiguous case
+setups and hinders scalability. In contrast, CFD literature, comprising millions of papers with detailed descriptions
+and standard results, remains underutilized, impeding agent evolution. These shortcomings highlight a critical gap in
+current CFD automation frameworks.
+To overcome these challenges, we introduce ChatCFD, an automated agent system for OpenFOAM simulations, as
+shown in Figure 1. ChatCFD processes multi-modal inputs (e.g., research papers, meshes) through an interactive
+interface, utilizing LLMs (DeepSeek-R1, DeepSeek-V3), multi-agent architecture, and OpenFOAM knowledge to
+2
+
+Figure 1: Overview of the ChatCFD automated agent system for streamlining CFD simulations within the OpenFOAM
+framework. ChatCFD enables researchers and engineers to configure and execute simulations with minimal CFD or
+OpenFOAM expertise. The system comprises three core components: (1) an interactive chat interface for users to input
+case descriptions or upload mesh files, (2) a thinking system, the core decision-making module (detailed in Figure 2),
+and (3) a simulation engine that executes cases, collects error logs, and delivers final results.
+manage the full workflow. It supports intricate setups via iterative refinement, handling diverse physical models and
+external meshes, surpassing prior agents in adaptability to unseen cases.
+This paper details ChatCFD’s architecture and validates its components experimentally. The structure is as follows:
+Section 2 describes the pipeline design, Section 3 presents results, and Section 4 summarizes findings. Appendices
+provide examples and prompts for operational clarity.
+
+2
+
+ChatCFD Pipeline Design
+
+ChatCFD is an automated CFD agent system that leverages the OpenFOAM framework to process multi-modal user
+inputs, including research articles and mesh files, to configure and execute CFD simulations based on user instructions.
+As illustrated in Fig. 2, the ChatCFD framework implements a comprehensive workflow to streamline simulation setup,
+execution, and analysis.
+2.1
+
+Stage 0: Knowledge Base Construction
+
+The preprocessing aims to establish a foundational knowledge base for CFD tasks, performed in advance to optimize
+ChatCFD’s operations. Ideally, this knowledge base contains general CFD principles (e.g., numerical differentiation,
+discretization schemes), OpenFOAM-specific manuals, and a comprehensive example library. Fine-tuning large
+language models (LLMs) for general CFD knowledge is beyond the current scope; readers are referred to recent work
+by Dong et al. [33]. This study focuses on preprocessing OpenFOAM manuals and publicly accessible examples.
+Through a systematic analysis of OpenFOAM manuals and tutorials, we construct a structured JSON database that
+records key parameters such as solver configurations, turbulence models, and file dependencies, laying the foundation
+for accurate case setup and error correction. Additionally, a vector database is established to further enhance the
+understanding of OpenFOAM and to generate more precise OpenFOAM case descriptions. As shown in Fig. 3, the
+3
+
+Figure 2: Architecture of the ChatCFD framework for automated CFD simulations, illustrating the four-stage workflow
+and agent structure. The stages are: (1) Knowledge Base Construction, creating a JSON database from OpenFOAM
+manuals and tutorials; (2) User Input Processing, enabling user interaction via natural language or document and mesh
+uploads; (3) Case File Generation, generating OpenFOAM case files using the knowledge base; and (4) Execution and
+Error Reflection, running simulations, converting meshes with fluentMeshToFoam, and resolving errors (dimension
+mismatches, missing files, persistent errors, general issues) using RAG-based modules ReferenceRetriever and
+ContextRetriever. The agent structure integrates DeepSeek-R1 and DeepSeek-V3 for intelligent processing, with
+iterative error correction.
+database primarily comprises two components: a Structured Database in JSON format and a Vector Database for
+efficient retrieval. The Structured Database includes the following parts:
+• File Dependency and Structure DB (db1): Designed to construct a hierarchical file structure model. This model
+is based on OpenFOAM tutorial cases and categorized primarily by solver type and turbulence model to store the
+necessary file structure for specific combinations. It also records the actual file structure of each tutorial case, which
+is utilized to construct and validate the space of permissible configurations.
+• Boundary Condition DB (db2): Comprehensively catalogs all available boundary condition types within OpenFOAM. For each boundary condition, it precisely documents the required additional setting keywords and their
+configuration specifications, ensuring the completeness and validity of the boundary setup.
+• Parameter Dimension DB(db3): Systematically records the standard dimensional configuration rules for all physical
+quantities in OpenFOAM. This database further defines the dimensional requirements and consistency constraints for
+relevant field variables under varying physical problems or specific solving environments.
+• Solver Template DB (db4): Systematically stores the core file content and structured metadata of fundamental OpenFOAM tutorial cases. The metadata includes: the case’s designated solver, turbulence model, and physical problem
+4
+
+Figure 3: Based on the knowledge base constructed from the contents such as the OpenFOAM manual and OpenFOAM
+tutorials, and how it functions within the ChatCFD framework
+category. This information serves as the key basis for achieving high-accuracy classification and rapid screening of
+tutorial cases, thus providing precise reference templates for automated case initialization and configuration.
+All configuration files are carefully parsed, converted to JSON format, and tagged with metadata (e.g., solver specifications and flow characteristics) for easy retrieval and application. OpenFOAM-specific header files are removed, and
+cases with external dependencies or auxiliary folders are excluded to maintain case autonomy and reduce the influence
+of irrelevant configuration elements on the LLM’s response quality. Furthermore, for cases where non-uniform field
+definitions occupy a large volume of file content (potentially exceeding dialogue context limits), placeholders (e.g.,
+__CELL_COUNT__, __FACE_COUNT__, __SCALAR_DATA_PLACEHOLDER__) are used to replace the non-uniform field
+data. This allows the LLM to focus on critical settings (such as boundary and initial conditions) while mitigating the
+issue of a reduced case count due to complex data.
+Initially, preprocessed manual and tutorial data are used to define file dependency relationships, which are accessed during the RAG process to enhance the agent’s error correction capabilities. To ensure robust operation,
+strategic case filtering is implemented by removing OpenFOAM-specific headers and excluding cases with external dependencies or auxiliary folders. This maintains case independence, reducing the risk of degraded LLM
+response quality due to irrelevant configuration elements. For cases where non-uniform field definitions occupy
+significant file content and may exceed the dialogue context limits of large models, placeholder tokens such as
+__CELL_COUNT__,__FACE_COUNT__,__SCALAR_DATA_PLACEHOLDER__ are used to replace non-uniform field data.
+This approach enables the LLM to focus on critical settings, such as boundary and initial conditions, while ignoring non-uniform field configurations. As a result, it mitigates the reduction in the number of usable OpenFOAM
+tutorial cases caused by complex non-uniform field data. Filtering criteria and implementation details are provided
+in Appendix A. Subsequently, the example library is preprocessed through systematic extraction and organization.
+All case configuration files are parsed and converted into a structured JSON format, tagged with metadata such
+as solver specifications, turbulence model types, and flow regime characteristics. Analysis of solver and turbulence model distributions determines specific file requirements for each configuration. For instance, the simpleFoam
+solver requires configuration files including system/fvSolution, system/controlDict, system/fvSchemes, 0/p,
+0/U, constant/transportProperties, and constant/turbulenceProperties. Similarly, the k-ω SST turbulence model requires system/fvSolution, system/controlDict, system/fvSchemes, 0/p, 0/U, 0/k, 0/omega,
+0/nut, constant/turbulenceProperties, and constant/transportProperties.
+2.2
+
+Stage 1: User Input Processing
+
+The initial stage of ChatCFD features an interactive, multi-modal interface that enables users to define CFD simulations
+by either conversing with the DeepSeek-R1 model or uploading documents and mesh files, built using the Streamlit
+Python framework. This interface leverages the preprocessed knowledge base to facilitate accurate case specification
+5
+
+with minimal CFD expertise. The knowledge base, comprising OpenFOAM manuals, tutorial cases, and a structured
+JSON database of solver configurations and turbulence models, informs the system’s natural language processing and
+case extraction, ensuring robust and context-aware interactions. The workflow comprises four key phases:
+• Input Submission: Users can upload research articles or describe the case through dialogue to provide the basis for
+case analysis.
+• Case Extraction: The system extracts and catalogs CFD cases from uploaded documents or conversation inputs,
+identifying solver configurations and physical models, and presents them in a structured format with unique identifiers
+(e.g., Case 1, Case 2).
+• Case Selection: Through natural language interaction, the system guides users to select a target case, provides
+detailed specifications for verification, and confirms the selection.
+• Mesh Integration: The system assists users in uploading mesh files, currently supporting Fluent format .msh files.
+For OpenFOAM default meshes, users must specify the path to the corresponding polyMesh directory.
+Upon completing this workflow, ChatCFD aggregates three essential components for downstream processing, as shown
+in Fig. 2:
+• Case Documentation: The system retains the full research article or conversation details, providing access to all
+technical specifications, including solvers, boundary conditions, and simulation parameters.
+• Case Specification: The selected case is recorded with detailed metadata, including solver types, numerical schemes,
+physical models, and source references, ensuring precise setup.
+• Mesh Data: Robust file transfer and path management ensure reliable delivery of mesh data to subsequent stages.
+2.3
+
+Stage 2: Case File Generation
+
+The CFD engineer layer, powered by the DeepSeek-R1 and DeepSeek-V3 models, initializes OpenFOAM case files
+through a streamlined three-phase process that leverages the preprocessed knowledge base.
+2.3.1
+
+Phase 1: File Configuration Synthesis
+
+The system analyzes the case description from Stage 1 (User Input Processing) to identify suitable solvers and models,
+thereby generating a list of required case file configurations. This involves explicitly matching dependencies for solvers,
+models, and related settings to facilitate accurate file configuration. The workflow proceeds as follows:
+• Relevant cases are retrieved based on the solver and model, yielding a corresponding file configuration list from
+which non-essential files (e.g., those for visualization or mesh generation) are removed. These refined cases are then
+input to the DeepSeek-V3 model to produce an optimized file configuration list.
+• In the absence of direct matches, cases are aligned by solver type. For additional models, such as turbulence models,
+necessary files are inferred from analogous cases, synthesized into a new configuration list, verified for solver
+compatibility, and finalized via DeepSeek-V3.
+This approach integrates solver and physical model structures with case synthesis, enhancing initialization precision,
+minimizing file omissions, and substantially improving overall case file quality.initialization.
+2.3.2
+
+Phase 2: Case Setup Extraction
+
+Detailed case configurations are derived from three primary sources: the file configuration list, user prompts, and the
+case library. The configuration list prevents omissions or redundancies in the case structure, while user prompts enable
+filtering of segmented case description chunks using the sentence-transformer/all-mpnet-base-v2 library and
+a similarity threshold. The DeepSeek-R1 model implements a hierarchical three-step extraction:
+• Mesh Boundary Condition Extraction: Boundary names and types are extracted via regular expressions and tools
+like pyFoam, forming a persistent dictionary for subsequent physical field generation and error handling.
+• Boundary Condition Validation: Boundary conditions are identified from filtered chunks, checked for compatibility
+with OpenFOAM-v2406, and subjected to rigorous naming and format validation.
+• Physical Field File Value Setup: Field files (e.g., 0/p, 0/nut, 0/nutTilda) are identified from the configuration
+list. Using prior boundary data, OpenFOAM-compliant templates are created, encompassing internal and boundary
+field settings differentiated by boundary names and associated keywords.
+6
+
+2.3.3
+
+Phase 3: Configuration Validation and Refinement
+
+For unspecified parameters, such as discretization schemes and solver algorithms in system/fvSolution and
+system/fvSchemes, the DeepSeek-R1 model applies advanced reasoning grounded in CFD best practices and
+case-specific physics to formulate coherent configurations. This maintains parameter interdependencies and ensures
+alignment with the outlined flow dynamics and solver demands.
+A comprehensive validation and correction mechanism further refines the generated files. The system scrutinizes
+structures in the system and constant directories, confirming proper dependencies and completeness through crossreferences with library exemplars. Particular emphasis is placed on physical field dimensions to mitigate LLM
+limitations in interpreting such constraints. For example, variables like p and alphat—which differ dimensionally
+between compressible and incompressible flows—are calibrated according to case type; ambiguous cases retain initial
+values. This process curtails errors like dimensional inconsistencies, bolsters initial file robustness, and diminishes
+iterative corrections in Stage 3.
+2.4
+
+Stage 3: Error Correction and Reflection
+
+Stage 3 of the ChatCFD pipeline employs a modular architecture for automated error correction and iterative refinement
+in OpenFOAM case configurations. The following modules facilitate robust error handling:
+• ReferenceRetriever: This module retrieves reference files from the preprocessed OpenFOAM knowledge base,
+matching solver and model specifications from benchmark tutorial cases. If no exact match is found, it prioritizes
+solver-compatible files. To balance guidance and prompt complexity, two reference files are selected to aid error
+detection and correction, leveraging the LLM’s few-shot learning to enhance ChatCFD’s accuracy in error locator and
+resolution.
+• ContextRetriever: This module compiles current case configurations into a structured JSON format, providing
+detailed file content and modification trajectories over a specified period, tailored to other modules’ needs. It
+supports targeted reflection and correction, particularly for errors involving physical coupling (e.g., pressure-density
+interactions).
+• Error Locator Module: Comprising two components: (1) DeepSeek-V3 rapidly identifies suspicious files based on
+error messages, reducing the analysis burden; (2) DeepSeek-R1 performs detailed reasoning to pinpoint erroneous
+files by comparing their content against the case library, leveraging its advanced inference capabilities for precise
+error location.
+• Error Correction Module: This module addresses file interdependencies in OpenFOAM through a three-step
+process: (1) DeepSeek-V3 identifies files requiring coordinated modifications to resolve coupling-related errors;
+(2) DeepSeek-R1 proposes actionable corrections by integrating error details, related file content, simulation
+requirements, and benchmark tutorial cases; (3) DeepSeek-V3 applies these corrections, ensuring compliance
+with OpenFOAM’s file format standards.
+• Reflection Module: Activated during persistent errors, this module collects error messages and file modification
+histories, formulating reflections in the format: ”For situation A, I considered B but overlooked C; next, I will apply
+D to resolve the issue.” These reflections are stored as reflection blocks within a <reflexion> tag in the reflection
+history, enhancing iterative error correction by integrating with error locator and correction modules.
+Errors detected during simulation are categorized into two types:
+• General Errors: These, comprising over 70% of runtime errors, include incorrect keywords, formatting issues, or
+floating-point errors. Correction involves a streamlined workflow: suspicious file detection (DeepSeek-V3), error
+confirmation (DeepSeek-R1), retrieval of related tutorial files (ReferenceRetriever), proposal of corrections, and
+file modification. For missing file errors, DeepSeek-V3 directly generates the required file using reference cases,
+followed by dimensional validation to ensure quality.
+• Persistent Errors: ChatCFD leverages short-term memory (recent error messages and file modification histories)
+and long-term memory (reflection histories) to address recurring issues. Reflection histories, stored as structured
+insights, enhance the system’s ability to adapt and resolve complex errors iteratively.
+2.5
+
+Stage 4: Post-Processing
+
+To enhance the transparency and user intelligibility of the computation process, ChatCFD integrates a dedicated
+Physics Interpreter in the fourth stage of the workflow. This component, implemented using the DeepSeek-R1
+model, automatically produces a technical summary immediately after the case is successfully generated and deemed
+7
+
+executable. The output is presented in Markdown format, supplemented by structured expressions such as tables and
+file tree diagrams. Its content systematically covers multiple dimensions, including fundamental information, physical
+problem background, special configuration settings, file structure, and key file contents, thereby comprehensively
+ensuring the transparency of the simulated physical process for the user.
+2.6
+
+LLM Architecture and Configuration
+
+ChatCFD employs a dual-model architecture, integrating the DeepSeek-R1 and DeepSeek-V3 large language models
+(LLMs) to execute a comprehensive CFD workflow for case generation and error correction. Each model is strategically
+deployed based on its strengths to optimize performance across Stages 2 and 3.
+The DeepSeek-R1 model, with its superior text comprehension and reasoning capabilities, is utilized for complex,
+high-stakes tasks. In Stage 2, it extracts critical simulation parameters (e.g., boundary conditions, initial conditions)
+from case descriptions and generates complete initial case files. In Stage 3, it pinpoints error-causing files, proposes
+detailed correction strategies, and conducts reflection on persistent errors. However, DeepSeek-R1’s propensity
+for hallucinations—such as inserting unnecessary Markdown formatting, which can disrupt error correction—poses
+challenges. Despite mitigation efforts using prompt engineering and pydantic for structured outputs, these issues
+persist. Additionally, its inference time increases significantly with longer prompts, making it less efficient for routine
+tasks.
+The DeepSeek-V3 model excels in instruction following and rapid response, making it ideal for structured, lowcomplexity tasks. In Stage 2, it performs quick file structure validation, while in Stage 3, it identifies suspicious or
+missing files and generates corrected file content based on provided instructions. To address DeepSeek-V3’s limited
+reasoning capacity, tasks are simplified into structured formats (e.g., providing configuration file lists to narrow analysis
+scope), and the model is prompted to justify its actions (e.g., explaining why a file is suspicious). This enhances
+its effectiveness while maintaining computational efficiency. This dual-model approach leverages DeepSeek-R1’s
+reasoning for complex CFD tasks and DeepSeek-V3’s efficiency for structured operations, ensuring robust performance
+across diverse case types (e.g., benchmark tutorial cases, literature-derived cases) while minimizing computational
+costs.
+ChatCFD maintains a comprehensive log for each CFD case, capturing all question-answer interactions and actions
+taken during reflection-based error correction. These logs are invaluable for analyzing the behavior of the DeepSeek-R1
+and DeepSeek-V3 models within the OpenFOAM framework, particularly in identifying limitations in handling
+complex CFD configurations. The recorded reflection iterations, which document corrective actions for persistent errors,
+provide critical insights into scenarios where ChatCFD’s performance is suboptimal, guiding targeted improvements
+in the pipeline. Additionally, a concise summary of reflections for recurring errors is maintained, offering a deeper
+understanding of ChatCFD’s behavior in complex scenarios. These logs have the potential to form a novel database,
+serving as a valuable resource for enhancing LLM-based agents in addressing high-complexity CFD problems within
+the MCP framework.
+The experimental validations described in Section 3 were conducted on the VolcEngine platform [36], which provides
+the pricing structure for token usage and computational costs. For DeepSeek-R1, input tokens cost $0.00055 per
+1,000 (0.004 RMB), and output tokens cost $0.0022 per 1,000 (0.016 RMB). For DeepSeek-V3, input tokens cost
+$0.00021 per 1,000 (0.0015 RMB), and output tokens cost $0.00082 per 1,000 (0.006 RMB). All token consumption
+and cost metrics reported in Section 3 are based on this pricing, enabling precise evaluation of ChatCFD’s computational
+efficiency across benchmark tutorial cases, perturbed variant cases, and literature-derived cases.
+
+3
+
+Results and discussion
+
+The performance of ChatCFD was rigorously evaluated through a series of validation experiments encompassing
+three distinct categories of CFD cases: (i) 205 benchmark tutorial cases drawn from OpenFOAM tutorials and the
+OpenFOAM wiki, serving as standardized references for foundational validation; (ii) 110 perturbed variants, derived
+by systematically altering key parameters (e.g., boundary conditions, solver settings, or physical properties) in the
+benchmark cases to assess robustness and sensitivity; and (iii) 2 advanced literature-derived cases, directly prompted
+from published research articles to test real-world applicability in complex, unseen scenarios. ChatCFD demonstrated
+an operational success rate of 82.1% across the 315 benchmark and perturbed cases, with success defined as error-free
+configuration and execution leading to converged simulations. For the advanced literature-derived cases, success rates
+ranged from 60% to 80%, reflecting the challenges of handling intricate, domain-specific configurations without prior
+exposure. These results represent a substantial advancement in LLM-driven CFD automation, particularly in reducing
+the expertise barrier for setup and execution within the OpenFOAM framework.
+8
+
+

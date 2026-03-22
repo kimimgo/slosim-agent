@@ -1,0 +1,406 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{xeCJK}
+\setCJKmainfont{NanumMyeongjo}
+\setCJKsansfont{NanumGothic}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{colortbl}
+\usepackage{multirow}
+
+\definecolor{accent}{RGB}{0,80,160}
+\definecolor{gray}{RGB}{100,100,100}
+\definecolor{lightgray}{RGB}{245,245,245}
+\definecolor{pass}{RGB}{34,139,34}
+\definecolor{partial}{RGB}{200,150,0}
+\definecolor{fail}{RGB}{180,30,30}
+\hypersetup{colorlinks=true,linkcolor=accent,urlcolor=accent}
+\titleformat{\section}{\large\bfseries\color{accent}}{}{0em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+\titleformat{\subsubsection}{\small\bfseries\color{gray}}{}{0em}{}
+\titlespacing{\section}{0pt}{1.0em}{0.3em}
+\titlespacing{\subsection}{0pt}{0.6em}{0.2em}
+\titlespacing{\subsubsection}{0pt}{0.4em}{0.1em}
+
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\color{gray}SlosimAgent — 실험 결과 상세 보고}
+\fancyhead[R]{\small\color{gray}2026-03-10}
+\fancyfoot[C]{\small\thepage}
+
+\setlength{\parskip}{0.3em}
+\setlength{\parindent}{0em}
+
+\begin{document}
+
+\begin{center}
+{\Large\bfseries SlosimAgent 실험 결과 상세 보고}\\[0.5em]
+{\normalsize 논문 뼈대 v2 기준 — EXP-A/B/C/D + Bridge + Rafiee 2011}\\[0.3em]
+{\small\color{gray} Imgyu Kim \quad | \quad 2026-03-10}
+\end{center}
+
+\vspace{0.3em}\hrule\vspace{0.8em}
+
+% ============================================================
+\section{논리 구조 — Gap$\rightarrow$실험$\rightarrow$증거}
+% ============================================================
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{>{\bfseries}p{3.2cm}p{4.5cm}p{5.8cm}}
+\toprule
+Gap & 실험 & 핵심 수치 \\
+\midrule
+\cellcolor{lightgray}Gap 1: 비전문가 접근성 & EXP-A (XML 생성 품질) + EXP-B (ablation baseline) & 0\%$\rightarrow$\textbf{82.2\%} M-A3 (+82pp) \\
+\cellcolor{lightgray}Gap 2: SPH 솔버 에이전트 & EXP-C (SPHERIC T10) + Bridge (5/5) + EXP-D (배플) & M2=19.5\%, r=0.655, 28.5\% SWL 감소 \\
+\cellcolor{lightgray}Gap 3: 로컬 SLM 충분 & EXP-A (32B$\approx$8B) + EXP-B (모델별 factorial) & $\Delta$=3.8pp, 9/10 시나리오 동일 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ============================================================
+\section{EXP-A: NL$\rightarrow$XML Parameter Fidelity}
+% ============================================================
+
+\subsection{실험 설계}
+
+10개 슬로싱 시나리오 $\times$ 2 모델(Qwen3-32B, 8B) $\times$ 3 trials = \textbf{60 runs}, temperature=0.
+
+\textbf{M-A3 채점}: 8개 파라미터를 $\pm$5--25\% tolerance로 이진 판정 후 평균.\\
+tank\_x, tank\_y, tank\_z, fill\_height, motion\_type, frequency, amplitude, timemax.
+
+\subsection{결과}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lccccc}
+\toprule
+& \multicolumn{2}{c}{\textbf{v3 (원본)}} & \multicolumn{2}{c}{\textbf{v4 (도구 수정 후)}} & \textbf{개선} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+모델 & M-A3 & $\Delta$ & M-A3 & $\Delta$ & \\
+\midrule
+32B & 69.5\% & \multirow{2}{*}{5.0pp} & \textbf{82.2\%} & \multirow{2}{*}{3.8pp} & +12.8pp \\
+8B & 64.5\% & & \textbf{78.5\%} & & +14.0pp \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{v3$\rightarrow$v4 개선 원인: 도구 설계 수정 2건}
+
+\begin{itemize}[nosep,leftmargin=1.5em]
+\item \textbf{P1 (motion\_type)}: \texttt{xml\_generator}가 pitch 운동 미지원 $\rightarrow$ \texttt{mvrotsinu} 생성 추가
+\item \textbf{P2 (amplitude)}: degrees$\rightarrow$radians 단위 변환 누락 $\rightarrow$ 수정
+\item 영향 시나리오: S01, S04, S05, S08, S09 (5/10 pitch 시나리오)
+\end{itemize}
+
+\textbf{핵심}: 모델 스케일링(8B$\rightarrow$32B) = +3.8pp vs 도구 수정(P1+P2) = +12.8pp $\rightarrow$ \textbf{도구 커버리지가 성능 병목}
+
+\subsection{난이도별 분포 (v4)}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{llcc}
+\toprule
+난이도 & 시나리오 & 32B & 8B \\
+\midrule
+Easy & S01, S02, S04, S06 & 87.7\% & 87.7\% \\
+Medium & S03, S10 & 85.5\% & 85.5\% \\
+Hard & S05, S07, S08, S09 & 51.0\% & 34.3\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Easy/Medium에서 32B=8B 완전 동일. Hard에서만 차이 발생 (S05: 32B=88\%$>$8B=50\%).
+
+\subsection{체계적 오류 패턴 (P1--P5)}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{clcc}
+\toprule
+패턴 & 설명 & 빈도 & 영향 \\
+\midrule
+P1 & motion\_type 혼동 (pitch$\rightarrow$sway 강제) & 5/10 & \textbf{v4에서 해결} \\
+P2 & amplitude 단위 (deg$\rightarrow$rad 누락) & 5/10 & \textbf{v4에서 해결} \\
+P3 & timemax 과소추정 & 6/10 & 잔여 한계 \\
+P4 & cylinder geometry 미지원 & 2/10 & 잔여 한계 \\
+P5 & tank\_z / fill\_height 혼동 & 1/10 & 잔여 한계 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+잔여 한계(P3--P5) 해결 시 이론적 최대: \textbf{$\sim$92--95\%} M-A3.
+
+\subsection{재현성}
+
+temperature=0에서 32B 10/10, 8B 10/10 시나리오 $\sigma$=0.0 — \textbf{완전 결정적 재현}.
+
+% ============================================================
+\section{EXP-B: Architecture Ablation (2$\times$2 Factorial)}
+% ============================================================
+
+\subsection{실험 설계}
+
+2$\times$2 factorial: Domain Prompt($\pm$) $\times$ DualSPHysics Tools($\pm$).\\
+10 시나리오 $\times$ 2 모델 = 20 runs/조건, \textbf{총 80 runs}.
+
+\subsection{결과}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lcccc}
+\toprule
+조건 & Prompt & Tools & M-A3 & 비고 \\
+\midrule
+B0 (Full) & \checkmark & \checkmark & \textbf{67.0\%} & 완전 시스템 \\
+B1 ($-$Prompt) & $\times$ & \checkmark & \textcolor{fail}{\textbf{0\%}} & 40/40 전부 실패 \\
+B2 ($-$Tool) & \checkmark & $\times$ & 46.1\% & XML 생성 가능하나 부정확 \\
+B4 (Bare) & $\times$ & $\times$ & \textcolor{fail}{\textbf{0\%}} & 40/40 전부 실패 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Hierarchical Dependency 발견}
+
+B1 = B4 = 0\% (40/40 runs) $\rightarrow$ 표준 factorial 분해 불가 $\rightarrow$ \textbf{hierarchical dependency}로 재해석:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lrl}
+\toprule
+효과 & 크기 & 해석 \\
+\midrule
+Prompt main effect & \textbf{+56.5pp} & \textbf{필요조건} — 없으면 도구 호출 자체 불가 \\
+Tool main effect & +10.5pp & B1=0에 의한 희석 포함 \\
+Interaction & \textbf{+20.9pp} & prompt 존재 시에만 도구가 유의미 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{핵심 발견 3가지}
+
+\begin{enumerate}[nosep,leftmargin=1.5em]
+\item \textbf{Prompt = 필요조건}: B1에서 Qwen3는 DualSPHysics 도구를 \textbf{단 1회도 호출 안 함} (glob/edit만 사용). 도메인 프롬프트 없이는 작업 자체를 인식 못 함
+\item \textbf{Tool = 구조적 정제}: B2(프롬프트만)에서도 XML 생성 가능(46.1\%), 그러나 tank\_z$\leftrightarrow$fill\_height 혼동 $\rightarrow$ 도구가 geometry 정확도 보장
+\item \textbf{8B에서 tool interaction 더 큼}: 8B=+24.2pp vs 32B=+17.6pp $\rightarrow$ 작은 모델일수록 도구 의존도 증가
+\end{enumerate}
+
+\subsection{모델별 Factorial 분해}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{lccc}
+\toprule
+모델 & Prompt & Tool & Interaction \\
+\midrule
+32B & +60.7pp & +8.8pp & +17.6pp \\
+8B & +52.4pp & +12.1pp & \textbf{+24.2pp} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ============================================================
+\section{EXP-C: Physics Validation — SPHERIC Test 10}
+% ============================================================
+
+\textit{``XML을 잘 만드는가'' (EXP-A/B) $\rightarrow$ ``물리적으로 올바른 시뮬레이션을 생산하는가'' (EXP-C)}
+
+\subsection{벤치마크 설정}
+
+Botia-Vera et al. (2010), Souto-Iglesias (2011) — \textbf{102회 반복 실험}.\\
+Tank: 900$\times$62$\times$508 mm, Pitch A=4°, DualSPHysics v5.4 GPU, DBC.
+
+\subsection{Sub-case 1: Water Lateral — \textcolor{pass}{PASS}}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lccc}
+\toprule
+메트릭 & 값 & 기준 & 결과 \\
+\midrule
+M1 (peak-in-band) & 3/3 & $\geq$2/3 & \textcolor{pass}{\textbf{PASS}} \\
+M2 (mean peak error) & \textbf{19.5\%} & $<$30\% & \textcolor{pass}{\textbf{PASS}} \\
+M5 (cross-correlation) & \textbf{r=0.655} & $>$0.5 & \textcolor{pass}{\textbf{PASS}} \\
+M6 (time shift) & +0.570s & $<$1.63s & \textcolor{pass}{\textbf{PASS}} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+피크별 비교 (dp=2mm):
+
+\begin{center}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{cccc}
+\toprule
+피크 & 실험 평균 [mbar] & 시뮬레이션 [mbar] & 오차 \\
+\midrule
+1 & 37.1 & 37.1 & \textbf{$-$0.1\%} \\
+2 & 48.2 & 35.4 & $-$26.4\% \\
+3 & 46.9 & 31.9 & $-$31.9\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection{수렴 분석 (3-level)}
+
+\begin{center}
+\begin{tabular}{ccc}
+\toprule
+dp & r\_max & 개선 \\
+\midrule
+4mm & 0.460 & — \\
+2mm & 0.655 & +42\% \\
+1mm & 0.697 & +6.4\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+단조 수렴 확인. 수렴 감속 (+42\%$\rightarrow$+6.4\%)은 reference resolution 근접을 시사.
+
+\subsection{Sub-case 2: Oil Lateral — \textcolor{pass}{PASS}}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lccc}
+\toprule
+메트릭 & 값 & 기준 & 결과 \\
+\midrule
+M7 (peak detection) & 4/4 & $\geq$3/4 & \textcolor{pass}{\textbf{PASS}} \\
+M1 (peak-in-band) & 2/4 & $\geq$2/4 & \textcolor{pass}{\textbf{PASS}} \\
+M5 (cross-correlation) & \textbf{r=0.570} & $>$0.5 & \textcolor{pass}{\textbf{PASS}} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection{점성 모델 비교 (핵심 물리 발견)}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{llc}
+\toprule
+점성 모델 & 해상도 & Mean Peak Error \\
+\midrule
+Artificial ($\alpha$=0.01) & 100Hz & 86.2\% \\
+Laminar+SPS & 100Hz & 37.7\% \\
+\textbf{Laminar+SPS} & \textbf{10ms hi-res} & \textbf{26.4\%} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Peaks 2--4 개별: 6.5\%, 14.4\%, 16.5\% — 우수한 매칭.\\
+Peak 1 anomaly (68.1\%): 첫 충격파 물리적 약화 — SPH 알려진 한계.
+
+\textbf{문헌 대비 최초}: 1,176편 서베이 결과, SPH Oil SPHERIC T10 정량 에러 보고 = \textbf{0편}. 본 연구 26.4\%가 \textbf{최초}.
+
+\subsection{Sub-case 3: Water Roof — \textcolor{partial}{PARTIAL}}
+
+DBC 경계의 $\sim$5mm 인공 점성 소산층 $\rightarrow$ 파도 최대 도달 503.6mm (지붕 508mm의 99.1\%).\\
+mDBC 시도: 26\% 입자 손실로 발산 — 알려진 솔버 한계로 문서화.
+
+\subsection{Rafiee \& Thiagarajan (2011) 추가 벤치마크}
+
+Tank 1.3m$\times$0.1m$\times$0.9m, Sway a=0.1m, f=0.496Hz (근공진), Water, DBC.\\
+비교 대상: Kim \& Park (2023) PoF — 동일 벤치마크 Direct Imposition 방법.\\
+pajulab 4$\times$RTX4090 병렬 실행.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lcc}
+\toprule
+방법 & P2 avg peak error & P1 avg peak error \\
+\midrule
+\textbf{DSPH dp=0.004 (DBC)} & \textbf{9.3\%} & 78.0\% \\
+Kim \& Park (2023) & 71.3\% & 49.4\% \\
+DSPH dp=0.002 (DBC) & 75.6\% & 66.7\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{핵심 발견}:
+\begin{itemize}[nosep,leftmargin=1.5em]
+\item \textbf{dp004 $>$ dp002 역전}: 큰 커널(h=0.0083m)이 벽면 압력을 넓게 감지 $\rightarrow$ 임팩트 과소추정 감소
+\item \textbf{위상 지연}: 근공진 SPH 인공점성 에너지 축적 — dp004=0.5T, dp002=1.6T 지연
+\item \textbf{Trough-calibrated}: 슬로싱 주기(t=2--8s) 저점 매칭으로 보정 후 비교
+\end{itemize}
+
+% ============================================================
+\section{Bridge Experiment: Agent XML $\rightarrow$ Physics}
+% ============================================================
+
+\textbf{목적}: EXP-A(XML 생성 품질)와 EXP-C(물리 검증)를 \textbf{직접 연결}.\\
+S02 agent-generated XML (M-A3=100\%) $\rightarrow$ GenCase $\rightarrow$ DualSPHysics GPU $\rightarrow$ MeasureTool
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lccc}
+\toprule
+검증 항목 & 측정값 & 기대값 & 결과 \\
+\midrule
+Hydrostatic 압력 & 333.5 Pa & 323.7 Pa & \textcolor{pass}{\textbf{3.0\% err}} \\
+Anti-phase (좌우 역위상) & r=$-$0.720 & r$<$0 & \textcolor{pass}{\textbf{PASS}} \\
+주파수 & 0.789 Hz & 0.756 Hz & \textcolor{pass}{\textbf{4.4\% err}} \\
+벽면$>$중앙 진폭 & 465 vs 213 Pa & 벽면$>$중앙 & \textcolor{pass}{\textbf{PASS}} \\
+입자 안정성 & 105,465/105,465 & 손실 없음 & \textcolor{pass}{\textbf{100\%}} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{5/5 PASS} — 에이전트 생성 XML이 물리적으로 유효한 시뮬레이션 생산.\\
+\textit{한계: M-A3=100\% 케이스만 검증. M-A3$<$100\% XML의 물리적 영향은 Discussion에서 논의.}
+
+% ============================================================
+\section{EXP-D: Autonomous Baffle Optimization}
+% ============================================================
+
+\textbf{목적}: 에이전트가 배플을 자율 설계하고 SWL 감소 효과를 정량 검증.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{ll}
+\toprule
+항목 & 값 \\
+\midrule
+탱크 & 0.6m$\times$0.3m$\times$0.4m, 50\% fill, sway f=0.95Hz \\
+배플 & center vertical, h=0.14m, t=0.016m (에이전트 자율 결정) \\
+해상도 & dp=0.008m, TimeMax=8s \\
+\midrule
+\textbf{SWL 진폭 감소} & \textbf{28.5\%} (Left=28.6\%, Right=28.4\%) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+좌우 대칭 ($\Delta$=0.2pp) $\rightarrow$ 시뮬레이션의 대칭성 검증 통과.\\
+문헌 기대값 30--50\% 범위 근처 $\rightarrow$ 물리적으로 타당.
+
+% ============================================================
+\section{종합 — Gap 증명 매트릭스}
+% ============================================================
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{>{\bfseries}p{2cm}p{3.2cm}p{3.5cm}p{4cm}}
+\toprule
+Gap & 주장 & 1차 증거 & 핵심 수치 \\
+\midrule
+\cellcolor{lightgray}Gap 1 & 비전문가 접근성 공백 해소 & EXP-A: 0\%$\rightarrow$82.2\% & +82pp 접근성 도약 \\
+\cellcolor{lightgray}Gap 2 & SPH 솔버 에이전트 통합 & EXP-C + Bridge + EXP-D & M2=19.5\%, 5/5 PASS, 28.5\% \\
+\cellcolor{lightgray}Gap 3 & 로컬 SLM 충분 & EXP-A: 32B$\approx$8B & 9/10 동일, $\Delta$=3.8pp \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{추가 핵심 Contribution}
+
+\begin{enumerate}[nosep,leftmargin=1.5em]
+\item \textbf{도구 커버리지 = 성능 천장}: P1+P2 수정 +12.8pp $\gg$ 모델 스케일링 +3.8pp (3.4$\times$)
+\item \textbf{Hierarchical dependency}: Prompt=필요조건(+56.5pp), Tool=조건부(+20.9pp)
+\item \textbf{Oil SPHERIC T10 최초 정량 보고}: 26.4\% mean peak error (1,176편 서베이에서 선례 없음)
+\item \textbf{총 실험 규모}: 60 (EXP-A) + 80 (EXP-B) + 8 (EXP-C runs) + 2 (Bridge) + 2 (EXP-D) + 4 (Rafiee) = \textbf{156+ runs}
+\end{enumerate}
+
+\end{document}

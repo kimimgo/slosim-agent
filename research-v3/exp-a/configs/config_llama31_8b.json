@@ -1,0 +1,35 @@
+{
+  "data": {},
+  "providers": {
+    "local": {
+      "apiKey": "dummy",
+      "disabled": false
+    }
+  },
+  "agents": {
+    "coder": {
+      "model": "local.llama3.1:8b-instruct-q8_0",
+      "maxTokens": 0,
+      "reasoningEffort": ""
+    },
+    "summarizer": {
+      "model": "local.llama3.1:8b-instruct-q8_0",
+      "maxTokens": 0,
+      "reasoningEffort": ""
+    },
+    "task": {
+      "model": "local.llama3.1:8b-instruct-q8_0",
+      "maxTokens": 0,
+      "reasoningEffort": ""
+    },
+    "title": {
+      "model": "local.llama3.1:8b-instruct-q8_0",
+      "maxTokens": 0,
+      "reasoningEffort": ""
+    }
+  },
+  "tui": {
+    "theme": "opencode"
+  },
+  "shell": {}
+}
