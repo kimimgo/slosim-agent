@@ -1,0 +1,205 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{spacex2007}
+\citation{hatayama2004}
+\citation{usgs1964}
+\citation{nrc2011}
+\citation{fmcsa2023}
+\citation{lloyd2024}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Sloshing: A Cross-Industry Safety Problem}{1}{subsection.1.1}\protected@file@percent }
+\citation{lloyd2024}
+\citation{sjtu_ofw13_2018}
+\citation{kim2019sloshing}
+\citation{marketreport2024}
+\citation{cadence2024}
+\citation{resolved_analytics}
+\citation{dominguez2022dualsphysics}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Real-world sloshing failures across industries.}}{2}{table.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{tab:accidents}{{1}{2}{Real-world sloshing failures across industries}{table.caption.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}The Sloshing Simulation Bottleneck}{2}{subsection.1.2}\protected@file@percent }
+\citation{vieira2017designsphysics}
+\citation{english2021mdbc}
+\citation{rescale2025}
+\citation{bran2024chemcrow}
+\citation{boiko2023coscientist}
+\citation{metaopenfoam2024}
+\citation{foamagent2025}
+\citation{chatcfd2026}
+\citation{openfoamgpt2025}
+\citation{cfdcopilot2025}
+\citation{autocfd2025}
+\citation{foamgpt2025}
+\citation{phynikce2026}
+\citation{pasimodo2025}
+\citation{dominguez2022dualsphysics}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}LLM Agents for Scientific Simulation---and Their Blind Spot}{3}{subsection.1.3}\protected@file@percent }
+\citation{kim2019sloshing}
+\citation{isope2012sloshing}
+\citation{chen2018sloshing}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.4}Contributions}{4}{subsection.1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{4}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Sloshing Simulation: State of Practice}{4}{subsection.2.1}\protected@file@percent }
+\citation{dominguez2022dualsphysics}
+\citation{crespo2011gpu}
+\citation{english2021mdbc}
+\citation{liu2024pitch}
+\citation{vieira2017designsphysics}
+\citation{kim2019sloshing}
+\citation{pasimodo2025}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Comparison of LLM-based simulation agents. All entries verified from primary publications.}}{5}{table.caption.2}\protected@file@percent }
+\newlabel{tab:comparison}{{2}{5}{Comparison of LLM-based simulation agents. All entries verified from primary publications}{table.caption.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}LLM Agents for CFD and Simulation}{5}{subsection.2.2}\protected@file@percent }
+\citation{chatcfd2026}
+\citation{isope2012sloshing}
+\citation{mdcrow2025}
+\citation{bran2024chemcrow}
+\citation{boiko2023coscientist}
+\citation{mdcrow2025}
+\citation{matsciagent2025}
+\citation{mechagents2024}
+\citation{lu2024aiscientist}
+\citation{scienceagentbench2025}
+\citation{agentic2025,fromaitoscience2025}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}LLM Agents for Scientific Discovery}{6}{subsection.2.3}\protected@file@percent }
+\citation{qwen2025}
+\citation{metaopenfoam2024}
+\citation{foamagent2025}
+\citation{bran2024chemcrow}
+\citation{mdcrow2025}
+\citation{yao2023react}
+\citation{cadence2024}
+\citation{mcp2024}
+\citation{foamagent2025}
+\@writefile{toc}{\contentsline {section}{\numberline {3}System Design}{7}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Architecture Overview}{7}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Tool Interface Design for Sloshing SPH}{7}{subsection.3.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces SloshAgent architecture: natural language input $\rightarrow $ domain-specialized prompt $\rightarrow $ ReAct agent loop with 14 SPH tools and 12 MCP post-processing tools $\rightarrow $ GPU simulation $\rightarrow $ experimental validation.}}{8}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:architecture}{{1}{8}{SloshAgent architecture: natural language input $\rightarrow $ domain-specialized prompt $\rightarrow $ ReAct agent loop with 14 SPH tools and 12 MCP post-processing tools $\rightarrow $ GPU simulation $\rightarrow $ experimental validation}{figure.caption.3}{}}
+\citation{shinn2023reflexion}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Tool interface summary: 14 built-in DualSPHysics tools.}}{9}{table.caption.4}\protected@file@percent }
+\newlabel{tab:tools}{{3}{9}{Tool interface summary: 14 built-in DualSPHysics tools}{table.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Domain-Specialized Sloshing Prompt}{9}{subsection.3.3}\protected@file@percent }
+\citation{lloyd2024}
+\citation{english2021mdbc}
+\citation{vieira2017designsphysics}
+\citation{qwen2025}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}XML Generation Pipeline}{10}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Experiments and Results}{10}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Experimental Setup}{10}{subsection.4.1}\protected@file@percent }
+\citation{metaopenfoam2024}
+\citation{chatcfd2026}
+\citation{spheric2009}
+\citation{isope2012sloshing}
+\citation{isope2012sloshing,english2021mdbc}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Experiment--RQ mapping and primary metrics.}}{11}{table.caption.5}\protected@file@percent }
+\newlabel{tab:exp_rq}{{4}{11}{Experiment--RQ mapping and primary metrics}{table.caption.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}EXP-1: SPHERIC Benchmark Validation (RQ2)}{11}{subsection.4.2}\protected@file@percent }
+\citation{english2021mdbc}
+\citation{english2021mdbc}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces SPHERIC Test~10 peak pressure validation.}}{12}{table.caption.6}\protected@file@percent }
+\newlabel{tab:spheric}{{5}{12}{SPHERIC Test~10 peak pressure validation}{table.caption.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Experimental reference values: water and oil (100-repeat statistics).}}{12}{table.caption.7}\protected@file@percent }
+\newlabel{tab:exp_ref}{{6}{12}{Experimental reference values: water and oil (100-repeat statistics)}{table.caption.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces SPHERIC Test~10 validation: violin plot showing the 102-repeat experimental pressure peak distributions (water) with simulation results overlaid. Gray bands indicate $\pm 2\sigma $ envelopes.}}{13}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:spheric_validation}{{2}{13}{SPHERIC Test~10 validation: violin plot showing the 102-repeat experimental pressure peak distributions (water) with simulation results overlaid. Gray bands indicate $\pm 2\sigma $ envelopes}{figure.caption.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Z-score bar chart for simulation pressure peaks relative to the experimental distributions. All $|z| < 2.0$.}}{14}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:zscore}{{3}{14}{Z-score bar chart for simulation pressure peaks relative to the experimental distributions. All $|z| < 2.0$}{figure.caption.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}EXP-2: NL$\rightarrow $XML Generation Accuracy (RQ1)}{15}{subsection.4.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces NL$\rightarrow $XML generation accuracy by complexity level.}}{15}{table.caption.10}\protected@file@percent }
+\newlabel{tab:nl2xml}{{7}{15}{NL$\rightarrow $XML generation accuracy by complexity level}{table.caption.10}{}}
+\citation{foamgpt2025}
+\citation{isope2012sloshing}
+\citation{chen2018sloshing}
+\citation{chen2018sloshing,liu2024pitch}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}EXP-3: Parametric Study Automation (RQ3)}{16}{subsection.4.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Parametric study results: six fill levels, automated from a single prompt.}}{16}{table.caption.11}\protected@file@percent }
+\newlabel{tab:parametric}{{8}{16}{Parametric study results: six fill levels, automated from a single prompt}{table.caption.11}{}}
+\citation{metaopenfoam2024,mooseagent2025}
+\citation{foamagent2025}
+\citation{openfoamgpt2025}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Sloshing amplitude versus fill level: left-wall and right-wall amplitudes increase with fill percentage, with growing left--right asymmetry.}}{17}{figure.caption.12}\protected@file@percent }
+\newlabel{fig:amplitude_vs_fill}{{4}{17}{Sloshing amplitude versus fill level: left-wall and right-wall amplitudes increase with fill percentage, with growing left--right asymmetry}{figure.caption.12}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}EXP-4: Domain Prompt Ablation (RQ4)}{17}{subsection.4.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Domain prompt ablation: accuracy and tool call rates for 32B and 8B models.}}{18}{table.caption.13}\protected@file@percent }
+\newlabel{tab:ablation}{{9}{18}{Domain prompt ablation: accuracy and tool call rates for 32B and 8B models}{table.caption.13}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Ablation comparison: parameter accuracy across four prompt conditions for 32B and 8B models. The 32B model shows monotonic improvement with richer prompts; the 8B model exhibits an inversion.}}{18}{figure.caption.14}\protected@file@percent }
+\newlabel{fig:ablation_comparison}{{5}{18}{Ablation comparison: parameter accuracy across four prompt conditions for 32B and 8B models. The 32B model shows monotonic improvement with richer prompts; the 8B model exhibits an inversion}{figure.caption.14}{}}
+\citation{nasa2023baffle,zhao2024lng}
+\citation{hatayama2004}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}EXP-5: Industrial Proof of Concept}{19}{subsection.4.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Baffle comparison: sloshing amplitude with and without a vertical center baffle. The baffle reduces SWL amplitude by 91.9\%.}}{20}{figure.caption.16}\protected@file@percent }
+\newlabel{fig:baffle_comparison}{{6}{20}{Baffle comparison: sloshing amplitude with and without a vertical center baffle. The baffle reduces SWL amplitude by 91.9\%}{figure.caption.16}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Seismic excitation scenario: petroleum storage tank under 0.3~Hz excitation showing extreme sloshing amplitude with complete wall drainage.}}{20}{figure.caption.18}\protected@file@percent }
+\newlabel{fig:seismic}{{7}{20}{Seismic excitation scenario: petroleum storage tank under 0.3~Hz excitation showing extreme sloshing amplitude with complete wall drainage}{figure.caption.18}{}}
+\citation{dominguez2022dualsphysics}
+\citation{qwen2025,ollama2024}
+\citation{cfdcopilot2025}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.7}Summary of Key Findings}{21}{subsection.4.7}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Summary of key findings ranked by novelty and evidence strength.}}{21}{table.caption.19}\protected@file@percent }
+\newlabel{tab:key_findings}{{10}{21}{Summary of key findings ranked by novelty and evidence strength}{table.caption.19}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Discussion}{21}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Limitations}{21}{subsection.5.1}\protected@file@percent }
+\citation{english2021mdbc}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}From Sloshing to General Particle Simulation}{22}{subsection.5.2}\protected@file@percent }
+\citation{isope2012sloshing}
+\citation{cadcrowd2024}
+\citation{bcg2025}
+\citation{metaopenfoam2024}
+\citation{chatcfd2026}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Industry Impact Projection}{23}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{23}{section.6}\protected@file@percent }
+\bibstyle{plainnat}
+\bibdata{../references}
+\bibcite{marketreport2024}{{1}{2024}{{Allied Market Research}}{{}}}
+\bibcite{mcp2024}{{2}{2024}{{Anthropic}}{{}}}
+\bibcite{boiko2023coscientist}{{3}{2023}{{Boiko et~al.}}{{Boiko, MacKnight, Kline, and Gomes}}}
+\bibcite{bcg2025}{{4}{2025}{{Boston Consulting Group}}{{}}}
+\bibcite{bran2024chemcrow}{{5}{2024}{{Bran et~al.}}{{Bran, Cox, Schilter, Baldassari, White, and Schwaller}}}
+\bibcite{mechagents2024}{{6}{2024}{{Buehler}}{{}}}
+\bibcite{cadcrowd2024}{{7}{2024}{{CadCrowd}}{{}}}
+\bibcite{cadence2024}{{8}{2024}{{Cadence Design Systems}}{{}}}
+\bibcite{chen2018sloshing}{{9}{2018}{{Chen and Nokes}}{{}}}
+\bibcite{metaopenfoam2024}{{10}{2024}{{Chen et~al.}}{{}}}
+\bibcite{crespo2011gpu}{{11}{2015}{{Crespo et~al.}}{{Crespo, Dom{\'\i }nguez, Rogers, G{\'o}mez-Gesteira, Longshaw, Canelas, Vacondio, Barreiro, and Garc{\'\i }a-Feal}}}
+\bibcite{dominguez2022dualsphysics}{{12}{2022}{{Dom{\'\i }nguez et~al.}}{{Dom{\'\i }nguez, Fourtakas, Altomare, Canelas, Tafuni, Garc{\'\i }a-Feal, Mart{\'\i }nez-Est{\'e}vez, Mokos, Vacondio, Crespo, et~al.}}}
+\bibcite{autocfd2025}{{13}{2025}{{Dong et~al.}}{{}}}
+\bibcite{english2021mdbc}{{14}{2022}{{English et~al.}}{{English, Dom{\'\i }nguez, Vacondio, Crespo, Stansby, Lind, Chiapponi, and G{\'o}mez-Gesteira}}}
+\bibcite{chatcfd2026}{{15}{2026}{{Fan et~al.}}{{}}}
+\bibcite{fmcsa2023}{{16}{2023}{{Federal Motor Carrier Safety Administration}}{{}}}
+\bibcite{hatayama2004}{{17}{2004}{{Hatayama et~al.}}{{}}}
+\bibcite{isope2012sloshing}{{18}{2012}{{ISOPE Sloshing Benchmark Group}}{{}}}
+\bibcite{kim2019sloshing}{{19}{2019}{{Kim et~al.}}{{}}}
+\bibcite{liu2024pitch}{{20}{2024}{{Liu et~al.}}{{}}}
+\bibcite{lloyd2024}{{21}{2024}{{Lloyd's Register}}{{}}}
+\bibcite{lu2024aiscientist}{{22}{2024}{{Lu et~al.}}{{Lu, Lu, Lange, Foerster, Clune, and Ha}}}
+\bibcite{sjtu_ofw13_2018}{{23}{2018}{{Luo et~al.}}{{Luo, Koh, and Bai}}}
+\bibcite{nasa2023baffle}{{24}{2023}{{NASA}}{{}}}
+\bibcite{nrc2011}{{25}{2011}{{Nuclear Regulatory Commission}}{{}}}
+\bibcite{ollama2024}{{26}{2024}{{Ollama Team}}{{}}}
+\bibcite{openfoamgpt2025}{{27}{2025}{{Pandey et~al.}}{{}}}
+\bibcite{phynikce2026}{{28}{2026}{{PolyU Team}}{{}}}
+\bibcite{qwen2025}{{29}{2025}{{Qwen Team}}{{}}}
+\bibcite{rescale2025}{{30}{2025}{{Rescale}}{{}}}
+\bibcite{resolved_analytics}{{31}{2024}{{Resolved Analytics}}{{}}}
+\bibcite{shinn2023reflexion}{{32}{2023}{{Shinn et~al.}}{{Shinn, Cassano, Gopinath, Narasimhan, and Yao}}}
+\bibcite{spheric2009}{{33}{2009}{{Souto-Iglesias et~al.}}{{Souto-Iglesias, Botia-Vera, and Bulian}}}
+\bibcite{spacex2007}{{34}{2007}{{SpaceX}}{{}}}
+\bibcite{cfdcopilot2025}{{35}{2025{a}}{{Team}}{{}}}
+\bibcite{matsciagent2025}{{36}{2025{b}}{{Team}}{{}}}
+\bibcite{mdcrow2025}{{37}{2025{c}}{{Team}}{{}}}
+\bibcite{pasimodo2025}{{38}{2025{d}}{{Team}}{{}}}
+\bibcite{scienceagentbench2025}{{39}{2025{e}}{{Team}}{{}}}
+\bibcite{usgs1964}{{40}{1964}{{U.S. Geological Survey}}{{}}}
+\bibcite{agentic2025}{{41}{2025{a}}{{Various}}{{}}}
+\bibcite{fromaitoscience2025}{{42}{2025{b}}{{Various}}{{}}}
+\bibcite{vieira2017designsphysics}{{43}{2017}{{Vieira et~al.}}{{Vieira, Brito, Crespo, Dom{\'\i }nguez, Altomare, and G{\'o}mez-Gesteira}}}
+\bibcite{yao2023react}{{44}{2023}{{Yao et~al.}}{{Yao, Zhao, Yu, Du, Shafran, Narasimhan, and Cao}}}
+\bibcite{foamagent2025}{{45}{2025{a}}{{Yue et~al.}}{{}}}
+\bibcite{foamgpt2025}{{46}{2025{b}}{{Yue et~al.}}{{}}}
+\bibcite{mooseagent2025}{{47}{2025}{{Zhang et~al.}}{{}}}
+\bibcite{zhao2024lng}{{48}{2024}{{Zhao et~al.}}{{}}}
+\gdef \@abspage@last{27}

@@ -1,0 +1,7 @@
+POINTS
+0.013  0.050  0.021   #P1_left_bottom (left wall, near floor, z=21mm)
+0.013  0.050  0.120   #P2_left_mid (left wall, mid-height, z=120mm)
+0.013  0.050  0.165   #P1_swl (left wall, near still water level, z=165mm)
+1.287  0.050  0.021   #P1_right_bottom (right wall mirror, z=21mm)
+1.287  0.050  0.120   #P2_right_mid (right wall mirror, z=120mm)
+1.287  0.050  0.165   #P2_right_swl (right wall mirror, z=165mm)

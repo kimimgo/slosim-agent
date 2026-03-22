@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: sloshagent_paper.aux
+The style file: plainnat.bst
+Database file #1: ../references.bib
+Warning--empty journal in mcp2024
+You've used 48 entries,
+            2773 wiz_defined-function locations,
+            808 strings with 11944 characters,
+and the built_in function-call counts, 18751 in all, are:
+= -- 1593
+> -- 1135
+< -- 38
++ -- 405
+- -- 351
+* -- 1288
+:= -- 3020
+add.period$ -- 146
+call.type$ -- 48
+change.case$ -- 251
+chr.to.int$ -- 42
+cite$ -- 97
+duplicate$ -- 911
+empty$ -- 1581
+format.name$ -- 412
+if$ -- 3883
+int.to.chr$ -- 7
+int.to.str$ -- 1
+missing$ -- 36
+newline$ -- 249
+num.names$ -- 192
+pop$ -- 565
+preamble$ -- 1
+purify$ -- 201
+quote$ -- 0
+skip$ -- 688
+stack$ -- 0
+substring$ -- 265
+swap$ -- 61
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 528
+warning$ -- 1
+while$ -- 158
+width$ -- 0
+write$ -- 596
+(There was 1 warning)

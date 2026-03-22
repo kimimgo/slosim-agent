@@ -1,0 +1,435 @@
+Foam-Agent 2.0: An End-to-End Composable
+Multi-Agent Framework for Automating CFD
+Simulation in OpenFOAM
+
+arXiv:2509.18178v2 [cs.AI] 30 Sep 2025
+
+Ling Yue1† , Nithin Somasekharan1† , Tingwen Zhang1 ,
+Yadi Cao2 , Shaowu Pan1*
+1*
+2
+
+Rensselaer Polytechnic Institute.
+University of California San Diego.
+
+*Corresponding author(s). E-mail(s): pans2@rpi.edu;
+†
+These authors contributed equally to this work.
+
+Abstract
+Computational Fluid Dynamics (CFD) is an essential simulation tool in
+engineering, yet its steep learning curve and complex manual setup create
+significant barriers. To address these challenges, we introduce Foam-Agent ,
+a multi-agent framework that automates the entire end-to-end OpenFOAM
+workflow from a single natural language prompt. Our key innovations
+address critical gaps in existing systems: 1. An Comprehensive End-toEnd Simulation Automation: Foam-Agent is the first system to manage the
+full simulation pipeline, including advanced pre-processing with a versatile Meshing Agent capable of handling external mesh files and generating
+new geometries via Gmsh, automatic generation of HPC submission scripts,
+and post-simulation visualization via ParaView. 2. Composable Service
+Architecture: Going beyond a monolithic agent, the framework uses Model
+Context Protocol (MCP) to expose its core functions as discrete, callable
+tools. This allows for flexible integration and use by other agentic systems,
+such as Claude-code, for more exploratory workflows. 3. High-Fidelity Configuration Generation: We achieve superior accuracy through a Hierarchical
+Multi-Index RAG for precise context retrieval and a dependency-aware
+generation process that ensures configuration consistency. Evaluated on a
+benchmark of 110 simulation tasks, Foam-Agent achieves an 88.2% success
+rate with Claude 3.5 Sonnet, significantly outperforming existing frameworks (55.5% for MetaOpenFOAM). Foam-Agent dramatically lowers the
+expertise barrier for CFD, demonstrating how specialized multi-agent systems can democratize complex scientific computing. The code is public at
+https://github.com/csml-rpi/Foam-Agent.
+
+Keywords: Large Language Model Agents, Simulation Automation,
+AI4Science, Computational Fluid Dynamics
+
+1
+
+1 Introduction
+The rapid progress in generative AI, particularly large language models (LLMs), has
+given rise to autonomous “AI agents” capable of dramatically transforming workflows across many domains. These agents can break down complex tasks, invoke tools
+or other software, and iteratively refine their outputs with minimal human intervention. For example, AutoGPT [1] allows the user to plan and execute multi-step goals
+(such as researching a topic or writing code) by chaining LLM queries and actions
+autonomously. Numerous frameworks now enable LLMs to use external tools or models like Shen et al. [2] which leverage an LLM as a central controller to orchestrate
+a suite of HuggingFace models for solving multi-modal tasks. Frameworks such as
+ReAct [3] have focused on improving the decision-making capabilities of a single agent,
+interleaving reasoning and acting steps, allowing an LLM to generate plans, query
+tools or databases, and adjust its strategy based on intermediate results. Reflexion [4]
+introduced self-reflection and memory to enhance an agent’s ability to correct its own
+mistakes, while Voyager [5] demonstrated open-ended exploration and tool use in an
+embodied setting like Minecraft. Toolformer [6] and Gorilla [7] extended the paradigm
+to reliable API calling and autonomous tool learning, ensuring agents can robustly
+interact with external systems. Multi-agent orchestration frameworks such as AutoGen [8] further show how multiple LLM-based agents can collaborate to solve complex
+problems. Multi-agent orchestration frameworks such as AutoGen [8] further show how
+multiple LLM-based agents can collaborate to solve complex problems. Beyond narrow
+task automation, LLM agents now demonstrate skills such as self-debugging code [9]
+and even autonomously conduct parts of scientific research (e.g. proposing hypotheses and analyzing data) [10]. In addition, generative agents, which simulate believable
+human-like behavior, have demonstrated how AI agents can handle complex interactive workflows in virtual environments [11]. Together, these advances suggest that AI
+agents can serve as general-purpose assistants, automating or accelerating tasks that
+traditionally required significant human effort.
+In scientific research, AI-driven agents and models have become indispensable collaborators across domains like biology, chemistry, physics, and materials science. In
+structural biology, AlphaFold from DeepMind [12] achieved atomic-level accuracy in
+protein structure prediction, effectively solving a long-standing challenge in the field;
+more recently, AlphaFold 3 extended this capability to complexes comprising proteins,
+nucleic acids, and ligands [13]. In biomedical workflows, specialized LLM agents such as
+CRISPR-GPT [14] automate the design of gene-editing experiments—handling tasks
+like guide RNA selection with minimal human input, while systems like MedAgents
+[15] work through diagnostic reasoning given patient information, achieving zero-shot
+performance on medical reasoning tasks and Huang et al. [16], Jin et al. [17] proposing a general-purpose biomedical agent able to carry out a spectrum of research tasks.
+In chemistry, systems like ChemCrow [18] equip LLM agents with tool use to assist
+in synthesis planning, data querying, and reaction optimization, LLM-RDF [19] introduces an architecture of agents tailored for experimental chemistry tasks, including
+design, execution, and result interpretation and [20] introduces a multi-agent framework to execute quantum chemistry workflows from natural language input. In the
+field of materials science, several agentic frameworks have been introduced to combine
+available material science knowledge [21, 22] and provide tools for material science discovery. Further, Ghafarollahi and Buehler [23] showed that a multi-agent system can
+be used to discover novel high-performance alloys by coordinating tasks like phase diagram reasoning and a graph neural network to evaluate candidate compounds. These
+categories of autonomous systems reflect the rapidly expanding footprint of AI agents
+
+2
+
+Fig. 1: Foam-Agent system architecture illustrating the complete end-to-end workflow from natural language input to post-processing visualization. The system features
+six primary agents with dynamic adaptive workflow topology: 1. Architect Agent:
+interprets user query and plans file and folder structures to be generated, 2. Meshing
+Agent: generates the OpenFOAM compatible mesh required to perform the simulation. Mesh can be produced by the agent itself using OpenFOAM native meshing
+modules or by using Gmsh meshing library. The user also has the option to provide the agent with externally developed mesh files in the form of .msh files or
+OpenFOAM native blockMeshDict/snappyHexMeshDict. 3. Input Writer Agent:
+generates OpenFOAM configuration files required to run the simulation like 0/U, 0/p,
+constant/physicalProperties, system/controlDict etc. 4. Runner Agent executes simulation either in the local environment of the user or in high performance
+computing environment as requested by the user in the prompt, 5. Reviewer Agent:
+diagnoses errors and proposes corrections through iterative debugging cycles. 6. Visualization Agent: generates visuals of physical quantities, if requested by the user
+within the user prompt, using Paraview/Pyvista python libraries. This adaptive workflow allows agents to autonomously determine execution paths based on intermediate
+results and problem complexity.
+
+3
+
+Fig. 2: Modularized Foam-Agent architecture using model context protocol (MCP).
+
+across scientific workflows—transforming not just individual tasks but entire research
+pipelines.
+The application of agentic AI extends naturally from fundamental science discovery to the application engineering domains, which is characterized by well-established
+but laborious workflows and a heavy reliance on domain expertise of using sophisticated specialized tools. Agents with intelligent tool calling capabilities are being
+developed to automate tedious and repetitive tasks such as design modifications, data
+collection and analysis, visualization etc., thereby scaling engineering productivity and
+enabling the exploration of a wider design space. Frameworks such as AutoFEA [24]
+and MooseAgent [25], have demonstrated the ability to translate natural language
+descriptions of engineering problems into executable input files for solvers like simulation software, CalculiX [26], [27], and Abaqus [28]. These agents typically employ
+a step-by-step planning approach, decomposing the complex task of simulation setup
+into manageable sub-problems like geometry definition, meshing, material property
+assignment, boundary condition etc. Further, Tian and Zhang [29] demonstrated the
+importance of optimizing the role of agents and defining clear responsibilities to each
+agent. The development of benchmarks like FEABench [30] further drives progress in
+this area by providing a standardized means of evaluating an agent’s ability to interact
+with FEA software APIs and solve real-world physics problems.
+Similarly, in the field of Computational Fluid Dynamics (CFD), running a simulation is still a painstaking, expertise-heavy workflow. A practitioner must define the
+geometry, generate a mesh, specify boundary and initial conditions, choose turbulence
+and physics models, and configure solver parameters. Even small errors, such as a
+missing field definition or inconsistent units, can cause the solver to crash, making
+
+4
+
+debugging tedious and demanding deep domain knowledge. These barriers have historically limited accessibility and slowed innovation. Recent work shows that LLM-based
+agentic systems are beginning to transform CFD into a conversational, automated
+process. Studies like [31–33] introduces agents, which converts natural-language problem descriptions into complete, runnable OpenFOAM cases by retrieving templates and
+embedding domain knowledge. ChatCFD [34] offers an interactive, multi-modal conversational interface, enabling users to initialize and guide CFD simulations through.
+Together, these developments highlight a paradigm shift: CFD agents that reason,
+self-correct, and coordinate across the full pipeline, collapsing what was once days of
+manual setup into a single natural-language interaction.
+Though these studies have shown initial promise but still face major shortcomings. First, they provide incomplete workflow coverage, often focusing narrowly on
+solver configuration while neglecting critical pre-processing of complex geometries and
+meshes, as well as essential post-processing tasks like visualization. Second, they struggle with high-fidelity generation for complex cases. Finally, most are designed as single,
+self-contained systems, which makes them difficult to integrate with other tools or
+agentic systems for broader, exploratory scientific workflows.
+To address these challenges and advance the emerging paradigm of AI agents with
+specialized tool-usage capabilities, we introduce Foam-Agent (Figure 1), a multi-agent
+framework designed to interface with OpenFOAM: a complex scientific software used
+in CFD. We demonstrate its ability to fully automate OpenFOAM-based CFD workflows
+while also performing the pre-processing and post-processing tasks that are essential
+in scientific computing. FoamAgent treats CFD simulation as a dynamic sequence of
+tool mediated decisions: generating and integrating computational meshes, configuring
+solvers, diagnosing and recovering from errors, deploying to HPC environments, and
+producing validated post-processed outputs. In doing so, it demonstrates how LLM
+based agents can not only automate solver pipelines but also write tailored inputs
+specific to the tool being invoked, develop auxiliary scripts for post-processing and
+visualization of scientific data, and orchestrate heterogeneous software components
+into coherent workflows. Though Foam-Agent is demonstrated on automating CFD
+pipelines that use OpenFOAM, it can still be viewed as a template for extending agentic
+AI frameworks to complex domains of scientific computing, where adaptability, error
+recovery, and end-to-end integration are essential.
+Similar to frameworks such as ChemCrow [35], SciToolAgent [36], and HoneyComb
+[21], Foam-Agent leverages large language models (LLMs) as central planners that
+invoke external tools to accomplish complex tasks from natural language prompts, integrating specialized software into the LLM’s reasoning loop to handle domain-specific
+computations. It also parallels domain-focused scientific agents such as STELLA [17],
+Biomni [16], and AutoFEA [24] in tightly coupling agentic pipelines with complex
+scientific ecosystems. Across these diverse systems, a common paradigm emerges: lowering expertise barriers by enabling LLMs to reason about scientific problems, retrieve
+relevant knowledge, and delegate subtasks to computational tools.
+Foam-Agent offers several key innovations. 1. Comprehensive End-to-End
+Simulation Automation: Foam-Agent is the first system to manage the full simulation pipeline, including advanced pre-processing with a versatile Meshing Agent
+capable of handling external mesh files and generating new geometries via Gmsh, automatic generation of HPC submission scripts, and post-simulation visualization via
+ParaView/Pyvista [37, 38]. 2. Composable Service Architecture: Instead of
+operating as a single, self-contained agent, the framework uses the Model Context Protocol (MCP) Figure 2 to expose its core functions as discrete, callable tools. This design
+allows for flexible integration and use by other agentic systems for more exploratory
+
+5
+
+workflows. 3. High-Fidelity Generation: We achieve superior accuracy through a
+Hierarchical Multi-Index RAG for precise context retrieval and a dependency-aware
+generation process that ensures configuration consistency across all files.
+Extensive experiments on a comprehensive benchmark dataset of OpenFOAM cases,
+Foam-Agent achieves an 88.2% success rate with Claude 3.5 Sonnet, significantly outperforming existing approaches. Case studies are provided to demonstrate its ability
+to handle end to end workflow automation like generation/utilization of mesh files,
+visualization of the user specified flow fields, HPC job submission, integration of individual modules to generic agent orchestrator via MCP etc., which are the key novelties
+of our framework. This demonstrates the potential of specialized multi-agent systems
+to democratize access to complex scientific simulation tools. We public all code at
+https://github.com/csml-rpi/Foam-Agent.
+
+2 Results
+We evaluated Foam-Agent using a comprehensive benchmark dataset containing 110
+OpenFOAM simulation cases across 11 distinct physics scenarios. The dataset spans a
+wide range of physical phenomena and geometric complexity Table 1, providing a
+thorough test of automated CFD capabilities.
+
+Table 1: Distribution of benchmark cases by
+physics category.
+Physics Category
+
+Number of Cases
+
+Shallow Water / Geophysical
+Combustion / Reactive Flow
+Multiphase / Free Surface
+Shock Dynamics
+Turbulent Flow
+Laminar Flow
+Heat Transfer
+
+10
+10
+10
+10
+20
+30
+20
+
+Total
+
+110
+
+Each benchmark case is described using natural language prompts that include
+the problem description, physical scenario, geometry, solver requirements, boundary
+conditions, and simulation parameters. The success rate is measured by the percentage of cases that ran successfully through the agentic framework given the prompt
+describing the simulation scenarios.
+
+Baseline Frameworks We compared Foam-Agent against two representative frameworks. MetaOpenFOAM [31], OpenFOAMGPT [39]. Since the authors of
+OpenFOAMGPT did not release their implementation, we used a variant of our own
+framework without the reviewer component to recreate their approach, which we refer
+to as OpenFOAMGPT-Alt throughout this paper. This implementation of our
+system (without the reviewer) closely mirrors their described functionality. For a comprehensive evaluation, each framework was tested with two frontier LLMs: Claude 3.5
+Sonnet and GPT-4o.
+Overall Performance Comparison Table 2 presents the comparative performance
+of the frameworks on executable success rate. Foam-Agent substantially outperforms both baselines across all tested models. With Claude 3.5 Sonnet, Foam-Agent
+achieves an 88.2% success rate compared to 55.5% for MetaOpenFOAM and 37.3% for
+6
+
+Table 2: Comparison of executable success rates across frameworks.
+Base LLM Model
+
+MetaOpenFOAM
+
+OpenFOAMGPT-Alt
+
+Foam-Agent (Ours)
+
+Claude 3.5 Sonnet
+GPT-4o
+
+55.5%
+17.3%
+
+37.3%
+45.5%
+
+88.2%
+59.1%
+
+OpenFOAMGPT-Alt. With GPT-4o, Foam-Agent achieves 59.1% compared to 17.3%
+for MetaOpenFOAM and 45.5% for OpenFOAMGPT-Alt.
+
+Ablation Studies Having established the superiority of Foam-Agent , we delve into
+the contribution of each component in our proposed framework. We analyze the impact
+of two key elements: the Reviewer Node and the File Dependency analysis module. All experiments were performed using the Claude-Sonnet-3.5 model. The results
+are summarized in Table 3.
+
+Table 3: Ablation study results evaluating the impact of the reviewer node and file
+dependency analysis on success rate, token usage, and reviewer efficiency. We varied the
+temperature to show that Foam-Agent ’s performance is generalizable. The highest success
+rate for each configuration pair is highlighted in bold.
+Reviewer
+Node
+
+File
+Dependency
+
+✗
+✗
+✗
+✗
+
+✗
+✓
+✗
+✓
+
+Temperature
+
+Success Rate (%)
+
+Token Usage
+
+Avg.
+Reviewer Loops
+
+Configuration without Reviewer Node
+0.0
+0.0
+0.6
+0.6
+
+48.2
+56.4
+45.4
+57.3
+
+282,056
+314,670
+282,034
+314,922
+
+N/A
+N/A
+N/A
+N/A
+
+Configuration with Reviewer Node (max loops=10)
+✓
+✓
+✓
+✓
+
+✗
+✓
+✗
+✓
+
+0.0
+0.0
+0.6
+0.6
+
+86.4
+88.2
+86.4
+88.2
+
+309,873
+332,324
+356,272
+334,303
+
+0.90
+0.79
+1.87
+0.96
+
+From the results in Table 3, it can be observed that the inclusion of the reviewer
+node is the most significant factor for performance. It dramatically improves the success rate from a baseline of roughly 50% to over 80% across all tested configurations.
+This highlights the critical role of iterative feedback and self-correction in solving complex scientific computing tasks. In the absence of reviewer, file dependency provides
+the most significant improvement on success rate, from 48.2% to 56.4% at T=0.0 and
+from 45.4% to 57.3% at T=0.6. However, because the reviewer operates independently
+of file dependency, the success rates do not differ significantly when the reviewer is
+present. As the workflow carries out more reviewer loops, any errors made during the
+initial file generation will be indiscriminately corrected by the reviewer. The evidence
+is the lower reviewer loops when file dependency is present (from 0.90 to 0.79 at T =
+0.0 and from 1.87 to 0.96 at T=0.6). Therefore, the main application of file dependency
+is to help the reviewer converge, thus reducing API calls and workflow runtime.
+The ablation study on RAG is summarized in Table 4. We first performed an
+experiment without reviewer to isolate the effect of hierarchical multi-index retrieval.
+
+7
+
+Table 4: Comparsion of Foam-Agent’s performance using the hierarchical
+multi-index (hierarchy) retrieval and a single-index (baseline) retrieval. All
+experiments are performed using Claude-Sonnet-3.5 at T=0.6. The highest
+success rates are highlighted in bold.
+Retrieval
+Method
+
+Reviewer
+Node
+
+baseline
+hierarchy
+
+✗
+✗
+
+Success Rate (%)
+
+Token Usage
+
+Avg.
+Reviewer Loops
+
+Configuration without Reviewer Node
+44.6
+57.3
+
+271,136
+306,844
+
+N/A
+N/A
+
+Configuration with Reviewer Node (max loops=10)
+baseline
+hierarchy
+
+✓
+✓
+
+84.6
+88.2
+
+323,011
+334,303
+
+0.73
+0.96
+
+The success rate of hierarchy (57.3%) is significantly higher than that of a singleindex retrieval (44.6%). Even with the reviewer, the effect of hierarchy is still noticible
+(88.2% vs. 84.6%). This multi-index approach significantly outperforms single-index
+approaches by reducing noise and improving retrieval precision. To address the semantic gap between natural language and technical terminology, we implement specialized
+tokenization and normalization procedures tailored to the CFD domain.
+
+Case Studies To qualitatively assess the relative accuracy of Foam-Agent and
+MetaOpenFOAM, we visually compare their simulation outputs against the Ground
+Truth across representative benchmark cases (CounterFlowFlame, wedge and
+forwardStep) in Table 2. The CH4 mass fraction distribution at the final timestep
+(0.5s) in CounterFlowFlame is shown in the top row, the middle row depicts the
+temperature distribution for the wedge case at a timestep of 0.2 and the bottom
+row shows the velocity magnitude distribution for forwardStep case at a timestep of
+0.5s. The ground truth of CounterFlowFlame shows a sharp, well-defined concentration gradient characteristic of flame fronts. MetaOpenFOAM produces a more diffuse,
+inaccurate transition region with considerable deviations from the expected profile.
+Foam-Agent ’s results closely match the ground truth. In the case of wedge, the ground
+truth exhibits a gradient of ve,velocity near the angled wall which is accurately captured by Foam-Agent , while MetaOpenFOAM fails to capture even the geometry of the
+problem. Finally in the case of forwardStep, Foam-Agent results are virtually indistinguishable from the ground truth, while MetaOpenFOAM results predict very low value
+of velocity within the domain. These cases demonstrate the accuracy of Foam-Agent
+in simulating canonical problems which are the stepping stones to more complicated
+flow fields.
+External Mesh File Ability to process externally developed mesh files is a key novelty of our framework. We provide mesh in the form of .msh files to the framework.
+The boundary names and flow scenario is described in the prompt to the framework.
+We demonstrate this functionality on two cases: 1) Flow over multi-element airfoil [40]: This case describes the flow around multiple airfoils within the domain, with
+the flow of one affecting the flow of another. This 2D simulation uses an inlet velocity
+of 9 m/s and a fluid kinematic viscosity of 1.5 × 10−5 m2 /s. The simulation is set to use
+simpleFOAM solver and Spalart-Allmaras turbulence model, with a timestep of 1.0 s
+and a final time of 1000 s. The user prompt for the case is shown in Section B.1. 2)
+Flow over tandem wing configuration [40]: This case describes the flow around
+
+8
+
+

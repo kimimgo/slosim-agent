@@ -1,0 +1,12 @@
+{
+    "scenario": "S05",
+    "model": "qwen3:32b",
+    "trial": 1,
+    "gpu_id": 0,
+    "exit_code": 0,
+    "duration_seconds": 287,
+    "start_time": "2026-03-08T00:38:55",
+    "end_time": "2026-03-08T00:43:42",
+    "hostname": "user",
+    "prompt_file": "/home/icap/slosim-agent/research-v3/exp-a/prompts/S05.txt"
+}

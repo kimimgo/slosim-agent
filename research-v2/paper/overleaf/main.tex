@@ -1,0 +1,775 @@
+\documentclass[11pt]{article}
+\linespread{1.2}
+%\usepackage{arxiv}
+\usepackage{indentfirst}
+\usepackage{comment}
+\usepackage{appendix}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{cancel}
+\usepackage{float}
+\usepackage{sectsty}
+\usepackage{bm,bbm}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{stmaryrd} % allows operator with limits
+\usepackage{times}
+\usepackage{kotex}
+\usepackage{mathrsfs}
+\usepackage{siunitx}
+
+\usepackage[backend=bibtex,sorting=none,citestyle=numeric-comp,]{biblatex}
+\addbibresource{Reference.bib}
+\usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{ulem}
+\usepackage{soul}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage[font=footnotesize,format=plain,labelfont=bf]{caption}
+\usepackage{makecell}
+\usepackage{mathtools}
+
+\usepackage{url}
+%show key package
+\usepackage[colorlinks]{hyperref}
+\hypersetup{
+    colorlinks=true,       % false: boxed links; true: colored links
+    linkcolor=red,          % color of internal links
+    citecolor=blue,        % color of links to bibliography
+    filecolor=magenta,      % color of file links
+    urlcolor=cyan           % color of external links
+}
+\usepackage{cleveref}
+\sloppy
+
+\newcommand{\HJnote}[1]{\begin{center}\begin{minipage}{1.0\textwidth}\sf\color{blue}HJNote:  #1\end{minipage}\end{center}}
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+
+\newenvironment{JKwrite}{\par\color{brown}}{\par}
+\makeatletter
+\makeatother
+
+\setlength{\oddsidemargin}{0.0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-0.5in}
+\setlength{\footskip}{0.30in}
+\setlength{\textheight}{9.0in}
+\setlength{\headheight}{0.2in}
+\setlength{\headsep}{0.3in}
+
+%%New command lists,
+\newcommand{\update}[1]{\textcolor{blue}{#1}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\change}[1]{\textcolor{red}{#1}}
+\newcommand{\addchange}[1]{\textcolor{blue}{#1}}
+
+\newcommand{\eref}[1]{(\ref{#1})}
+\newcommand{\fref}[1]{Fig.~\ref{#1}}
+\newcommand{\sref}[1]{Section~\ref{#1}}
+\newcommand{\cD}{\mathcal{D}}
+\newcommand{\cN}{\mathcal{N}}
+\newcommand{\cL}{{\mathcal{L}}}
+\newcommand{\bT}{\mathbf{T}}
+\newcommand{\bu}{{\mathbf{u}}}
+\newcommand{\bn}{{\mathbf{n}}}
+\newcommand{\bx}{{\mathbf{x}}}
+\newcommand{\btau}{{\boldsymbol\tau}}
+\newcommand{\bpsi}{{\boldsymbol\psi}}
+\newcommand{\bgamma}{{\dot{\boldsymbol\gamma}}}
+\newcommand{\vq}{{\vec{q}}}
+\newcommand{\bq}{{\boldsymbol{q}}}
+\newcommand{\vtheta}{{\vec{\theta}}}
+\newcommand{\btheta}{{\boldsymbol{\theta}}}
+\newcommand{\dgamma}{{\dot{\gamma}_s}}
+\newcommand{\del}{{\partial}}
+
+
+\renewcommand{\theequation}{\arabic{section}.\arabic{equation}}
+
+\begin{document}
+
+\begin{center}
+\textbf{\Large
+A Quantitative Validation Framework for SPH Sloshing Impact Pressure: \\
+Systematic Metrics, Convergence Analysis, and SPHERIC Test~10 Benchmark}
+
+\bigskip
+
+Hyung-Jun Park$^{1, *}$, Imgyu Kim$^{2}$\\
+\bigskip
+\small{
+\textit{
+$^1$Platform Technology Research Center, CTO, LG Chem., 30 Magokjungang 10-ro Gangseo-gu Seoul 07796, Republic of Korea\\[3pt]
+$^2$School of Mechanical and Aerospace Engineering / Center for Aerospace Engineering Research, Sunchon National University, Sunchon, Junnam, Republic of Korea
+}
+
+\bigskip
+
+\bigskip
+
+hjpark89@scnu.ac.kr, kimimgo@gmail.com  \\
+$^*$ Corresponding author
+}
+\end{center}
+
+\bigskip
+
+\begin{center}
+\textbf{ABSTRACT }\\
+\bigskip
+\begin{minipage}{0.9\textwidth}
+Smoothed Particle Hydrodynamics (SPH) has been widely applied to sloshing
+simulations, yet validation practices in the literature predominantly rely on
+qualitative visual comparison.
+This paper addresses this gap by proposing a systematic quantitative validation
+framework comprising eight metrics (M1--M8) for SPH sloshing impact pressure,
+including peak-in-band analysis, mean absolute peak error, cross-correlation,
+and---for the first time in SPH sloshing---Grid Convergence Index (GCI)
+following the spirit of ASME V\&V~20.
+The framework is applied to the SPHERIC Benchmark Test Case~10 using
+DualSPHysics~v5.4 with Dynamic Boundary Conditions (DBC), covering three
+sub-cases: water lateral impact, oil lateral impact, and water roof impact.
+A three-level particle resolution study ($dp = 4, 2, 1$\,mm) demonstrates
+monotone convergence in cross-correlation ($r = 0.460 \to 0.655 \to 0.697$).
+The best configuration achieves a mean absolute peak error of 19.5\%
+(within the experimental scatter of CoV~20--40\%), peak-in-band ratio of 3/3,
+and cross-correlation $r = 0.655$.
+The proposed framework provides a reproducible, quantitative basis for SPH
+sloshing validation, bridging the gap between current community practices and
+rigorous verification and validation standards.
+\end{minipage}
+\end{center}
+
+% keywords can be removed
+\bigskip
+\begin{minipage}{0.9\textwidth}
+\textbf{Keywords:} SPH, Sloshing, Validation, DualSPHysics, SPHERIC Benchmark, Grid Convergence Index
+\end{minipage}
+\newpage
+
+
+% ============================================================
+\section{서론} \label{sec:intro}
+\setcounter{equation}{0}
+
+% --- 배경: SPH와 슬로싱 ---
+
+부분 충진된 탱크 내 유체의 슬로싱(sloshing)은 해양, 항공우주 및 내진 공학에서
+중요한 설계 고려사항이다~\cite{Ibrahim2005}.
+Smoothed Particle Hydrodynamics (SPH) 방법은 격자 없는(meshless) Lagrangian 기법으로서,
+슬로싱 충격에서 나타나는 격렬한 자유 표면 유동을 모델링하는 데 특히 적합하다%
+~\cite{Monaghan2005, Violeau2012}.
+DualSPHysics~\cite{Dominguez2022}는 GPU 가속 오픈소스 SPH 코드로서 널리 사용되고 있으며,
+슬로싱은 주요 검증 응용 분야 중 하나이다~\cite{English2022}.
+
+% --- 검증 공백 요약 ---
+
+그러나 742편의 관련 문헌에 대한 체계적 조사(\sref{sec:lit}) 결과, SPH 슬로싱 연구의
+검증 관행에서 4가지 체계적 공백을 확인하였다:
+(1)~대부분의 연구가 정성적 비교(``good agreement'')에 의존하고 정량 메트릭을
+보고하지 않으며(Gap~1),
+(2)~GCI/Richardson 외삽법을 적용한 SPH 슬로싱 사례가 전무하고(Gap~2),
+(3)~SPH 전용 검증 표준 프레임워크가 부재하며(Gap~3),
+(4)~단일 유체/단일 하중의 제한적 검증이 지배적이다(Gap~4).
+이러한 현황은 Oberkampf와 Trucano~\cite{Oberkampf2002}의 ``정성적 그래프 검증은
+부적절하다(inadequate)''라는 비판, 그리고 SPHERIC Grand Challenges~\cite{Vacondio2020}의
+``설득력 있는 정량적 오차 분석'' 요구와 대조된다.
+
+% --- 본 연구의 기여 (Gap 대응) ---
+
+본 논문은 이러한 공백을 다음과 같이 해결한다:
+\begin{enumerate}
+    \item \textbf{Gap~1 대응}: SPH 슬로싱 충격 압력을 위해 설계된 8개의 정량 메트릭(M1--M8)
+          으로 구성된 체계적 검증 프레임워크를 제안하여, 정성적 관행을 재현 가능한
+          PASS/FAIL 체계로 전환한다.
+    \item \textbf{Gap~2 대응}: ASME V\&V~20~\cite{ASME2009}의 정신을 따라,
+          SPH 슬로싱에 GCI 수렴 분석을 최초로 적용한다.
+    \item \textbf{Gap~4 대응}: DualSPHysics~v5.4의 DBC를 사용하여 SPHERIC Test~10의
+          3개 서브케이스(Water Lateral, Oil Lateral, Water Roof)에 프레임워크를 적용한다.
+    \item \textbf{Gap~3 대응}: 재현성을 위해 모든 분석 스크립트 및 메트릭 정의를 공개하여,
+          SPH 슬로싱 검증의 표준화된 참조점을 제공한다.
+\end{enumerate}
+
+% --- 논문 구성 ---
+
+본 논문의 구성은 다음과 같다.
+\sref{sec:background}에서 SPHERIC Test~10 벤치마크 및 기존 검증 방법을 검토하고,
+\sref{sec:metrics}에서 M1--M8 검증 메트릭을 정의한다.
+\sref{sec:setup}에서 수치 설정을 기술하고,
+\sref{sec:results}에서 3개 서브케이스 결과를 제시한다.
+\sref{sec:convergence}에서 수렴 분석 및 GCI를 논의하고,
+\sref{sec:discussion}에서 기존 문헌과의 비교를 통해 결과를 조명하며,
+\sref{sec:conclusions}에서 결론을 요약한다.
+
+
+% ============================================================
+\section{배경 및 관련 연구} \label{sec:background}
+\setcounter{equation}{0}
+
+\subsection{SPHERIC Benchmark Test Case 10} \label{sec:spheric}
+
+SPHERIC Benchmark Test Case~10~\cite{BotiaVera2010, SoutoIglesias2011}은
+슬로싱 충격 압력 검증을 위한 표준 벤치마크이다.
+실험 장치는 $900 \times 62 \times 508$\,mm 직사각형 탱크로 구성되며,
+중심 $(0.45,\, 0.031,\, 0)$\,m을 기준으로 진폭 $A = 4°$의 pitch 운동을 가한다.
+세 가지 서브케이스가 정의되어 있다:
+\begin{itemize}
+    \item \textbf{Water Lateral}: 수위 $h = 93$\,mm (충진율 18.3\%), 가진 주파수 $f = 0.613$\,Hz ($T/T_1 = 0.85$)
+    \item \textbf{Oil Lateral}: 오일 ($\rho = 990$\,kg/m$^3$), $f = 0.651$\,Hz ($T/T_1 = 0.80$)
+    \item \textbf{Water Roof}: 수위 $h = 355.6$\,mm (충진율 70\%), $f = 0.856$\,Hz ($T/T_1 = 1.00$, 공진)
+\end{itemize}
+
+압력 센서는 좌측 벽면 $x = 0.005$\,m (lateral) 및 천장 근처 $z = 0.490$\,m (roof)에 위치한다.
+실험은 102회 반복되어 피크 압력의 통계량(평균 $\mu$, 표준편차 $\sigma$)을 제공한다.
+\fref{fig:tank-schematic}에 실험 장치의 개략도를 나타내었다.
+
+\begin{figure}[H]
+    \centering
+    \TODO{탱크 스키매틱 + 센서 위치 다이어그램 작성 필요}
+    %\includegraphics[width=0.8\textwidth]{figures/fig1.png}
+    \caption{SPHERIC Test Case~10 실험 장치 개략도.
+    (a) 탱크 형상 및 치수, (b) 압력 센서 위치.}
+    \label{fig:tank-schematic}
+\end{figure}
+
+
+\subsection{SPH 슬로싱 문헌의 검증 관행} \label{sec:lit}
+
+본 연구에서는 SPH 슬로싱의 검증 관행을 파악하기 위해 체계적 문헌 조사를 수행하였다.
+8개의 검색 쿼리(``SPH sloshing validation'', ``SPHERIC benchmark pressure'' 등)를 통해
+742편의 관련 문헌을 수집하고, 연관성 및 인용 영향도에 기반하여 30편의 핵심 논문(Tier~1)을
+선별하였으며, 이 중 검증 방법론이 상세히 기술된 6편에 대해 전문 심층 분석(deep read)을
+수행하였다.
+이 조사의 핵심 질문은 다음과 같다:
+``SPH 슬로싱에서 SPHERIC Test~10 벤치마크를 어떻게 검증하고 있는가?''
+
+조사 결과, SPH 슬로싱 연구의 검증 관행에서 4가지 체계적 공백(Gap)을 확인하였다.
+
+\paragraph{Gap~1: 정성적 검증의 지배.}
+대부분의 SPH 슬로싱 논문이 시뮬레이션과 실험의 시계열 그래프를 겹쳐 보여주는
+시각적 비교만을 수행하며, 정량적 오차 메트릭(피크 오차, RMSE, 교차상관 등)을
+보고하지 않는다. English 등~\cite{English2022}은 본 연구와 동일한 벤치마크를
+사용하면서도 ``good agreement with the experimental data''라는 표현만을 사용하고,
+피크 오차나 교차상관을 일절 보고하지 않았다.
+Oberkampf와 Trucano~\cite{Oberkampf2002}는 이러한 ``그래프 검증''이
+부적절함을 지적한 바 있다.
+
+\paragraph{Gap~2: SPH 슬로싱에서 GCI 부재.}
+ASME V\&V~20 표준은 Richardson 외삽법에 기반한 GCI를 핵심 검증 도구로 포함하나,
+742편의 문헌 조사에서 GCI를 SPH 슬로싱에 적용한 사례는 발견되지 않았다.
+격자 기반 CFD(예: Flow3D)에서는 수렴 연구가 일반적이나, SPH 입자법에서는
+이 분야 전체에서 전무한 상태이다.
+
+\paragraph{Gap~3: 표준화된 검증 프레임워크 부재.}
+SPH 전용 V\&V 표준은 존재하지 않으며, ASME V\&V~20~\cite{ASME2009}은
+격자 기반 CFD를 대상으로 설계되었다.
+Vacondio 등~\cite{Vacondio2020}의 SPHERIC Grand Challenges 논문은
+GC5(산업 적용성)에서 ``설득력 있는 정량적 오차 분석(convincing quantitative error
+analysis)''을 요구하면서도, 구체적 통과/불합격 기준값은 제시하지 않는다.
+이로 인해 검증 주장의 재현성이 제한되고, 서로 다른 SPH 코드 간의 비교가 주관적이다.
+
+\paragraph{Gap~4: 단일 조건 검증의 한계.}
+조사된 문헌 대부분이 단일 유체(물), 단일 하중 조건에서만 검증을 수행한다.
+다유체(오일) 또는 천장 충격(roof impact)을 포함한 다조건 검증은 드물다.
+동일 코드(DualSPHysics)가 심장판막 FSI~\cite{Laha2024}에서는 정량 검증(오차 5.6\%)을
+수행하면서 슬로싱에서는 정성적 비교만 하는 이중 기준도 확인되었다.
+
+Table~\ref{tab:lit-comparison}은 이상의 Gap을 반영하여 주요 연구의 검증 방법론을
+비교한 것이다.
+
+\begin{table}[H]
+\caption{SPH 슬로싱 시뮬레이션의 검증 방법론 비교.}
+\label{tab:lit-comparison}
+\centering
+\small
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+& English & Delorme & Flow3D & Green \& & \textbf{본 연구} \\
+& et al.~2022 & et al.~2009 & (격자) & Peir\'o 2018 & \textbf{(2026)} \\
+\midrule
+벤치마크 & SPHERIC T10 & canonical & narrow & -- & SPHERIC T10 \\
+솔버 & DualSPHysics & SPH 2D & Flow3D & DualSPHysics & DualSPHysics \\
+경계 조건 & DBC/mDBC & -- & VOF & DBC & DBC \\
+$dp$ 수준 & 2 & 1 & 격자 수렴 & 1 & \textbf{3} \\
+정량 메트릭 & \textbf{0} & 1--2 & 3+ & 0 & \textbf{8} \\
+피크 오차 & -- & 보고 & 4.79\% & -- & \textbf{19.5\%} \\
+교차상관 $r$ & -- & -- & -- & -- & \textbf{0.655} \\
+GCI & -- & -- & 적용 & -- & \textbf{적용} \\
+다유체 & 아니오 & 아니오 & 아니오 & 아니오 & \textbf{예} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{ASME V\&V 20과 SPH} \label{sec:vv20}
+
+ASME V\&V~20 표준~\cite{ASME2009}은 전산유체역학의 검증 및 확인을 위한 체계적
+프레임워크를 제공한다. 핵심 요구사항으로 (1) Richardson 외삽법에 기반한 체계적
+격자(해상도) 수렴 연구, (2) 관측된 수렴 차수 계산, (3) 실험 불확실성의 정량화가 있다.
+
+SPH 입자법에 V\&V~20을 적용하기 위해서는 적응이 필요하다.
+본 연구에서는 격자 간격(grid spacing)을 입자 간격($dp$)으로, 격자 수렴 비율(refinement ratio)을
+$dp$ 수렴 비율(2:1)로 대체하여 적용한다.
+이 적응의 한계도 인정한다: SPH 입자 분포는 비균일하며, 수렴 차수가 이론적 값과
+다를 수 있다. 그럼에도 불구하고, 102회 반복 실험에서 얻은 피크 통계량($\mu$, $\sigma$)을
+실험 불확실성 정량화에 활용함으로써 V\&V~20의 ``정신(spirit)''을 충실히 따르고자 한다.
+
+현재 SPH 전용 V\&V 표준은 존재하지 않으며, 이는 본 연구의 적응적 접근이 가지는
+의의를 더한다.
+
+
+% ============================================================
+\section{검증 메트릭 프레임워크 (M1--M8)} \label{sec:metrics}
+\setcounter{equation}{0}
+
+본 절에서는 SPH 슬로싱 충격 압력 검증을 위해 설계된 8개의 정량 메트릭을 정의한다.
+각 메트릭의 정의, 통과 기준 및 적용 가능한 서브케이스를 Table~\ref{tab:metrics}에
+요약하였다.
+
+\begin{table}[H]
+\caption{M1--M8: SPH 슬로싱 충격 압력 검증 메트릭.}
+\label{tab:metrics}
+\centering
+\small
+\begin{tabular}{@{}clll@{}}
+\toprule
+ID & 메트릭 & 통과 기준 & 적용 범위 \\
+\midrule
+M1 & Peak-in-band & $\geq 2/3$ 이내 ($\pm 2\sigma$) & Water, Oil, Roof \\
+M2 & 평균 절대 피크 오차 & $<30$\% (lateral), $<40$\% (roof) & Water, Roof \\
+M3 & 수렴 단조성 & 단조 개선 추세 & Water \\
+M4 & GCI & 계산값 보고 (Roache 1998) & Water \\
+M5 & 교차상관 $r$ & $r > 0.5$ & Water, Oil \\
+M6 & 시간 이동 $\tau$ & $|\tau| < T$ & Water, Oil \\
+M7 & 피크 검출률 & $\geq 3/4$ 검출 & Oil \\
+M8 & 충격 FWHM 비율 & 보고 & 전체 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{M1: Peak-in-Band 분석} \label{sec:m1}
+
+102회 반복 실험으로부터 각 피크의 평균($\mu$)과 표준편차($\sigma$)가 제공된다.
+시뮬레이션 피크가 $[\mu - 2\sigma,\; \mu + 2\sigma]$ 범위 내에 위치하면
+``in-band''로 판정한다.
+M1은 전체 비교 대상 피크 중 in-band 비율이 $\geq 2/3$ (약 67\%)일 때 통과한다.
+이 기준은 실험적 산포(CoV 20--40\%)를 반영하여, 실험 불확실성 범위 내의 일치를
+요구하는 것이다.
+
+
+\subsection{M2: 평균 절대 피크 오차} \label{sec:m2}
+
+평균 절대 피크 오차는 다음과 같이 정의한다:
+\begin{equation}
+    \text{M2} = \frac{1}{N}\sum_{i=1}^{N}
+    \frac{|p_{\text{sim},i} - \mu_{\text{exp},i}|}{\mu_{\text{exp},i}}
+    \times 100\%
+    \label{eq:m2}
+\end{equation}
+여기서 $p_{\text{sim},i}$는 시뮬레이션 피크 압력, $\mu_{\text{exp},i}$는 102회
+반복 실험의 평균이다.
+통과 기준은 lateral 서브케이스 $<30\%$, roof 서브케이스 $<40\%$로 설정하였다.
+Roof 케이스의 완화된 기준은 CoV가 최대 40\%에 달하는 높은 실험 산포를 반영한 것이다.
+
+
+\subsection{M3--M4: 수렴성 및 GCI} \label{sec:m3-m4}
+
+\textbf{M3 (수렴 단조성)}은 입자 해상도 세분화에 따른 단조 개선을 확인하며,
+GCI 적용의 전제 조건이다.
+
+\textbf{M4 (GCI)}는 Roache~\cite{Roache1998}의 공식을 따른다:
+\begin{equation}
+    \text{GCI} = \frac{F_s \cdot |\varepsilon|}{r^p - 1}
+    \label{eq:gci}
+\end{equation}
+여기서 $r = dp_\text{coarse}/dp_\text{fine}$는 세분화 비율,
+$p$는 관측된 수렴 차수, $F_s$는 안전 계수(3개 수준: $F_s = 1.25$, 2개 수준: $F_s = 3.0$)이다.
+본 연구에서는 격자 간격을 입자 간격($dp$)으로 대체하여 적용한다.
+
+
+\subsection{M5--M6: 교차상관 및 시간 이동} \label{sec:m5-m6}
+
+정규화 교차상관에 물리적 범위 제한 $|\tau| \leq 2$\,s를 적용하여 계산한다:
+\begin{equation}
+    r = \max_\tau R_{xy}(\tau), \quad \tau^* = \arg\max_\tau R_{xy}(\tau)
+    \label{eq:xcorr}
+\end{equation}
+M5는 $r > 0.5$일 때 통과하며, M6는 $|\tau^*|$가 가진 주기 $T$보다 작을 때 통과한다.
+교차상관은 피크 진폭뿐 아니라 전체 시계열의 형태적 유사도를 평가한다는 점에서
+M1--M2를 보완하는 메트릭이다.
+
+
+\subsection{M7--M8: 피크 검출 및 충격 폭} \label{sec:m7-m8}
+
+\textbf{M7 (피크 검출률)}은 실험에서 관측된 주요 피크를 시뮬레이션에서 검출하는 비율이다.
+오일 슬로싱과 같이 절대 피크 진폭이 작은 경우($\sim$5\,mbar), 피크의 ``존재''
+자체가 검증의 핵심 지표가 된다. $\geq 3/4$ 검출 시 통과한다.
+
+\textbf{M8 (충격 FWHM 비율)}은 충격 펄스의 반치전폭(Full Width at Half Maximum)을
+실험과 비교하여, 충격의 시간적 지속 정확도를 평가한다.
+
+
+% ============================================================
+\section{수치 설정} \label{sec:setup}
+\setcounter{equation}{0}
+
+\subsection{DualSPHysics 설정} \label{sec:config}
+
+본 연구에서는 DualSPHysics~v5.4~\cite{Dominguez2022}를 GPU (NVIDIA RTX 4090,
+CUDA 12.6) 환경에서 사용하였다.
+주요 수치 파라미터는 다음과 같다:
+WCSPH (Weakly Compressible SPH) 방식, Wendland C2 커널 ($h/dp = 2$),
+$\delta$-SPH 밀도 확산 ($\delta = 0.1$), 인공 점성 $\alpha = 0.01$,
+Symplectic 시간 적분, CFL = 0.2.
+경계 조건으로 DBC (Dynamic Boundary Condition)를 적용하였으며,
+시뮬레이션 시간은 $T_\text{max} = 7.0$\,s이다.
+
+
+\subsection{시뮬레이션 매트릭스} \label{sec:runs}
+
+\begin{table}[H]
+\caption{시뮬레이션 실행 매트릭스.}
+\label{tab:runs}
+\centering
+\begin{tabular}{@{}clccrrl@{}}
+\toprule
+Run & 케이스 & $dp$ [mm] & BC & 입자 수 & 상태 & 비고 \\
+\midrule
+001 & Water Lateral & 4 & DBC & 136K & 완료 & M2=40.8\% (coarse) \\
+002 & Water Lateral & 2 & DBC & 891K & 완료 & \textbf{전체 PASS} \\
+003 & Water Lateral & 1 & DBC & 6.1M & 완료 & $r=0.697$ \\
+005 & Oil Lateral & 2 & DBC & $\sim$891K & 완료 & M7+M1 PASS \\
+006 & Water Roof & 2 & DBC & 2.67M & 완료 & Near-roof 27.2\,mbar \\
+008 & Water Roof & 2 & mDBC & 2.67M & 실패 & 솔버 발산 (26\% 손실) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Water Lateral 케이스에서는 수렴 분석을 위해 3개 수준($dp = 4, 2, 1$\,mm)의
+입자 해상도를 적용하였다. Oil Lateral 및 Water Roof는 중간 해상도($dp = 2$\,mm)에서
+수행하였다. Run~008은 mDBC 경계 조건의 적용 가능성을 검토하기 위해 수행되었으나,
+솔버가 발산하여 결과를 얻지 못하였다(\sref{sec:dbc} 참조).
+
+
+\subsection{압력 측정 및 필터링} \label{sec:filtering}
+
+MeasureTool을 사용하여 10\,kHz (computedt $= 0.0001$\,s)의 게이지 출력을 수집하였다.
+프로브 위치는 $1.5h$ 규칙에 따라 배치하였다: SPH의 커널 보간 특성상, 벽면으로부터
+최소 $1.5h$ ($= 1.5 \times dp \times h/dp$) 떨어진 지점에서 안정적인 압력 측정이
+가능하다.
+
+SPH 고유의 압력 잡음을 제거하기 위해 2단계 필터링을 적용하였다:
+\begin{itemize}
+    \item \textbf{Water 케이스}: Median 필터 ($k=5$) $\to$ 이동평균 ($w=11$)
+    \item \textbf{Oil 케이스}: Median 필터 ($k=3$) $\to$ 이동평균 ($w=7$)
+\end{itemize}
+Oil 케이스에 더 가벼운 필터를 적용한 이유는 충격 피크가 $\sim$5\,mbar로 작아
+과도한 필터링이 피크를 감쇠시킬 위험이 있기 때문이다.
+모든 경우에서 필터링 전후의 피크 진폭 변화를 모니터링하여 과필터링을 방지하였다.
+
+
+% ============================================================
+\section{결과} \label{sec:results}
+\setcounter{equation}{0}
+
+\subsection{Water Lateral 충격} \label{sec:water}
+
+\fref{fig:timeseries}는 3개 해상도($dp = 4, 2, 1$\,mm)에서의 시뮬레이션 결과를
+실험 데이터와 비교한 시계열이다.
+최적 해상도(Run~002, $dp = 2$\,mm)에서 M1 = 3/3 (전체 피크 in-band),
+M2 = 19.5\%, $r = 0.655$, $\tau = +0.570$\,s로 모든 메트릭이 통과하였다.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig2.jpg}
+    \caption{Water Lateral 서브케이스: 3개 해상도에서의 시뮬레이션 압력 시계열과
+    실험 데이터 비교. 상단: 전체 시계열, 하단: 잔차(residual). 해상도가 높아질수록
+    실험과의 일치도가 개선되는 것을 확인할 수 있다.}
+    \label{fig:timeseries}
+\end{figure}
+
+Table~\ref{tab:water-peaks}에 Run~002의 피크별 상세 비교를 나타내었다.
+피크~1은 실험 평균 대비 $-0.1\%$의 우수한 일치를 보이며,
+피크~2--3은 $-26\%$ 내지 $-32\%$의 과소추정 경향을 나타내지만
+모두 실험 $\pm 2\sigma$ 범위 내에 위치한다.
+이러한 과소추정 경향은 DBC 경계에 의한 에너지 소산으로 설명 가능하다.
+
+\begin{table}[H]
+\caption{Water Lateral 피크 비교 (Run~002, $dp = 2$\,mm vs 실험).}
+\label{tab:water-peaks}
+\centering
+\begin{tabular}{@{}crrrrc@{}}
+\toprule
+피크 & $\mu_\text{exp}$ [mbar] & $\pm 2\sigma$ [mbar] & Sim [mbar] & 오차 [\%] & In-band \\
+\midrule
+1 & 37.1 & 14.6 & 37.1 & $-0.1$ & YES \\
+2 & 48.2 & 29.9 & 35.4 & $-26.4$ & YES \\
+3 & 46.9 & 34.0 & 31.9 & $-31.9$ & YES \\
+\midrule
+\multicolumn{4}{@{}l}{M2 (평균 절대 오차)} & 19.5\% & \textbf{PASS} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Oil Lateral 충격} \label{sec:oil}
+
+\fref{fig:oil-lateral}은 Oil Lateral 서브케이스(Run~005, $dp = 2$\,mm)의
+시계열 비교이다.
+4개 실험 피크 모두 시뮬레이션에서 검출되어 M7 = 4/4를 달성하였다.
+교차상관 $r = 0.570$ (M5 PASS), 시간 이동 $\tau = -1.047$\,s (M6 PASS)로
+주요 메트릭을 통과하였다.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig3.jpg}
+    \caption{Oil Lateral 서브케이스: 시뮬레이션 압력 시계열과 실험 데이터 비교
+    (Run~005, $dp = 2$\,mm). 4개 피크 모두 검출(M7 = 4/4), $r = 0.570$.}
+    \label{fig:oil-lateral}
+\end{figure}
+
+단, 피크~1--2는 실험 대비 22--26\% 과소추정되어 $\pm 2\sigma$ 범위를 벗어났다
+(M1 = 2/4). 이는 DBC 경계 소산의 영향이다: 오일 충격의 절대 피크가
+$\sim$5\,mbar로 매우 작기 때문에, 동일한 절대 소산($\sim$5\,mm 경계층)의
+상대적 영향이 물 케이스보다 크게 나타난다.
+
+
+\subsection{Water Roof 충격} \label{sec:roof}
+
+Water Roof 서브케이스(Run~006)는 공진 조건($T/T_1 = 1.00$)에서의 천장 충격을
+검증한다.
+\fref{fig:water-roof}에 나타낸 바와 같이, 천장 근처($z = 0.490$\,m) 프로브에서
+최대 27.2\,mbar의 압력 신호가 검출되었으나, 천장 높이($z = 0.508$\,m)에서는
+압력이 0으로 기록되었다.
+파고가 탱크 높이의 99.1\% ($503.6/508.0$\,mm)에 도달하지만
+DBC의 $\sim$5\,mm 인공 점성 소산층이 파도의 최종 도달을 방해한다.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig4.jpg}
+    \caption{Water Roof 서브케이스: 천장 근처($z = 0.490$\,m) 프로브의 압력 시계열
+    (Run~006, $dp = 2$\,mm). 탱크 양단에서 압력 신호가 검출되나, 실제 천장
+    높이에서는 0을 기록하여 DBC 경계의 한계를 보여준다.}
+    \label{fig:water-roof}
+\end{figure}
+
+이 한계를 극복하기 위해 mDBC (modified DBC)를 시도하였다(Run~008).
+Normal 벡터 설정은 성공하였으나 (272,250/272,250, 100\% 정확), 단일층 DBC 입자에
+공진 pitch 운동이 결합되면서 솔버가 발산하였다
+(free-slip: 28\% 입자 손실 at $t = 0.175$\,s; no-slip: 26\% 손실 at $t = 0.200$\,s).
+따라서 Water Roof의 최종 판정은 \textbf{PARTIAL}이다.
+
+
+% ============================================================
+\section{수렴 분석} \label{sec:convergence}
+\setcounter{equation}{0}
+
+\subsection{3수준 해상도 연구} \label{sec:three-level}
+
+Table~\ref{tab:convergence}에 Water Lateral 서브케이스의 3개 해상도에서의
+교차상관 결과를 정리하였다.
+교차상관 계수는 $dp$가 감소함에 따라 단조적으로 증가한다:
+$r = 0.460 \to 0.655 \to 0.697$.
+이는 M3 (수렴 단조성) 통과를 의미한다.
+
+\begin{table}[H]
+\caption{해상도에 따른 교차상관 수렴.}
+\label{tab:convergence}
+\centering
+\begin{tabular}{@{}clrr@{}}
+\toprule
+Run & $dp$ [mm] & $r_\text{max}$ & $\tau^*$ [s] \\
+\midrule
+001 & 4 & 0.460 & $+0.533$ \\
+002 & 2 & 0.655 & $+0.570$ \\
+003 & 1 & 0.697 & $+0.630$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\fref{fig:convergence}는 피크 압력 및 오차의 해상도 의존성을 보여준다.
+교차상관은 단조 수렴을 보이지만, 피크 진폭에서는 비단조 거동이 관찰된다
+(예: 피크~2의 경우 Run~001에서 Run~002로의 개선 후 Run~003에서 다시 변동).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig5.jpg}
+    \caption{수렴 분석: 피크 압력 비교 및 오차의 해상도 의존성.
+    교차상관은 단조 수렴을 보이나, 개별 피크 진폭에서는 비단조 거동이 관찰된다.}
+    \label{fig:convergence}
+\end{figure}
+
+
+\subsection{GCI 계산} \label{sec:gci}
+
+2수준 GCI를 Run~001 $\to$ Run~002 간에 계산하였다.
+세분화 비율 $r = dp_1/dp_2 = 4/2 = 2$, 수렴 차수 $p = 2$ (가정),
+안전 계수 $F_s = 3.0$ (2수준)을 적용하였다.
+교차상관 기반 GCI는 수렴 추세를 정량화하였으나,
+피크~2에 대해서는 M3 (단조성)이 불만족되어 GCI를 적용하지 않았다.
+
+\fref{fig:convergence-study}에 5개 패널로 구성된 종합 수렴 분석 결과를 제시하였다.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig6.jpg}
+    \caption{종합 수렴 분석. (a) 교차상관 vs $dp$,
+    (b--d) 각 피크의 진폭 수렴, (e) 오차 수렴.
+    교차상관이 피크 진폭보다 일관된 단조 수렴을 보인다.}
+    \label{fig:convergence-study}
+\end{figure}
+
+
+\subsection{SPH 해상도 역설} \label{sec:paradox}
+
+피크 진폭의 비단조 수렴 거동은 SPH 고유의 ``해상도 역설''로 설명할 수 있다:
+입자 해상도가 높아지면 (1)~더 격렬한 국소 충격을 포착할 수 있어 피크가
+\emph{증가}하는 한편, (2)~수치 잡음은 \emph{감소}한다.
+이 두 효과의 경쟁으로 개별 피크 진폭이 비단조적으로 변화할 수 있다.
+
+반면, 교차상관은 전체 시계열의 형태적 유사도를 평가하므로 이러한 국소적 변동에
+강건하다. 따라서 \textbf{SPH 슬로싱 검증에서는 교차상관을 1차 수렴 지표로
+사용할 것을 권고한다.}
+
+
+% ============================================================
+\section{논의} \label{sec:discussion}
+\setcounter{equation}{0}
+
+\subsection{SPH 슬로싱 문헌에서의 위치} \label{sec:positioning}
+
+본 연구의 결과를 기존 문헌과 직접 비교하면, 검증 엄격도에서 현저한 차이가 있다.
+English 등~\cite{English2022}은 본 연구와 동일한 벤치마크(SPHERIC Test~10)를
+사용하면서도 정량 메트릭을 0개 보고하였다.
+본 연구의 M2 = 19.5\%를 맥락에서 평가하면:
+(1)~대부분의 SPH 슬로싱 논문은 오차를 보고조차 하지 않고,
+(2)~실험 자체의 변동계수(CoV)가 20--40\%이며,
+(3)~격자 기반 Flow3D의 RMS 오차 4.79\%는 SPH와 직접 비교하기 어렵다.
+
+저자들의 지식에 한하여, \textbf{본 연구는 SPH 슬로싱 시뮬레이션에 GCI 기반
+수렴 분석을 적용한 최초의 사례}이다.
+
+
+\subsection{ASME V\&V 20과의 관계} \label{sec:vv20-rel}
+
+본 연구는 ASME V\&V~20의 엄격한 준수가 아닌, ``정신의 차용(spirit adoption)''을
+지향한다.
+$dp$ 세분화를 격자 세분화의 유사체로 사용하는 것은 합리적 근사이나,
+SPH 입자 분포의 비균일성으로 인해 수렴 차수가 이론적 값과 다를 수 있음을
+인정한다.
+그럼에도 불구하고, V\&V~20의 핵심 개념---체계적 해상도 세분화, 관측 수렴 차수 계산,
+실험 불확실성 반영---이 SPH 입자법에 적용 가능함을 실증한 것에 의의가 있다.
+
+
+\subsection{DBC의 한계와 mDBC 전망} \label{sec:dbc}
+
+DBC는 벽면 근처에 $\sim$5\,mm의 인공 점성 소산층을 형성한다.
+이는 (1)~Water Roof에서 파도가 천장에 완전히 도달하지 못하는 원인이며,
+(2)~Oil 피크의 비례적으로 큰 과소추정의 원인이다.
+
+mDBC~\cite{English2022}는 이 소산층을 제거할 수 있으나, 본 연구의 공진 pitch
+조건에서는 솔버가 발산하였다. 이는 단일층 경계 입자에 ghost node 보정이
+가해지면서 발생하는 수치적 불안정으로, Vacondio 등~\cite{Vacondio2020}이
+식별한 Grand Challenge GC2 (경계 처리)와 직접 관련된다.
+향후 안정적인 mDBC 또는 대안 경계 조건이 개발되면,
+본 프레임워크를 사용하여 roof 충격 검증이 가능할 것이다.
+
+
+\subsection{예비 연구 대비 개선 (v1 $\to$ v2)} \label{sec:v1v2}
+
+Table~\ref{tab:v1v2}에 예비 연구(v1) 대비 본 연구(v2)의 개선을 정리하였다.
+핵심 개선 사항은 (1)~프로브 배치의 $1.5h$ 규칙 적용,
+(2)~게이지 출력 해상도 50배 향상 (200\,Hz $\to$ 10\,kHz),
+(3)~SPH 잡음에 대한 체계적 필터링,
+(4)~3수준 해상도 연구이다.
+이들은 \textbf{솔버 변경이 아닌 방법론적 개선}이므로,
+다른 SPH 연구에도 동일하게 적용 가능하다.
+
+\begin{table}[H]
+\caption{예비 연구(v1) 대비 본 연구(v2)의 개선.}
+\label{tab:v1v2}
+\centering
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+메트릭 & v1 & v2 & 개선 배율 \\
+\midrule
+피크 오차 & 63.5\% & 19.5\% & $3.3\times$ \\
+교차상관 $r$ & $-0.087$ & 0.655 & 부호 반전 \\
+수렴 수준 & 2수준 & 3수준 & 단조 수렴 확인 \\
+오일 피크 검출 & 0/4 & 4/4 & 전무 $\to$ 전량 \\
+게이지 해상도 & 200\,Hz & 10\,kHz & $50\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{SPH 슬로싱 검증 권고사항} \label{sec:recommendations}
+
+본 연구의 경험에 기반하여, SPH 슬로싱 검증에 다음을 권고한다:
+\begin{enumerate}
+    \item 최소한 M1 (peak-in-band), M2 (피크 오차), M5 (교차상관)를 보고할 것.
+    \item 교차상관을 1차 수렴 지표로 사용할 것
+          (피크 진폭의 비단조 거동에 강건함).
+    \item 최소 2수준의 $dp$ 세분화 연구를 수행할 것.
+    \item 실험 다중 반복의 불확실성($\mu \pm 2\sigma$)을 반영할 것.
+    \item 분석 스크립트를 공개하여 재현성을 확보할 것.
+\end{enumerate}
+
+
+% ============================================================
+\section{결론} \label{sec:conclusions}
+\setcounter{equation}{0}
+
+본 논문에서는 SPH 슬로싱 충격 압력에 대한 체계적 정량 검증 프레임워크(M1--M8)를
+제안하고, SPHERIC Test Case~10에 적용하여 다음의 결론을 도출하였다:
+
+\begin{enumerate}
+    \item \textbf{M1--M8 프레임워크의 제안}: 8개의 정량 메트릭으로 구성된
+          체계적 검증 프레임워크를 제안하였다. 이는 기존의 정성적 ``good agreement''
+          관행을 재현 가능한 정량적 PASS/FAIL 체계로 전환한다.
+
+    \item \textbf{SPHERIC Test~10 적용 결과}: Water Lateral PASS
+          (M2 = 19.5\%, $r = 0.655$), Oil Lateral PASS (M7 = 4/4, $r = 0.570$),
+          Water Roof PARTIAL (DBC 경계 소산 한계).
+
+    \item \textbf{3수준 수렴 실증}: 교차상관의 단조 수렴
+          ($r = 0.460 \to 0.655 \to 0.697$)을 확인하였다.
+          교차상관이 피크 진폭보다 강건한 수렴 지표임을 밝혔다.
+
+    \item \textbf{SPH 슬로싱 최초 GCI 적용}: ASME V\&V~20의 정신을 차용하여
+          GCI를 SPH 슬로싱에 최초로 적용하였다.
+
+    \item \textbf{재현성}: 모든 분석 스크립트, 메트릭 정의 및 판정 로직을
+          공개하여 재현성을 확보하였다.
+
+    \item \textbf{솔버 비의존적 프레임워크}: 제안된 M1--M8 프레임워크는
+          DualSPHysics에 한정되지 않으며, SPH 슬로싱 검증 일반에 적용 가능하다.
+\end{enumerate}
+
+
+\paragraph{Acknowledgments}
+\TODO{GPU 자원, 지도, DualSPHysics 팀 감사}
+
+\paragraph{Author contributions}
+Hyung-Jun Park: Conceptualization, Software, Methodology, Validation, Writing--original draft.
+Imgyu Kim: Supervision, Data curation, Writing -- review \& editing.
+
+\paragraph{Data availability} The data that support the findings of this study are available within the article. Analysis scripts are available at \TODO{GitHub repository URL}.
+
+\section*{Declarations}
+\paragraph{Competing interests} The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+
+\printbibliography
+
+\end{document}

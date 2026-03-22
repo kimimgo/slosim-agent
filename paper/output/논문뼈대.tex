@@ -1,0 +1,147 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.8cm]{geometry}
+\usepackage{xeCJK}
+\setCJKmainfont{NanumMyeongjo}
+\setCJKsansfont{NanumGothic}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+\definecolor{accent}{RGB}{0,80,160}
+\definecolor{gray}{RGB}{100,100,100}
+\hypersetup{colorlinks=true,linkcolor=accent,urlcolor=accent}
+\titleformat{\section}{\large\bfseries\color{accent}}{}{0em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+\titlespacing{\section}{0pt}{1.2em}{0.4em}
+\titlespacing{\subsection}{0pt}{0.8em}{0.2em}
+
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\color{gray}SlosimAgent 논문 뼈대}
+\fancyhead[R]{\small\color{gray}2026-03-02}
+\fancyfoot[C]{\small\thepage}
+
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{0em}
+
+\begin{document}
+
+\begin{center}
+{\Large\bfseries SlosimAgent: Natural-Language-Driven AI Agent\\for Autonomous SPH Sloshing Simulation}\\[1em]
+{\normalsize Imgyu Kim \quad | \quad 논문 뼈대 v2}
+\end{center}
+
+\vspace{0.5em}\hrule\vspace{1em}
+
+% ============================================================
+\section{핵심 스토리 (한 문단)}
+% ============================================================
+
+슬로싱 실무자(탱크 검사원, 구조 엔지니어)는 CFD 전문 지식 없이는 시뮬레이션을 수행할 수 없다.
+기존 LLM-CFD 에이전트 7종은 모두 \textbf{CFD 전문가 대상 + OpenFOAM(격자) + 클라우드 API}다.
+본 연구는 \textbf{비전문가가 자연어로 SPH 슬로싱 시뮬레이션을 자율 수행}할 수 있는 최초의 AI 에이전트 SlosimAgent를 제시한다.
+10개 시나리오에서 8/10 GPU 파이프라인 성공을 달성하고,
+SPHERIC Test 10 벤치마크로 에이전트 출력의 물리적 신뢰성을 정량 검증한다(M2=19.5\%, r=0.655).
+
+% ============================================================
+\section{연구 Gap (4개)}
+% ============================================================
+
+\begin{enumerate}[nosep,leftmargin=1.5em]
+\item \textbf{비전문가 접근성 공백} --- SPH 슬로싱을 자연어로 수행할 수 있는 도구 = 0편
+\item \textbf{SPH 솔버 에이전트 부재} --- 7종 에이전트 전부 OpenFOAM(격자 FVM) only
+\item \textbf{로컬 SLM 부재} --- 전부 Cloud API 의존, 산업 현장 배포 불가
+\item \textbf{MCP 기반 과학계산 통합 부재} --- 표준 프로토콜 미사용
+\end{enumerate}
+
+\textit{*서베이 근거: 1,700편 (8개 DB, 16개 쿼리), Tier-1 40편 원문 분석}
+
+% ============================================================
+\section{논문 구조}
+% ============================================================
+
+\subsection{Abstract}
+Gap 4개 $\rightarrow$ SlosimAgent 제안 $\rightarrow$ 10 E2E 8/10 PASS $\rightarrow$ SPHERIC T10 정량 검증
+
+\subsection{1. Introduction ({\small\color{gray}$\sim$2.5p})}
+\begin{itemize}[nosep,leftmargin=1.5em]
+\item 슬로싱 공학적 중요성 + SPH 적합성 + LLM-CFD 에이전트 부상
+\item Gap 1--4 제시
+\item Contribution 3개: (1) 비전문가용 최초 SPH AI 에이전트, (2) DualSPHysics+Qwen3+MCP 통합, (3) SPHERIC T10 정량 검증 + M1--M8 프레임워크
+\end{itemize}
+
+\subsection{2. Related Work ({\small\color{gray}$\sim$2p})}
+\begin{itemize}[nosep,leftmargin=1.5em]
+\item 2.1 LLM-Based CFD Agents --- 7종 비교 (OpenFOAMGPT, ChatCFD, Foam-Agent 등)
+\item 2.2 NL Interfaces for Scientific Simulation --- 타 도메인 NL→도구 사례
+\item 2.3 SPH Sloshing and DualSPHysics --- English 2022, Vacondio 2020
+\end{itemize}
+
+\subsection{3. System Design ({\small\color{gray}$\sim$3p})}
+\begin{itemize}[nosep,leftmargin=1.5em]
+\item 3.1 아키텍처: 자연어 $\rightarrow$ Qwen3-32B Agent $\rightarrow$ 18 MCP Tools $\rightarrow$ DualSPHysics GPU
+\item 3.2 DualSPHysics 전용 도구 설계 (XML 생성, 솔버, 후처리)
+\item 3.3 로컬 SLM 배포 (Ollama, 클라우드 불필요)
+\item 3.4 MCP 도구 통합 (표준 프로토콜)
+\end{itemize}
+
+\subsection{4. End-to-End Evaluation ({\small\color{gray}$\sim$2p})}
+\begin{itemize}[nosep,leftmargin=1.5em]
+\item 10개 사용자 시나리오 (직사각/원통/STL, 물/오일/LNG)
+\item \textbf{결과: 8/10 GPU PASS}
+\item PARTIAL 2건 분석 (공진 불안정, DBC 한계)
+\end{itemize}
+
+\subsection{5. Physics Validation: SPHERIC Test 10 ({\small\color{gray}$\sim$3p})}
+\begin{itemize}[nosep,leftmargin=1.5em]
+\item 벤치마크 설정: Souto-Iglesias (2011), 102회 반복 실험
+\item M1--M8 정량 메트릭 프레임워크 정의
+\item 결과: Water Lat \textbf{PASS} (M2=19.5\%, r=0.655), Oil \textbf{PASS}, Roof \textbf{PARTIAL}
+\item 수렴: 3-level dp, r = 0.460 $\rightarrow$ 0.655 $\rightarrow$ 0.697
+\item 기존 문헌 비교: English 2022는 동일 벤치마크에서 정량 메트릭 0개
+\end{itemize}
+
+\subsection{6. Discussion ({\small\color{gray}$\sim$2p})}
+\begin{itemize}[nosep,leftmargin=1.5em]
+\item 접근성 vs 자동화: 기존은 ``전문가 자동화'', 우리는 ``비전문가 접근''
+\item 한계 정직 보고: M2=19.5\%, DBC only, 8회 시뮬레이션, 8B 모델 실패
+\end{itemize}
+
+\subsection{7. Conclusion}
+\begin{enumerate}[nosep,leftmargin=1.5em]
+\item 최초 비전문가용 SPH 슬로싱 AI 에이전트 (8/10 PASS)
+\item 최초 SPH LLM 에이전트 (DualSPHysics + Qwen3 + MCP)
+\item SPHERIC T10 정량 검증 (M2=19.5\%, r=0.655) + M1--M8 프레임워크
+\end{enumerate}
+
+% ============================================================
+\section{Figures \& Tables 계획}
+% ============================================================
+
+\begin{tabular}{lll}
+\toprule
+\textbf{번호} & \textbf{내용} & \textbf{상태} \\
+\midrule
+Table 1 & 경쟁 에이전트 비교 (7종 vs Ours) & 완료 \\
+Table 2 & M1--M8 메트릭 정의 & 완료 \\
+Table 3 & E2E 10개 시나리오 결과 & 완료 \\
+Table 4 & SPHERIC T10 결과 요약 & 완료 \\
+Fig 1 & 시스템 아키텍처 다이어그램 & 미작성 \\
+Fig 2 & Water Lateral 시계열 (3-resolution) & 완료 \\
+Fig 3 & Oil Lateral 시계열 vs 실험 & 완료 \\
+Fig 4 & 수렴 분석 (r vs dp) & 완료 \\
+\bottomrule
+\end{tabular}
+
+% ============================================================
+\section{Contribution Statement}
+% ============================================================
+
+\begin{quote}
+\textit{To our knowledge, SlosimAgent is the first AI agent enabling non-expert technicians to configure, execute, and analyze SPH sloshing simulations through natural language. We contribute: (1) a domain-specialized agent integrating DualSPHysics GPU with a local SLM (Qwen3-32B) via MCP --- the first LLM agent for particle-based CFD; (2) E2E evaluation across 10 scenarios achieving 8/10 success; and (3) quantitative validation against SPHERIC Test 10, reporting M2=19.5\% and r=0.655 with a proposed M1--M8 framework.}
+\end{quote}
+
+\end{document}

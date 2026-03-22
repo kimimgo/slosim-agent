@@ -1,0 +1,39 @@
+
+                                              Analysis A
+                                              gent
+
+                                              cwd:
+
+                                              /home/imgy
+                                              u/work
+                                              space/02_a
+                                              ctive/
+                                              sim/slosim
+                                              -agent
+
+                                              Session: N
+                                              ew
+
+                                              Session
+
+                                              LSP Config
+                                              urati…
+                                              • gopls (g
+                                              opls)
+
+                                              Modified F
+ ░ Generating...                              iles:
+ press esc to exit cancel                     No modifie
+                                              d file
+                                              s
+
+
+───────────────────────────────────────────────────────────
+
+>
+
+
+
+
+
+ ctrl+? help  Context: 0, Cost: $0.00    No diagnostics  Qw

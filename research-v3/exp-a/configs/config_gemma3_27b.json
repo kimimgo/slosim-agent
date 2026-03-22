@@ -1,0 +1,35 @@
+{
+  "data": {},
+  "providers": {
+    "local": {
+      "apiKey": "dummy",
+      "disabled": false
+    }
+  },
+  "agents": {
+    "coder": {
+      "model": "local.gemma3:27b",
+      "maxTokens": 0,
+      "reasoningEffort": ""
+    },
+    "summarizer": {
+      "model": "local.gemma3:27b",
+      "maxTokens": 0,
+      "reasoningEffort": ""
+    },
+    "task": {
+      "model": "local.gemma3:27b",
+      "maxTokens": 0,
+      "reasoningEffort": ""
+    },
+    "title": {
+      "model": "local.gemma3:27b",
+      "maxTokens": 0,
+      "reasoningEffort": ""
+    }
+  },
+  "tui": {
+    "theme": "opencode"
+  },
+  "shell": {}
+}

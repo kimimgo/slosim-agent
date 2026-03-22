@@ -1,0 +1,1281 @@
+Topology optimization for microchannel heat sinks with nanofluids using an
+Eulerian-Eulerian approach
+Chih-Hsiang Chena , Kentaro Yajia,∗
+a Department of Mechanical Engineering, Graduate School of Engineering, Osaka University, 2-1, Yamadaoka, Suita, Osaka, 565-0871, Japan
+
+arXiv:2501.16749v1 [math.OC] 28 Jan 2025
+
+Abstract
+The demand for high-performance heat sinks has significantly increased with advancements in computing power and the miniaturization of electronic devices. Among the promising solutions, nanofluids have attracted considerable attention due to their superior
+thermal conductivity. However, designing a flow field that effectively utilizes nanofluids remains a significant challenge due to the
+complex interactions between fluid and nanoparticles. In this study, we propose a density-based topology optimization method for
+microchannel heat sink design using nanofluids. An Eulerian–Eulerian framework is utilized to simulate the behavior of nanofluids,
+and the optimization problem aims to maximize heat transfer performance under a fixed pressure drop. In numerical examples, we
+investigate the dependence of the optimized configuration on various parameters and apply the method to the design of a manifold
+microchannel heat sink. The parametric study reveals that the number of flow branches increases with the increased pressure drop
+but decreases as the particle volume fraction increases. In the heat sink design, the topology-optimized flow field achieves an 11.6%
+improvement in heat transfer performance compared to a conventional parallel flow field under identical nanofluid conditions.
+Keywords: Topology optimization, Microchannel heat sink, Nanofluid, Eulerian-Eulerian approach
+
+1. Introduction
+The increasing computational demands and trend toward
+highly integrated circuits have led to a rise in the power consumption of electronic devices. Thermal dissipation has become a critical concern due to high heat flux generation and the
+miniaturization of electronic devices [1]. To address this issue,
+the microchannel heat sink (MCHS), first proposed by Tuckerman and Pease [2], has become an attractive solution due to
+its high heat transfer performance and compact size [3]. Over
+the past decades, numerous studies have sought to improve
+MCHS from various perspectives, including operating conditions [4, 5], coolant types [6, 7], material selection [8–10], and
+channel configurations [11–13].
+In terms of coolants, nanofluids introduced by Choi and Eastman [14] have attracted significant attention due to their superior heat transfer properties. The fundamental concept of
+nanofluids is to disperse nanoscale particles into a base fluid to
+enhance heat transfer performance, and they have been widely
+applied in the field of heat dissipation [15–17]. Although typical flow field designs—such as parallel [18], fin-and-pin [19],
+and wavy [20]—are widely employed with nanofluids, the
+complex interactions between nanoparticles and the base fluid
+present significant challenges in designing efficient flow fields
+for nanofluids. Meanwhile, numerous studies have conducted
+parametric investigations based on these designs [21–23]; however, their limited design freedom has constrained the performance improvements in MCHS.
+∗ Corresponding author
+
+As a method with high design flexibility, topology optimization can generate optimized configurations without relying on
+the designer’s intuition. In topology optimization, the density
+method employs a continuous design variable field, which enables smooth variations of material distribution throughout the
+design domain during the optimization process. The introduction of a penalization factor eliminates intermediate values of
+these design variables, resulting in a binary distribution of material [24]. Based on the idea of the density method, Borrvall
+and Petersson proposed a topology optimization approach for
+Stokes flow, introducing a fictitious force based on design variables as a no-slip boundary condition to determine the material
+distribution of the pseudo-solid region [25]. Further research
+has also developed topology optimization methods for heat sink
+design. Dede [26] and Yoon [27] first proposed a topology optimization method for forced convection heat transfer problems.
+Koga et al. proposed a topology optimization method for heat
+sinks, defining a multi-objective function to maximize heat dissipation while simultaneously minimizing power dissipation in
+their study [28]. Matsumori et al. developed a topology optimization method for heat sinks that accounts for constrained
+input power [29]. Yaji et al. developed a topology optimization
+method to maximize heat exchange, using a level set boundary expression to control the geometric complexity of the optimized configurations [30]. Dilgen et al. proposed a topology
+optimization method for turbulent forced convection heat transfer systems [31]. Zeng et al. developed a two-layer model for
+topology optimization to reduce the computational cost of 3D
+heat sink design and experimentally verified that the optimized
+result exhibits superior performance [32]. Zhou et al. intro-
+
+Email address: yaji@mech.eng.osaka-u.ac.jp (Kentaro Yaji)
+Preprint submitted to Elsevier
+
+January 29, 2025
+
+Nomenclature
+u
+
+velocity vector (m/s)
+
+T
+
+temperature (K)
+
+x
+
+position vector (m)
+
+u
+
+velocity component in the x-direction (m/s)
+
+c
+
+specific heat capacity (J/kg · K)
+
+v
+
+velocity component in the y-direction (m/s)
+
+Cd
+
+drag coefficient
+
+tol
+
+convergence tolerance for flow simulation
+
+D
+
+design domain
+
+Greek symbols
+
+dp
+
+particle diameter (m)
+
+α
+
+inverse permeability (kg/m3 · s)
+
+H
+
+plate length (m)
+
+h
+
+β
+
+projection parameter
+
+3
+
+ϵ
+
+convergence tolerance for optimization
+
+2
+
+volumetric heat exchange coefficient (W/m · K )
+
+hp
+
+fluid-particle heat transfer coefficient (W/m · K )
+
+η
+
+threshold parameter
+
+i
+
+number of flow simulation iterations
+
+Γ
+
+boundary of the analysis domain
+
+J
+
+objective function
+
+γ
+
+design variable
+
+K
+
+momentum exchange coefficient (kg/m · s )
+
+µ
+
+viscosity (Pa · s)
+
+k
+
+thermal conductivity (W/m · K)
+
+Ω
+
+fluid domain
+
+L
+
+inlet length (m)
+
+ϕ
+
+volume fraction
+
+n
+
+number of optimization iterations
+
+ρ
+
+density (kg/m3 )
+
+Nu
+
+Nusselt number
+
+Subscripts
+
+p
+
+pressure (Pa)
+
+ave
+
+average
+
+Pr
+
+Prandtl number
+
+f
+
+fluid phase
+particle phase
+
+3
+
+3
+
+Q
+
+volumetric heat generation coefficient (W/m · K )
+
+p
+
+q
+
+convex parameter
+
+Superscripts
+
+R
+
+filter radius (m)
+
+in
+
+inlet
+
+Re
+
+fluid Reynolds number
+
+out
+
+outlet
+
+Rep
+
+particle Reynolds number
+
+w
+
+wall
+
+duced a topology optimization method for manifold microchannel heat sinks and investigated the optimized results numerically and experimentally [33]. Although these studies proposed
+topology optimization methods for heat sinks, they did not consider nanofluids as potential coolants. In terms of nanofluids,
+Zhang et al. proposed a topology optimization method for
+MCHS [34]. Due to the diluteness of nanoparticles, a singlephase model is employed to simulate the behavior of nanofluids, with its physical properties being temperature-dependent.
+In their study, while optimized configurations can be obtained
+using a single-phase model, the performance of the structures
+optimized with nanofluids was inferior to those optimized with
+pure water.
+In the field of numerical investigations for nanofluids, although the single-phase model is frequently used, recent studies
+have increasingly focused on the two-phase model for nanofluids. In the two-phase model, the particle phase is treated as a
+continuous phase to account for the complex interactions between nanoparticles and the fluid. Bianco et al. investigated
+the laminar forced convection flow of Al2 O3 nanofluid in a cir-
+
+cular pipe with the single-phase and two-phase models. The
+maximum difference in the average heat transfer coefficient between the single-phase model and the two-phase model is 11%
+in their study [35]. Kalteh et al. conducted numerical simulations of nanofluid forced convection in a microchannel using the Eulerian-Eulerian approach. The average Nusselt number enhancement obtained with the Eulerian-Eulerian approach
+is higher than that achieved with the single-phase model [36].
+In terms of experimental validation, Fard et al. compared the
+simulation results of single-phase and two-phase models for
+nanofluids with copper nanoparticles and found that the twophase model results aligned more closely with experimental
+data [37]. Beheshti et al. conducted a comparative numerical study of heat transfer with turbulent nanofluids in an annular channel. In their study, the single-phase model underestimates the experimental data at concentrations (1% and 1.5%).
+In contrast, the two-phase model yields results that are closer
+to the experimental values [38]. In summary, these studies have
+demonstrated that the two-phase model provides more accurate
+results and serves as an effective alternative for simulating the
+2
+
+(a)
+
+heat transfer of nanofluids.
+Several studies have employed topology optimization to address particle flow problems. In these studies, the EulerianLagrangian approach has been extensively utilized to optimize
+particle trajectory and manipulation [39–41]. However, this approach leads to high computational costs when applied to the
+collective behavior of nanofluids. In contrast, although Chen
+et al. demonstrated that the Eulerian–Eulerian approach can
+effectively tackle topology optimization problems for particle
+flows [42], the assumption of one-way coupling in their study
+limits the ability to capture the bidirectional interactions between the fluid and particles in nanofluids.
+Based on the above, we propose a topology optimization
+method for flow field design in MCHS with nanofluids using an
+Eulerian-Eulerian approach. In the numerical model, the particle phase is treated as a continuous phase, and fluid-particle
+bidirectional interactions are incorporated into the momentum
+and energy equations for both phases based on the EulerianEulerian approach. The optimization problem is defined as
+a heat transfer maximization problem under a fixed pressure
+drop. The sensitivity information is derived using automatic
+differentiation, and GCMMA (Globally Convergent Method of
+Moving Asymptotes) is employed for solving the optimization
+problem [43]. This study includes two numerical examples. In
+the first example, we optimize the flow field in a square design domain commonly used for topology optimization in thermal management. This example serves as a preliminary exploration of various parameters to validate the proposed optimization method. In the second numerical example, we consider a
+manifold microchannel heat sink (MMCHS) for optimization,
+as shown in Fig. 1. In the MMCHS, dividers segment the microchannels into multiple sections, allowing fluid to flow downward into each section and upward out of it. Since the MMCHS
+consists of periodic unit cells, we optimize the flow field in a
+unit cell with a simplified two-dimensional model in this study.
+The subsequent sections of this paper are organized as follows: In Section 2, we demonstrate the formulation of the governing equations and boundary conditions. In Section 3, we describe the representation of fluid and solid regions in the topology optimization method and formulate the optimization problem for flow field design in MCHS. In Section 4, we provide an
+overview of the algorithm used in the fluid solver and outline
+the optimization process. In Section 5, we compare the effects
+of different parameters on the optimized flow field and optimize
+the flow field in the unit cell of MMCHS. Finally, we present
+the summary of findings and future work in Section 6.
+
+Divider
+
+z
+
+Inlet
+
+Outlet
+
+x
+y
+
+Microchannel
+Heated surface
+
+(b)
+x
+
+Divider
+
+y
+
+Unit cell
+
+Fin
+
+Fig. 1: Schematic diagram of a manifold microchannel heat sink: (a) The flow
+direction and key components in the MMCHS (b) Top view of a unit cell in the
+MMCHS.
+
+negative effects. In this study, we adopt the two-way coupling
+assumption, meaning that the behaviors of the fluid and particles influence each other, while interactions between particles
+are neglected. Additionally, we consider a steady-state laminar
+flow for the numerical examples due to the broad range of laminar flow applications in MCHS [45–47]. Although the fluid
+in the MMCHS exhibits both upward and downward flow behaviors, under high aspect ratio conditions—where the channel
+width is significantly greater than its depth—the distributions of
+physical quantities remain sufficiently uniform [48, 49]. Consequently, the flow field can be approximated as two-dimensional.
+In addition, we further consider a uniform heat distribution
+along the channel’s height and simplify the volumetric heat generation into the two-dimensional energy equation. The basic
+assumptions are summarized as follows:
+• The flow fields are treated as two-dimensional.
+• The fluid is treated as a steady incompressible laminar flow.
+• Heat distribution is uniform along the channel’s height.
+• Particle-particle interactions are not considered.
+• The gravity effect is not considered.
+
+2. Analysis model
+
+• Shape effects are neglected, and particles are spherical.
+
+2.1. Assumptions
+
+• Particle aggregation is not considered.
+
+The particle volume fraction has a significant impact on the
+behavior of nanofluids. Although increasing the particle volume fraction can enhance heat transfer, excessive concentration may lead to nanoparticle aggregation, which increases viscosity and reduces heat transfer efficiency [44]. Therefore, the
+volume fraction of nanofluids is typically low to prevent these
+
+2.2. Governing equations
+Based on the assumptions in Section 2.1 and the EulerianEulerian model proposed by Kalteh et al. [36], the governing
+3
+
+the Cd is the drag coefficient, which is defined as follows:
+
+24
+
+
+
+, if Rep < 1
+
+
+
+Re
+ p
+Cd = 
+
+24
+
+
+0.687
+
+
+ Re (1 + 0.15Rep ), if 1≤ Rep ≤ 1000.
+
+𝛤 in
+
+(8)
+
+p
+
+The particle Reynolds number Rep in Eq. (8) is described as:
+
+𝐷\𝛺
+(γ = 0)
+
+𝛤w
+
+Rep =
+
+𝛤w
+
+(9)
+
+For monodispersed spherical particles, the heat exchange coefficient h in Eqs. (3) and (6) can be expressed in the following
+equation.
+
+𝛺
+(γ = 1)
+𝛤 out
+
+ρf |uf − up |dp
+.
+µf
+
+𝛤 out
+
+h=
+
+𝛤w
+
+equations for the fluid phase, including continuity, momentum,
+and energy, are as follows:
+
+k̃f
+,
+ϕf
+k̃p
+k̂p = ,
+ϕp
+k̂f =
+
+(1)
+
+∇ · (ϕf ρf uf uf ) = −ϕf ∇p + ∇ · (µf ϕf (∇uf + ∇u⊺f ))
+
+(2)
+
++ K(up − uf ),
+∇ · (ϕf ρf cf uf T f ) = ∇ · (ϕf k̂f ∇T f ) + h(T p − T f ),
+
+where u is the velocity vector, p is the pressure, µ is the viscosity, ρ is the density, ϕ is the volume fraction, K is the momentum
+exchange coefficient, T is the temperature, c is the specific heat
+capacity, h is the heat exchange coefficient, and k̂ is the effective thermal conductivity. The subscripts ‘f’ and ‘p’ denote the
+fluid and particle phases. Similarly, the governing equations for
+the particle phase are described as follows:
+(4)
+
+∇ · (ϕp ρp up up ) = −ϕp ∇p + ∇ · (µp ϕp (∇up + ∇u⊺p ))
+
+(5)
+(6)
+
+p = pin
+
+The momentum exchange coefficient K in Eqs. (2) and (5)
+can be expressed as follows:
+
+3 ϕp ϕf ρf |uf − up | −2.65
+
+
+
+Cd
+ϕf , if ϕf > 0.8
+
+
+
+4
+dp
+
+
+K=
+
+ϕ2p µf
+
+ϕp ρf |uf − up |
+
+
+
+150
++ 1.75
+, if ϕf ≤ 0.8,
+
+
+2
+dp
+ϕf dp
+
+(13)
+
+where A and B in Eqs. (15) and (16) are given by the equations
+
+ 109
+k
+f
+, respectively. According to Kalteh
+A = kpf and B = 1.25 1−ϕ
+ϕf
+et al. [36], the value of ω is chosen as 7.26 × 10−3 in this study.
+Fig. 2 shows the analysis domain and dimensions for the optimization problems. To account for the effect of pumping power
+on heat transfer performance, we fixed the pressure drop between the inlet and the outlet in the numerical examples. The
+boundary conditions for state variables in the first numerical
+example are shown below:
+
++ K(uf − up ),
+∇ · (ϕp ρp cp up T p ) = ∇ · (ϕp k̂p ∇T p ) + h(T f − T p ).
+
+(12)
+
+where k̃f and k̃p can be further expressed as follows:
+
+
+p
+k̃f = 1 − 1 − ϕf kf ,
+(14)
+p
+k̃p = 1 − ϕf (ωA + (1 − ω)Γ) kf ,
+(15)
+
+
+
+
+
+
+ B(A − 1)
+
+A
+B−1
+B + 1
+2 
+Γ=
+ln
+−
+−
+, (16)
+
+
+
+B 
+B 2
+B
+
+
+B
+2
+1 − A A(1 − A )
+(1 − A )
+
+(3)
+
+∇ · (ϕp up ) = 0,
+
+(10)
+
+According to Wakao and Kaguei [51], the fluid-particle heat
+transfer coefficient hp can be obtained using the empirical correlation as follows:
+hp dp
+1
+3
+(11)
+= 2 + 1.1Re0.6
+Nup =
+p Pr ,
+kf
+where Pr is the Prandtl number for the fluid phase. Besides, as
+proposed by Kuipers et al. [52], the effective thermal conductivities for both phases k̂f and k̂p are shown below:
+
+Fig. 2: Schematic representation of the fluid domain Ω and the solid domain
+D\Ω in the fixed design domain D, including the corresponding boundary expressions for the inlet Γ in , outlet Γ out , and wall Γ w .
+
+∇ · (ϕf uf ) = 0,
+
+6(1 − ϕf )
+hp .
+dp
+
+T f = T fin ,
+out
+
+T p = T pin
+
+p=p
+
+ϕp = ϕin
+p,
+
+(7)
+
+uf = 0,
+
+up = 0
+
+∇ϕp · n = 0
+∇T f · n = 0,
+
+where dp is the particle diameter. As mentioned by Kolve [50],
+4
+
+∇T p · n = 0
+
+on
+
+Γ in ,
+
+(17)
+
+on
+
+in
+
+Γ ,
+
+(18)
+
+on
+
+out
+
+Γ ,
+
+(19)
+
+on
+
+Γ ,
+
+(20)
+
+on
+
+Γ ,
+
+in
+
+w
+
+(21)
+
+on
+
+out
+
+Γ ,Γ ,
+
+(22)
+
+on
+
+Γ ,Γ .
+
+(23)
+
+w
+
+w
+
+out
+
+In addition, we apply the symmetric boundary condition in
+the first numerical example to reduce computational cost. In
+the second numerical example, since we optimize the flow field
+in the unit cell, free-slip boundary conditions are applied to the
+walls. The types of the remaining boundary conditions are the
+same as those in the first numerical example.
+
+design variables and incorporated them into the equations. The
+re-formulated equations are presented as follows:
+= −ϕf ∇p + ∇ · (µf ϕf (∇uf + ∇u⊺f )) (28)
+
+∇ · (ϕf ρf uf uf )
+
++ K(up − uf ) − ϕf αuf ,
+∇ · (ϕf ρf cf uf T f ) = ∇ · (ϕf keff,f ∇T f ) + h(T p − T f )
++ ϕf Q(T Q − T f ),
+
+3. Problem formulation
+
++ K(uf − up ) − ϕp αup ,
+
+Topology optimization aims to enhance the objective function by optimizing the material distribution within the design
+domain D. Initially, we define a characteristic function for the
+representation of solid and fluid regions to determine the material distribution, as follows:
+
+
+
+1, if x ∈ Ω
+(24)
+χ(x) = 
+
+0, if x ∈ D\Ω,
+
+∇ · (ϕp ρp cp up T p ) = ∇ · (ϕp keff,p ∇T p ) + h(T f − T p )
+
+(31)
+
++ ϕp Q(T Q − T p ).
+The inverse permeability α and volumetric heat generation
+coefficient Q can be described as follows [29]:
+α(γ̃¯ ) = α + (α − α)γ̃¯
+
+1+q
+,
+γ̃¯ + q
+
+(32)
+
+Q(γ̃¯ ) = Q(1 − γ̃¯ ),
+
+where x is the position in D, and Ω represents the flow domain
+in D. The characteristic function χ(x) is inherently discontinuous, which necessitates the relaxation techniques to facilitate a
+smooth transition for numerical analysis. In this study, we employ a continuous function, γ(x), commonly used in the density
+method, with values ranging 0 ≤ γ(x) ≤ 1.
+Checkerboard patterns may arise in the material distribution
+due to numerical instabilities [53]. To address this issue, we
+implement convolution filtering as outlined below [54]:
+P
+i∈Ne,k w(xi )γi
+.
+(25)
+γ̃k = P
+i∈Ne,k w(xi )
+
+(33)
+
+where α and α are the maximum and minimum values of the
+inverse permeability, respectively, Q is the maximum value
+of the volumetric heat generation coefficient, and q is the
+convex parameter. It is worth noting that Q is also necessary when converting a three-dimensional problem into a twodimensional problem. By employing methods such as the twolayer model [56], results comparable to those obtained in three
+dimensions can be achieved if the height of the flow path is
+sufficiently small. However, for simplicity, we follow previous
+research [29, 30] and determine Q based on prior parameter investigations. By incorporating fictitious forces and heat sources
+into the equations, we can evaluate the influence of design variables on the objective function through sensitivity analysis.
+
+Here, γ̃k represents the filtered design variable on node k,
+Ne,k denotes the set of nodes located within the filtering radius
+R, and w(xi ) is the weighting function defined as below.
+
+3.3. Heat transfer maximization problem
+Heat transfer between the solid and fluid regions is a critical factor in the design of MCHS. In this optimization problem,
+since the pressure drop between the inlet and outlet is fixed,
+the objective function only needs to account for the heat transfer between the solid and the fluid. Therefore, the optimization
+problem is formulated as a heat generation maximization problem as follows:
+Z
+maximize J =
+Q(T Q − T ave )dΩ,
+(34)
+D
+0 ≤ γ(x) ≤ 1 for ∀x ∈ D,
+
+(26)
+
+Although filtering can address the checkerboard pattern issue, it often results in the presence of gray-scale design variables in the material distribution. To address this issue, we employ the projection function to obtain the optimized configuration closer to a binary distribution as follows [55]:
+tanh(βη) + tanh(β(γ̃k − η))
+γ̃¯ k =
+,
+tanh(βη) + tanh(β(1 − η))
+
+= −ϕp ∇p + ∇ · (µp ϕp (∇up + ∇u⊺p )) (30)
+
+∇ · (ϕp ρp up up )
+
+3.1. Representation of solid and fluid regions
+
+w(xi ) = R − |xi − xk |.
+
+(29)
+
+(27)
+
+where β is the projection parameter, η is the threshold parameter
+and γ̃¯ k is the design variable after projection.
+
+where T Q represents the temperature in the solid region, T ave
+represents the average temperature of the fluid phase and the
+particle phase, expressed as follows [57], where l denotes the
+phase with l ∈ {f, p}.
+
+P R
+ρ |u | c T dΩ
+D l l l l
+
+3.2. Governing equations with fluid and solid representations
+In Section 3.1, we defined the design variables used to represent the solid and fluid regions. To determine the distribution
+of design variables during the optimization process, we further
+introduced fictitious forces and heat sources dependent on the
+
+T ave =
+
+l∈{f,p}
+
+P R
+l∈{f,p}
+
+5
+
+D
+
+ρl |ul | cl dΩ
+
+
+
+(35)
+
+4. Numerical implementation
+Initialization
+
+We develop a custom finite difference flow solver incorporating the NAPPLE (Nonstaggered Artificial Pressure for
+Pressure-Linked Equation) algorithm. This algorithm allows
+state variables to be defined on a collocated grid under specific
+assumptions. Based on these assumptions, we can derive the
+pressure-linked equation and discretize it using the harmonic
+scheme to eliminate the checkerboard pressure pattern. For further details, refer to [42, 58]. Besides, the momentum and energy equations are discretized for both phases using a weighting
+function scheme [59]. In fluid simulation, we use the maximum
+residual values among all grid points as the convergence criteria
+expressed by the following equations:
+max ui − ui−1 ≤ tolu ,
+
+(36)
+
+max vi − vi−1 ≤ tolv ,
+
+(37)
+
+i
+
+max T − T
+
+i−1
+
+≤ tolT ,
+
+Filtering and projection
+
+Solve governing equations
+
+Compute the sensitivities
+
+Obtain the distribution of design variables γ
+
+Yes
+Continuation
+steps completed?
+
+No
+
+Update projection
+parameter β
+
+(38)
+Yes
+
+where i represents iteration count, u and v are the velocity components in the x- and y-directions, respectively. The convergence criteria for the state variables u, v and T for both phases
+are denoted as tolu , tolv and tolT and are set to 1 × 10−6 , respectively.
+Fig. 3 shows the flowchart of the optimization process. In
+the first step, we initialize all the state and design variables.
+In the second step, we apply the filter in Eq. (25) and projection in Eq. (27) on the design variables. In the third and fourth
+steps, the numerical simulation is performed, and the sensitivities are obtained using the automatic differentiation with Adept
+C++ [60]. In the fifth step, we use the GCMMA algorithm [43]
+to determine the distribution of design variables. In the optimization process, we adopt a continuation method, gradually
+increasing the value of β in Eq. (27) to remove gray-scale design variables. If the optimization meets the convergence criterion, the value of β is doubled, and the process returns to the
+second step. This loop continues until all continuation steps are
+completed. If the criterion is unmet, the process returns to the
+second step without modifying β. The convergence criterion for
+the optimization is as follows:
+Jn − Jn−1
+< ϵ.
+Jn
+
+No
+
+Converge?
+
+End
+
+Fig. 3: Flowchart of the topology optimization process.
+
+y
+Wall
+
+Outlet
+
+Inlet
+Symmetry boundary condition
+x
+
+L
+
+Wall
+H
+
+Fig. 4: Analysis domain for the numerical scheme validation.
+
+(H/L = 100), as shown in Fig. 4. The analysis domain is discretized with a quadrilateral mesh of 2000 × 30. The nanofluid
+consists of water as the base fluid and copper as the nanoparticle material. At the inlet, the nanofluid enters with a uniform
+velocity and a temperature of 293 K, while the static pressure at
+the outlet is set to zero. The side walls are subjected to no-slip
+boundary conditions, with the wall temperature set to 303 K.
+In addition, the symmetry boundary condition is utilized for the
+numerical analysis. The material properties of the nanofluid are
+summarized in the table 1.
+In this study, we first compare the average Nusselt number
+variations with the Reynolds number at different particle volume fractions. The definitions and calculations of Reynolds
+and Nusselt numbers are based on those provided by Kalteh et
+al. [36]. As illustrated in Fig. 5, the numerical results align
+well with those reported in the previous study. An increase in
+Reynolds number enhances the convective heat transfer effect,
+while a higher particle volume fraction improves the effective
+thermal conductivity of the nanofluid. Consequently, the aver-
+
+(39)
+
+Here, n represents the number of optimization iterations, ϵ
+represents the criterion for the optimization convergence and is
+set to 1 × 10−4 in this study.
+5. Results and discussion
+5.1. Validation of numerical method
+We validate the feasibility of the numerical scheme through
+a numerical example from prior research [36]. In this problem,
+the nanofluid flows between two parallel plates separated by L
+= 200 µm. Each plate has a length 100 times its inlet width
+6
+
+analysis domain is relatively small for MCHS, this configuration is commonly used in topology optimization problems for
+heat sinks [29, 30]. As a preliminary validation case, this setup
+allows for evaluating the influence of different parameters on
+the optimized flow field at a reasonable computational cost and
+verifies whether the proposed method can generate flow fields
+with superior performance.
+In the fluid simulation setup, the analysis domain is discretized using a quadrilateral mesh of 100 × 50. The pressure
+drop is set to 5000 Pa, and the inlet particle volume fraction ϕin
+p
+is 1%. The corresponding fluid Reynolds number is 67.1. For
+the temperature boundary conditions, the inlet temperature T in
+for both phases is set to 300 K, while solid temperature T Q is
+set to 360 K.
+In the optimization setup, the initial design variable is set to
+0.9, while the inverse permeability α and the volumetric heat
+generation coefficient Q have maximum values of 4.44 × 1010
+and 5.33 × 1010 , respectively. The convex parameter q is set
+to 0.05. In the filtering and projection, the filter radius R is set
+to 1.8 µm, and the maximum value of the projection parameter
+βmax is set to 64.
+
+age Nusselt number increases accordingly.
+Additionally, we examined the average Nusselt number for
+different particle diameters under Re = 500 and ϕp = 1%. As
+reported in Kalteh et al. [36], the ratio of the Nusselt number
+for nanofluids to water is 40.43% and 42.47% for dp = 100 nm
+and dp = 30 nm, respectively, with the Nusselt number of water
+reported as 9.3. Based on these values, the average Nusselt
+numbers for dp = 100 nm and dp = 30 nm can be calculated as
+13.06 and 13.25, respectively. Under the same conditions, the
+average Nusselt numbers for dp = 100 nm and dp = 30 nm in
+this study are 12.74 and 13.42, showing a deviation of less than
+2.5% compared to the prior study.
+Table 1: Material properties of the Cu-water nanofluid.
+Parameters
+
+Symbols
+
+Values
+
+Unit
+
+Fluid viscosity
+
+µf
+
+0.001
+
+Pa · s
+
+Fluid density
+
+ρf
+
+1000
+
+kg/m3
+
+Fluid heat capacity
+
+cf
+
+4181.8
+
+J/kg K
+
+Fluid thermal conductivity
+
+kf
+
+0.6
+
+Particle viscosity
+
+µp
+
+1.38 × 10
+
+Pa · s
+
+Particle density
+
+ρp
+
+8954
+
+kg/m3
+
+Particle heat capacity
+
+cp
+
+383.1
+
+J/kg K
+
+Particle thermal conductivity
+
+kp
+
+386
+
+W/m K
+
+Particle diameter
+
+dp
+
+100
+
+nm
+
+Kalteh - 0%
+𝜙p 0%
+𝜙p 3%
+Kalteh - 3%
+𝜙p 0%
+Present study - 0%
+𝜙p 3%
+Present study - 3%
+
+24
+22
+
+W/m K
+−3
+
+3L
+
+L
+
+Design domain D
+L
+
+Kalteh - 𝜙
+1%
+p 1%
+Kalteh - 𝜙
+5%
+p 5%
+𝜙p 1%
+Present study - 1%
+𝜙p 5%
+Present study - 5%
+
+L
+
+Nusselt number Nu
+
+20
+
+Inlet
+𝛤 in
+
+Symmetry boundary
+
+Outlet
+𝛤 out
+
+y
+
+18
+
+x
+16
+
+14
+
+Wall 𝛤 w
+
+Fig. 6: Dimensions of the design domain D utilized for the heat transfer optimization problem.
+
+12
+10
+
+5.2.2. Optimized flow field
+The optimized flow field is obtained using the default parameters outlined in Section 5.2.1. Fig. 7 illustrates the optimized
+flow field alongside the velocity and temperature distributions
+for both phases. From Fig. 7(c) and (f), it can be observed that
+as the nanofluid flows around the heat sink fins, it absorbs heat
+generated by the solid through the thermal exchange, thereby
+achieving a cooling effect. Due to the interactions between the
+fluid and particles, the velocity and temperature distributions of
+the fluid phase and particle phase are nearly identical. Notably,
+as shown in Fig. 7(d), the particle volume fraction is distributed
+uniformly across the design domain, even within the solid regions. This is due to the limitations of the fictitious body force
+formulation, which causes particles to remain inside the solid
+regions. However, since the particle velocity within the solid
+
+8
+200
+
+400
+
+600
+
+800
+
+1000
+
+Reynolds number Re
+
+Fig. 5: Average Nusselt number is evaluated with the Reynolds number at different particle volume fractions in the analysis domain shown in Fig. 4.
+
+5.2. Heat transfer optimization problem
+5.2.1. Details of numerical setting
+In the first numerical example, the default material properties for the nanofluid are listed in Table 1. Fig. 6 shows the
+schematic diagram of the analysis domain in this problem, with
+the inlet length L set to 30 µm. Although the overall size of the
+7
+
+(a)
+
+(b)
+
+(c)
+
+𝛾෤ҧ
+0.0
+
+𝐮f
+1.0
+
+(d)
+
+(e)
+
+𝜑p
+0.0
+
+0.0
+
+0.01
+
+𝑇f
+Umax
+
+(f)
+
+𝐮p
+0.0
+
+0.0
+
+Umax
+
+Tmax
+
+𝑇p
+0.0
+
+Tmax
+
+Fig. 7: Optimized Results and distribution of physical quantities with: (a) optimized flow field (b) fluid velocity magnitude(c) fluid phase temperature (d) particle
+volume fraction (e) particle velocity magnitude (f) particle phase temperature. The maximum values on the color bar for velocity and temperature for both phases
+are 1.77 m/s and 355.8 K, respectively.
+
+regions is extremely low, its influence on the optimization results is minimal.
+
+5.2.3. Effect of pressure drop
+First, we examine the effects of different pressure drops on
+the optimized configurations, as shown in Fig. 9. The results
+indicate that the number of branches in the optimized flow field
+increases as the pressure drop increases. An increase in pressure drop enhances the overall convective effects within the
+flow field, promoting the formation of additional flow branches.
+Although increased branching leads to greater flow resistance,
+it also enhances heat dissipation performance by providing additional heat transfer surfaces and disrupting the thermal boundary layer. Table 2 presents the results of the crosscheck. It can
+be observed that the flow fields optimized under specific pressure drop conditions exhibit the best performance at their corresponding pressure drops. This demonstrates that the proposed
+method can generate optimized flow fields under different pressure drop conditions.
+
+Fig. 8 illustrates the convergence history for the optimized
+flow field, showing a progressive increase in the objective function value with each iteration. However, the objective function value may occasionally experience a sudden drop. This
+is because the projection function in Eq. (27) imposes abrupt
+changes to the design variable field, resulting in short-term performance reduction.
+
+20
+
+J × 1011 W/m
+
+18
+16
+14
+12
+
+Table 2: Crosscheck of objective function J (×1011 ) with pressure drop.
+10
+
+Analysis ∆p
+
+1000
+
+3000
+
+5000
+
+7000
+
+1000
+3000
+
+11.0
+14.6
+
+9.3
+16.4
+
+7.4
+15.6
+
+6.3
+14.6
+
+5000
+7000
+
+15.8
+16.4
+
+19.0
+20.4
+
+19.3
+21.8
+
+19.1
+21.9
+
+8
+0
+
+10
+
+20
+
+30
+40
+Iteration
+
+50
+
+60
+
+70
+
+Fig. 8: Convergence history of the objective function J for the optimized flow
+field shown in Fig. 7.
+
+8
+
+Optimization ∆p
+
+
