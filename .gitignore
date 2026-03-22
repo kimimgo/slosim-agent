@@ -1,5 +1,7 @@
 # Build outputs
 slosim-agent
+slosim
+slosim-*
 *.exe
 
 # Simulation data
@@ -35,3 +37,11 @@ __pycache__/
 # Logs
 firebase-debug.log
 *.log
+
+# Temp/backup
+*.bak
+simulations_backup_*
+sloshing_sim.xml
+sloshing_sim_probe_points.txt
+test_agent*.sh
+supplementary/

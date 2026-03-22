@@ -6,6 +6,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -342,6 +343,16 @@ func putFloat32LE(buf []byte, v float32) {
 	buf[3] = byte(bits >> 24)
 }
 
+func dummyValidation(xMin, yMin, zMin, xMax, yMax, zMax float64) *STLValidation {
+	return &STLValidation{
+		TriangleCount:    100,
+		IsWatertight:     true,
+		NormalsConsistent: true,
+		BBoxMin:          [3]float64{xMin, yMin, zMin},
+		BBoxMax:          [3]float64{xMax, yMax, zMax},
+	}
+}
+
 func TestGenerateSTLXML(t *testing.T) {
 	t.Run("generates valid XML for STL import", func(t *testing.T) {
 		params := STLImportParams{
@@ -351,8 +362,9 @@ func TestGenerateSTLXML(t *testing.T) {
 			FluidHeight: 1.5,
 			Scale:       1.0,
 		}
+		val := dummyValidation(0, 0, 0, 0.5, 0.35, 0.25)
 
-		xml := generateSTLXML(params)
+		xml := generateSTLXML(params, val)
 
 		assert.Contains(t, xml, "<?xml version=\"1.0\"")
 		assert.Contains(t, xml, "<case>")
@@ -361,20 +373,178 @@ func TestGenerateSTLXML(t *testing.T) {
 		assert.Contains(t, xml, "dp=\"0.02\"")
 		assert.Contains(t, xml, "<drawfilestl")
 		assert.Contains(t, xml, "file=\"tank.stl\"")
-		assert.Contains(t, xml, "scale=\"1\"")
+		assert.Contains(t, xml, "autofill=\"false\"")
 		assert.Contains(t, xml, "<setmkbound mk=\"0\"")
 		assert.Contains(t, xml, "<setmkfluid mk=\"0\"")
 	})
 
-	t.Run("uses default fluid height when not specified", func(t *testing.T) {
+	t.Run("uses default 50% fill when no height specified", func(t *testing.T) {
 		params := STLImportParams{
 			STLFile: "test.stl",
 			OutPath: "/tmp/test",
 			DP:      0.01,
 		}
+		val := dummyValidation(0, 0, 0, 1.0, 0.5, 0.8)
 
-		xml := generateSTLXML(params)
+		xml := generateSTLXML(params, val)
 		assert.Contains(t, xml, "dp=\"0.01\"")
+		assert.Contains(t, xml, "<drawbox>")
+	})
+
+	t.Run("fillpoint is included in XML", func(t *testing.T) {
+		params := STLImportParams{
+			STLFile:    "fuel_tank.stl",
+			OutPath:    "/tmp/fuel",
+			DP:         0.008,
+			FillPointX: 0.25,
+			FillPointY: 0.175,
+			FillPointZ: 0.125,
+			Scale:      1.0,
+		}
+		val := dummyValidation(0, 0, 0, 0.5, 0.35, 0.25)
+
+		xml := generateSTLXML(params, val)
+		assert.Contains(t, xml, "<fillpoint")
+		assert.Contains(t, xml, "x=\"0.2500\"")
+		assert.Contains(t, xml, "y=\"0.1750\"")
+	})
+
+	t.Run("motion XML is generated when specified", func(t *testing.T) {
+		params := STLImportParams{
+			STLFile:    "tank.stl",
+			OutPath:    "/tmp/tank",
+			DP:         0.008,
+			MotionType: "mvrectsinu",
+			MotionFreq: 0.5,
+			MotionAmpl: 0.05,
+			MotionAxis: "x",
+			TimeMax:    15.0,
+			Scale:      1.0,
+		}
+		val := dummyValidation(0, 0, 0, 0.5, 0.35, 0.25)
+
+		xml := generateSTLXML(params, val)
+		assert.Contains(t, xml, "<motion>")
+		assert.Contains(t, xml, "<mvrectsinu")
+		assert.Contains(t, xml, "duration=\"15\"")
+	})
+
+	t.Run("fillpoint_modefill", func(t *testing.T) {
+		params := STLImportParams{
+			STLFile:    "fuel_tank.stl",
+			OutPath:    "/tmp/fuel",
+			DP:         0.008,
+			FillPointX: 0.25,
+			FillPointY: 0.175,
+			FillPointZ: 0.125,
+			Scale:      1.0,
+		}
+		val := dummyValidation(0, 0, 0, 0.5, 0.35, 0.25)
+
+		xml := generateSTLXML(params, val)
+		assert.Contains(t, xml, "<modefill>void</modefill>")
+		assert.Contains(t, xml, "<fillpoint")
+	})
+
+	t.Run("fillpoint_before_drawbox", func(t *testing.T) {
+		params := STLImportParams{
+			STLFile:    "fuel_tank.stl",
+			OutPath:    "/tmp/fuel",
+			DP:         0.008,
+			FillPointX: 0.25,
+			FillPointY: 0.175,
+			FillPointZ: 0.125,
+			Scale:      1.0,
+		}
+		val := dummyValidation(0, 0, 0, 0.5, 0.35, 0.25)
+
+		xml := generateSTLXML(params, val)
+		fillpointIdx := strings.Index(xml, "<fillpoint")
+		drawboxIdx := strings.Index(xml, "<drawbox>")
+		assert.Greater(t, drawboxIdx, fillpointIdx, "fillpoint must appear before drawbox")
+	})
+
+	t.Run("drawfilestl_autofill", func(t *testing.T) {
+		params := STLImportParams{
+			STLFile: "tank.stl",
+			OutPath: "/tmp/tank",
+			DP:      0.02,
+			Scale:   1.0,
+		}
+		val := dummyValidation(0, 0, 0, 0.5, 0.35, 0.25)
+
+		xml := generateSTLXML(params, val)
+		assert.Contains(t, xml, `autofill="false"`)
+		assert.NotContains(t, xml, `scale="1"`)
+		assert.NotContains(t, xml, "<drawscale")
+	})
+
+	t.Run("drawfilestl_scale_child", func(t *testing.T) {
+		params := STLImportParams{
+			STLFile: "tank.stl",
+			OutPath: "/tmp/tank",
+			DP:      0.02,
+			Scale:   2.0,
+		}
+		val := dummyValidation(0, 0, 0, 0.5, 0.35, 0.25)
+
+		xml := generateSTLXML(params, val)
+		assert.Contains(t, xml, `autofill="false"`)
+		assert.Contains(t, xml, `<drawscale x="2" y="2" z="2" />`)
+	})
+
+	t.Run("motion_begin_element", func(t *testing.T) {
+		params := STLImportParams{
+			STLFile:    "tank.stl",
+			OutPath:    "/tmp/tank",
+			DP:         0.008,
+			MotionType: "mvrectsinu",
+			MotionFreq: 0.5,
+			MotionAmpl: 0.05,
+			MotionAxis: "x",
+			TimeMax:    15.0,
+			Scale:      1.0,
+		}
+		val := dummyValidation(0, 0, 0, 0.5, 0.35, 0.25)
+
+		xml := generateSTLXML(params, val)
+		assert.Contains(t, xml, `<begin mov="1" start="0" />`)
+		assert.NotContains(t, xml, `next="0"`)
+	})
+
+	t.Run("motion_mvrotsinu_anglesunits", func(t *testing.T) {
+		params := STLImportParams{
+			STLFile:    "tank.stl",
+			OutPath:    "/tmp/tank",
+			DP:         0.008,
+			MotionType: "mvrotsinu",
+			MotionFreq: 0.5,
+			MotionAmpl: 4.0,
+			MotionAxis: "y",
+			TimeMax:    10.0,
+			Scale:      1.0,
+		}
+		val := dummyValidation(0, 0, 0, 0.5, 0.35, 0.25)
+
+		xml := generateSTLXML(params, val)
+		assert.Contains(t, xml, `anglesunits="degrees"`)
+		assert.Contains(t, xml, `<begin mov="1" start="0" />`)
+	})
+
+	t.Run("fill_ratio calculates fluid height from BBox", func(t *testing.T) {
+		params := STLImportParams{
+			STLFile:   "tank.stl",
+			OutPath:   "/tmp/tank",
+			DP:        0.008,
+			FillRatio: 0.5,
+			Scale:     1.0,
+		}
+		val := dummyValidation(0, 0, 0, 0.5, 0.35, 0.25)
+		// BBox height = 0.25, fill_ratio = 0.5 → fluid_height = 0.125
+		// But fill_ratio is computed in Run(), not generateSTLXML, so set manually
+		params.FluidHeight = 0.125
+
+		xml := generateSTLXML(params, val)
 		assert.Contains(t, xml, "<drawbox>")
 	})
 }

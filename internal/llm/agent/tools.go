@@ -25,35 +25,34 @@ func CoderAgentTools(
 	}
 	return append(
 		[]tools.BaseTool{
+			// DualSPHysics core pipeline (highest priority for sloshing agent)
+			tools.NewXMLGeneratorTool(),
+			tools.NewSTLImportTool(),
+			tools.NewGenCaseTool(),
+			tools.NewSolverTool(),
+			tools.NewPartVTKTool(),
+			tools.NewMeasureToolTool(),
+			tools.NewBaffleGeneratorTool(),
+			tools.NewReportTool(),
+			tools.NewAnalysisTool(),
+			tools.NewMonitorTool(),
+			tools.NewErrorRecoveryTool(),
+			tools.NewJobManagerTool(),
+			tools.NewSeismicInputTool(),
+			tools.NewParametricStudyTool(),
+			tools.NewResultStoreTool(),
+			// General-purpose tools
 			tools.NewBashTool(permissions),
-			tools.NewEditTool(lspClients, permissions, history),
-			tools.NewFetchTool(permissions),
+			tools.NewViewTool(lspClients),
 			tools.NewGlobTool(),
 			tools.NewGrepTool(),
 			tools.NewLsTool(),
-			tools.NewSourcegraphTool(),
-			tools.NewViewTool(lspClients),
-			tools.NewPatchTool(lspClients, permissions, history),
 			tools.NewWriteTool(lspClients, permissions, history),
+			tools.NewEditTool(lspClients, permissions, history),
+			tools.NewFetchTool(permissions),
+			tools.NewSourcegraphTool(),
+			tools.NewPatchTool(lspClients, permissions, history),
 			NewAgentTool(sessions, messages, lspClients),
-			// DualSPHysics sloshing simulation tools (v0.1)
-			tools.NewXMLGeneratorTool(),
-			tools.NewGenCaseTool(),
-			tools.NewSolverTool(),
-			tools.NewJobManagerTool(),
-			tools.NewPartVTKTool(),
-			tools.NewMeasureToolTool(),
-			tools.NewReportTool(),
-			// v0.2: AI Analysis (pvpython/animation replaced by pv-agent MCP server)
-			tools.NewMonitorTool(),
-			tools.NewAnalysisTool(),
-			// v0.3: Domain Expansion + Multi-Job
-			tools.NewSTLImportTool(),
-			tools.NewSeismicInputTool(),
-			// v1.0: Parametric Study + Production
-			tools.NewParametricStudyTool(),
-			tools.NewResultStoreTool(),
-			tools.NewErrorRecoveryTool(),
 		}, otherTools...,
 	)
 }

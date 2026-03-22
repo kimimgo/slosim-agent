@@ -133,7 +133,7 @@ func NewProvider(providerName models.ModelProvider, opts ...ProviderClientOption
 		clientOptions.openaiOptions = append(clientOptions.openaiOptions,
 			WithOpenAIBaseURL(localEndpoint),
 			WithTemperature(0),
-			WithMaxTools(5),
+			WithMaxTools(10),
 		)
 		return &baseProvider[OpenAIClient]{
 			options: clientOptions,

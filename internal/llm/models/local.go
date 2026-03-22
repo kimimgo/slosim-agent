@@ -143,8 +143,8 @@ func convertLocalModel(model localModel) Model {
 		Name:                friendlyModelName(model.ID),
 		Provider:            ProviderLocal,
 		APIModel:            model.ID,
-		ContextWindow:       cmp.Or(model.LoadedContextLength, 4096),
-		DefaultMaxTokens:    cmp.Or(model.LoadedContextLength, 4096),
+		ContextWindow:       cmp.Or(model.LoadedContextLength, 32768),
+		DefaultMaxTokens:    cmp.Or(model.LoadedContextLength, 32768),
 		CanReason:           false, // Ollama does not support reasoning_effort parameter
 		SupportsAttachments: true,
 	}

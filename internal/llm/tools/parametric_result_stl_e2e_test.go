@@ -508,7 +508,7 @@ endsolid test
 
 	assert.Contains(t, string(xmlContent), `<drawfilestl`)
 	assert.Contains(t, string(xmlContent), `file="test.stl"`)
-	assert.Contains(t, string(xmlContent), `scale="1"`)
+	assert.Contains(t, string(xmlContent), `autofill="false"`)
 	assert.Contains(t, response.Content, "삼각형 수: 4")
 }
 
@@ -591,6 +591,73 @@ func TestSTLImport_E2E_InvalidParams(t *testing.T) {
 	}
 }
 
+func TestSTLImport_E2E_AutoFillpoint(t *testing.T) {
+	// auto_fillpoint=true → Run() → modefill void 포함 XML
+	tempDir := t.TempDir()
+
+	stlPath := filepath.Join(tempDir, "tetra.stl")
+	err := os.WriteFile(stlPath, []byte(tetrahedronSTL()), 0644)
+	require.NoError(t, err)
+
+	tool := NewSTLImportTool()
+	params := STLImportParams{
+		STLFile:       stlPath,
+		OutPath:       filepath.Join(tempDir, "output"),
+		DP:            0.02,
+		AutoFillPoint: true,
+		Scale:         1.0,
+	}
+
+	paramsJSON, err := json.Marshal(params)
+	require.NoError(t, err)
+
+	response, err := tool.Run(context.Background(), ToolCall{
+		Name:  STLImportToolName,
+		Input: string(paramsJSON),
+	})
+	require.NoError(t, err)
+	assert.False(t, response.IsError)
+
+	xmlPath := filepath.Join(tempDir, "output.xml")
+	xmlContent, err := os.ReadFile(xmlPath)
+	require.NoError(t, err)
+
+	xmlStr := string(xmlContent)
+	assert.Contains(t, xmlStr, "<fillpoint")
+	assert.Contains(t, xmlStr, "<modefill>void</modefill>")
+	assert.Contains(t, xmlStr, `autofill="false"`)
+}
+
+func TestSTLImport_E2E_FillRatio(t *testing.T) {
+	// fill_ratio=0.5 → Run() → FluidHeight 자동 계산
+	tempDir := t.TempDir()
+
+	stlPath := filepath.Join(tempDir, "tetra.stl")
+	err := os.WriteFile(stlPath, []byte(tetrahedronSTL()), 0644)
+	require.NoError(t, err)
+
+	tool := NewSTLImportTool()
+	params := STLImportParams{
+		STLFile:   stlPath,
+		OutPath:   filepath.Join(tempDir, "output"),
+		DP:        0.02,
+		FillRatio: 0.5,
+		Scale:     1.0,
+	}
+
+	paramsJSON, err := json.Marshal(params)
+	require.NoError(t, err)
+
+	response, err := tool.Run(context.Background(), ToolCall{
+		Name:  STLImportToolName,
+		Input: string(paramsJSON),
+	})
+	require.NoError(t, err)
+	assert.False(t, response.IsError)
+	// Tetrahedron BBox height ~ 0.816, fill_ratio 0.5 → fluid_height ~ 0.408
+	assert.Contains(t, response.Content, "유체 높이: 0.408")
+}
+
 func TestGenerateSTLXML_Structure(t *testing.T) {
 	// Verify XML structure (drawfilestl, scale, fluid box)
 	params := STLImportParams{
@@ -600,8 +667,15 @@ func TestGenerateSTLXML_Structure(t *testing.T) {
 		FluidHeight: 0.5,
 		Scale:       2.0,
 	}
+	val := &STLValidation{
+		TriangleCount:    50,
+		IsWatertight:     true,
+		NormalsConsistent: true,
+		BBoxMin:          [3]float64{0, 0, 0},
+		BBoxMax:          [3]float64{1, 1, 1},
+	}
 
-	xml := generateSTLXML(params)
+	xml := generateSTLXML(params, val)
 
 	// Verify XML declaration
 	assert.Contains(t, xml, `<?xml version="1.0"`)
@@ -619,13 +693,14 @@ func TestGenerateSTLXML_Structure(t *testing.T) {
 	// Verify drawfilestl element
 	assert.Contains(t, xml, `<drawfilestl`)
 	assert.Contains(t, xml, `file="test.stl"`)
-	assert.Contains(t, xml, `scale="2"`)
+	assert.Contains(t, xml, `autofill="false"`)
+	assert.Contains(t, xml, `<drawscale x="2" y="2" z="2" />`)
 
 	// Verify fluid box
 	assert.Contains(t, xml, `<setmkfluid mk="0" />`)
 	assert.Contains(t, xml, `<drawbox>`)
 	assert.Contains(t, xml, `<boxfill>solid</boxfill>`)
-	assert.Contains(t, xml, `z="0.5"`) // fluid height
+	assert.Contains(t, xml, `z="0.5000"`) // fluid height (%.4f format)
 
 	// Verify boundary
 	assert.Contains(t, xml, `<setmkbound mk="0" />`)

@@ -1,17 +1,1 @@
-{
-  "mcpServers": {
-    "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
-    },
-    "pv": {
-      "command": "uv",
-      "args": ["--directory", "tools/pv-agent", "run", "pv-agent"],
-      "env": {
-        "PV_DATA_DIR": "./simulations",
-        "PV_PYTHON_BIN": "/opt/paraview/bin/pvpython",
-        "PV_RENDER_BACKEND": "gpu"
-      }
-    }
-  }
-}
+{"mcpServers":{}}

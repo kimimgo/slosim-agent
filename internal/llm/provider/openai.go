@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/openai/openai-go"
@@ -71,11 +73,18 @@ func (o *openaiClient) convertMessages(messages []message.Message) (openaiMessag
 	// Add system message first
 	openaiMessages = append(openaiMessages, openai.SystemMessage(o.providerOptions.systemMessage))
 
+	// Qwen3 models: append /no_think to user messages to suppress thinking mode
+	isQwen3 := strings.Contains(strings.ToLower(o.providerOptions.model.APIModel), "qwen3")
+
 	for _, msg := range messages {
 		switch msg.Role {
 		case message.User:
 			var content []openai.ChatCompletionContentPartUnionParam
-			textBlock := openai.ChatCompletionContentPartTextParam{Text: msg.Content().String()}
+			text := msg.Content().String()
+			if isQwen3 && !strings.HasSuffix(strings.TrimSpace(text), "/no_think") {
+				text = text + " /no_think"
+			}
+			textBlock := openai.ChatCompletionContentPartTextParam{Text: text}
 			content = append(content, openai.ChatCompletionContentPartUnionParam{OfText: &textBlock})
 			for _, binaryContent := range msg.BinaryContent() {
 				imageURL := openai.ChatCompletionContentPartImageImageURLParam{URL: binaryContent.String(models.ProviderOpenAI)}
@@ -259,6 +268,13 @@ func (o *openaiClient) stream(ctx context.Context, messages []message.Message, t
 	if cfg.Debug {
 		jsonData, _ := json.Marshal(params)
 		logging.Debug("Prepared messages", "messages", string(jsonData))
+	}
+
+	// DEBUG: dump request to file for cross-model diagnosis
+	if os.Getenv("SLOSIM_DUMP_REQUEST") != "" {
+		jsonData, _ := json.Marshal(params)
+		os.WriteFile(os.Getenv("SLOSIM_DUMP_REQUEST"), jsonData, 0644)
+		fmt.Fprintf(os.Stderr, "[DUMP] Request saved to %s (%d bytes)\n", os.Getenv("SLOSIM_DUMP_REQUEST"), len(jsonData))
 	}
 
 	attempts := 0

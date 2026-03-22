@@ -2,19 +2,19 @@
   "$schema": "./opencode-schema.json",
   "agents": {
     "coder": {
-      "model": "local.qwen3:32b-64k",
+      "model": "local.qwen3:latest",
       "maxTokens": 32768
     },
     "task": {
-      "model": "local.qwen3:32b-64k",
+      "model": "local.qwen3:latest",
       "maxTokens": 16384
     },
     "title": {
-      "model": "local.qwen3:32b-64k",
+      "model": "local.qwen3:latest",
       "maxTokens": 256
     },
     "summarizer": {
-      "model": "local.qwen3:32b-64k",
+      "model": "local.qwen3:latest",
       "maxTokens": 4096
     }
   },
