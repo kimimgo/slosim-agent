@@ -20,9 +20,9 @@ Ollama.
 
 [agent] xml_generator      → cases/sloshing_case.xml
 [agent] gencase            → /data/out/sloshing_case (Docker, CUDA 12.6)
-[agent] solver (GPU)       → RTX 4090, ~N particles, t=5/f s
+[agent] solver (GPU)       → RTX 4090, t = 5/f s
 [agent] partvtk            → simulations/sloshing_case/vtk/
-[agent] analysis           → f/f1 = 0.82 → "일반 출렁임"
+[agent] analysis           → below resonance → "일반 출렁임"
 ```
 
 The agent is not a shell wrapper. It picks numerical parameters, reads
@@ -39,7 +39,7 @@ Three surfaces where the model's output changes the simulation outcome
 | Surface | What the model decides | Source |
 |---|---|---|
 | **Parameter inference** | `dp`, `time_max`, fluid height, excitation amplitude when the user omits them; standard tank dimensions by colloquial name ("LNG 탱크", "실험 탱크"); resonance-frequency-aware excitation setup | `internal/llm/prompt/sloshing_coder.go:77-88`, consumed by `internal/llm/tools/xml_generator.go` |
-| **Reflection on residuals** | Reads `Run.csv` + derived metrics; classifies the run as Normal / Near-Resonance / Resonance / Overshoot via `f/f₁`; triggers follow-up tool calls (re-run with refined `dp`, invoke `measuretool`, or stop) | `internal/llm/tools/analysis.go:92-125`, `internal/llm/tools/monitor.go` |
+| **Reflection on residuals** | Classifies the run as Normal / Near-Resonance / Resonance / Overshoot via `f/f₁`, which the agent loop consumes to decide whether to re-run with refined `dp`, invoke `measuretool`, or stop; live residuals surfaced via `Run.csv` parsing | `internal/llm/tools/analysis.go:92-125`, `internal/llm/tools/monitor.go` |
 | **Failure-aware planning** | Detects divergence (`RhopOut`, Inf velocity) from solver logs, emits concrete fix actions ("TimeStep 감소", "dp 감소", "CFL 조정") with retry policy | `internal/llm/tools/error_recovery.go:100-170, 231-340` |
 
 What the model does **not** decide: SPH kernel choice, MPI/GPU
@@ -72,8 +72,8 @@ share one `SendMessages()` / `StreamResponse()` contract.
 
 ## DualSPHysics tool surface
 
-Fifteen domain tools exposed to the agent. Each has a feature ID tied
-to the FRD (`docs/FRD_v0.1.md`).
+Fifteen domain tools exposed to the agent. Several carry a feature ID
+tied to the FRD (`docs/FRD_v0.1.md`).
 
 | Tool | Feature | Responsibility |
 |---|---|---|
@@ -178,6 +178,7 @@ Config lives at `.opencode/config.json` or `~/.opencode.json`. Set
 
 ## License & acknowledgements
 
-MIT. Forked from [OpenCode](https://github.com/opencode-ai/opencode).
-SPH solver: [DualSPHysics](https://dual.sphysics.org/) (v5.4, GPU). LLM
-weights: [Qwen3](https://qwenlm.github.io/) (Alibaba).
+MIT © 2026 Imgyu Kim. Forked from
+[OpenCode](https://github.com/opencode-ai/opencode) (© 2025 Kujtim
+Hoxha). SPH solver: [DualSPHysics](https://dual.sphysics.org/) (v5.4,
+GPU). LLM weights: [Qwen3](https://qwenlm.github.io/) (Alibaba).
