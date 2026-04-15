@@ -71,22 +71,35 @@ Product requirements: [PRD.md](./PRD.md).
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    U["User<br/>NL query"] --> P["Planner LLM<br/>(Qwen3, local)"]
-    P <--> VR["Vector memory<br/>case + failure"]
-    P --> T["Tool layer<br/>case gen / solver / postproc"]
-    T --> S["DualSPHysics<br/>GPU SPH solver"]
-    S --> R["Reference comparison<br/>Run.csv, measure points"]
-    R --> RF["Reflection LLM<br/>α, Δt adjustment"]
-    RF -- "param adjust" --> T
-    RF -- "converged" --> O["Physical reasoning<br/>+ safety verdict"]
-    RF -- "failure trace" --> VR
+![slosim-agent architecture](docs/figures/slosim_architecture_1.png)
+
+Numbered flow ① → ⑤: a natural-language prompt enters through the
+BubbleTea TUI (or the non-interactive `-p` CLI), routes via Cobra to the
+**Coder Agent**, which reasons with the local Qwen3 model under the
+`SloshingCoderPrompt` and dispatches one of fifteen domain-specific
+tools (case generation, execution, monitoring, analysis). Tools run
+DualSPHysics on a GPU-passed Docker container and persist state in
+SQLite. The provider abstraction allows alternative LLM backends
+(OpenAI, Gemini, GROQ, OpenRouter) without touching the agent core.
+
+Full layout in [ARCHITECTURE.md](./ARCHITECTURE.md).
+
+<details>
+<summary>Reflection loop detail (text diagram)</summary>
+
+```
+NL query → Planner LLM ⇄ Vector memory (case + failure recall)
+              ↓
+         Tool layer → DualSPHysics GPU → Run.csv / measure points
+              ↑                                ↓
+       α, Δt adjust ←──── Reflection LLM ←── Reference comparison
+                                ↓
+                         Physical reasoning + safety verdict
+                                ↓
+                       (failure trace → Vector memory)
 ```
 
-Layered view: TUI (BubbleTea) → Agent core (Qwen3 + tool loop) →
-DualSPHysics tool surface (15 tools) → SPH solver + ParaView post-processing.
-Full layout in [ARCHITECTURE.md](./ARCHITECTURE.md).
+</details>
 
 ---
 
