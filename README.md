@@ -38,9 +38,9 @@ Three surfaces where the model's output changes the simulation outcome
 
 | Surface | What the model decides | Source |
 |---|---|---|
-| **Parameter inference** | `dp`, `time_max`, fluid height, excitation amplitude when the user omits them; standard tank dimensions by colloquial name ("LNG 탱크", "실험 탱크"); resonance-frequency-aware excitation setup | `internal/llm/prompt/sloshing_coder.go:77-88`, consumed by `internal/llm/tools/xml_generator.go` |
-| **Reflection on residuals** | Classifies the run as Normal / Near-Resonance / Resonance / Overshoot via `f/f₁`, which the agent loop consumes to decide whether to re-run with refined `dp`, invoke `measuretool`, or stop; live residuals surfaced via `Run.csv` parsing | `internal/llm/tools/analysis.go:92-125`, `internal/llm/tools/monitor.go` |
-| **Failure-aware planning** | Detects divergence (`RhopOut`, Inf velocity) from solver logs, emits concrete fix actions ("TimeStep 감소", "dp 감소", "CFL 조정") with retry policy | `internal/llm/tools/error_recovery.go:100-170, 231-340` |
+| **Parameter inference** | `dp`, `time_max`, fluid height, excitation amplitude when the user omits them; standard tank dimensions by colloquial name ("LNG 탱크", "실험 탱크"); resonance-frequency-aware excitation setup. 5 numeric default rules + 4 named tank presets | `sloshing_coder.go:77-88`, consumed by `xml_generator.go` |
+| **Reflection on residuals** | Classifies the run as Normal / Near-Resonance / Resonance / Overshoot via `f/f₁`, which the agent loop consumes to decide whether to re-run with refined `dp`, invoke `measuretool`, or stop. Agent loop re-invokes the model after each tool result; loop cap 25 iterations | `analysis.go:92-125`, `monitor.go`, `agent.go:284-344` |
+| **Failure-aware planning** | Detects divergence (`RhopOut`, Inf velocity) from solver logs; emits 6 concrete fix-action types (TimeStep, viscosity, dp, domain size, GPU memory, NaN recovery) with retry policy | `error_recovery.go:139-162` |
 
 What the model does **not** decide: SPH kernel choice, MPI/GPU
 partitioning, or the physics laws encoded in DualSPHysics itself. Those
@@ -109,6 +109,9 @@ papers and industrial geometries:
 - `NASA2023_Cylinder_Def.xml`, `Zhao2024_HorizCyl_Def.xml` — cylindrical
 - `ISOPE2012_LNG_Def.xml` — large-scale LNG
 
+Cases span three axes: geometry (rectangular, cylindrical, L-shaped),
+fluid (water, oil), and excitation (sinusoidal sway/pitch, seismic).
+
 ---
 
 ## Research and paper trails
@@ -117,16 +120,26 @@ Development has proceeded alongside experiment bookkeeping and manuscript
 preparation. These live in-tree as evidence of iterative work rather
 than end-of-line artefacts.
 
+- `paper-cs/` — manuscript targeting **EAAI / Engineering with
+  Computers / Expert Systems with Applications**. Agent architecture +
+  ablation study. Key results: parameter fidelity 82.2% (EXP-A),
+  Qwen3:8B (78.5%) > LLaMA:70B (51.4%) on cross-model comparison,
+  prompt contribution +56.5 pp in 2x2 factorial ablation.
+  <!-- TODO: submission status -->
+- `paper-pof/` — manuscript targeting **Physics of Fluids**. Physical
+  validation against experiments. Key results: SPHERIC Test 10 Water
+  lateral 19.5% mean error / r = 0.655; first quantitative SPH error
+  report on SPHERIC Test 10 Oil (verified via 1,176-paper literature
+  survey); baffle-induced 28.5% SWL reduction.
+  <!-- TODO: submission status -->
+- `paper/` — earlier integrated draft (legacy reference).
 - `research/`, `research-v2/`, `research-v3/` — versioned experiment
-  logs (EXP-A parameter fidelity, EXP-B ablation 2×2, EXP-C oil
+  logs (EXP-A parameter fidelity, EXP-B ablation 2x2, EXP-C oil
   parametric, SPHERIC validation). `research-v2/experiment_registry.json`
   catalogues runs.
-- `paper-cs/` — manuscript draft targeting a CS venue
-  <!-- TODO: fill venue + submission status -->
-- `paper-pof/` — manuscript draft focused on physics validation
-  <!-- TODO: fill venue + submission status -->
-- `paper/` — earlier integrated draft (legacy reference)
-  <!-- TODO: confirm role vs. paper-cs / paper-pof -->
+- Failure-to-learning loop documented in `research-v2/POSTMORTEM_V1.md`:
+  peak amplitude error +63.5% → 19.5%, correlation r = -0.087 → 0.655,
+  Oil peak detection 0/4 → 4/4 across the v1 → v2 cycle.
 
 ---
 
@@ -142,9 +155,22 @@ than end-of-line artefacts.
   generator → GPU solver → residual-driven reflection) is not specific
   to sloshing. It applies to any tank- or reactor-shaped problem where
   (a) a parametric case generator exists, (b) a GPU solver is available,
-  and (c) the residuals can be post-processed. Natural adjacents:
+  and (c) the residuals can be post-processed. Extension slots already
+  present in code: `stl_import.go` for arbitrary CAD geometries,
+  `seismic_input.go` for non-sinusoidal excitation time-series,
+  cylindrical and L-shaped tank types defined in
+  `sloshing_coder.go:130-142` and `geometry.go`. Natural adjacents:
   multi-phase flows, chemical process tank dynamics, general CFD
   pre/post workflows.
+
+---
+
+## Testing
+
+46 test files (~12 k lines) across `internal/`. Tool-level tests
+sit next to their implementations (`internal/llm/tools/*_test.go`);
+integration tests under the `*_integration_test.go` suffix exercise
+multi-step flows (error recovery, parametric study, result store).
 
 ---
 
